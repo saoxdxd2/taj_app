@@ -1,0 +1,171 @@
+# MASTER_INDEX.md
+
+# Engineering Manual Navigation
+
+This file tells the AI exactly which documents must be loaded for every type of work.
+
+Never load unnecessary documentation.
+
+---
+
+# ALWAYS LOADED
+
+00_ENGINEERING_CONSTITUTION.md
+
+00.5_NON_NEGOTIABLE_INVARIANTS.md
+
+PROJECT_MEMORY.md
+
+---
+
+# Architecture
+
+Load
+
+01_SYSTEM.md
+
+02_PROJECT_DNA.md
+
+03_RECURSIVE_ENGINEERING_PROTOCOL.md
+
+06_ARCHITECTURE_FREEZE.md
+
+09_SOFTWARE_ARCHITECTURE_PATTERNS.md
+
+---
+
+# Business
+
+Load
+
+10_BUSINESS_ARCHITECTURE.md
+
+11_DATABASE_STANDARD.md
+
+---
+
+# Inventory
+
+Load
+
+10_BUSINESS_ARCHITECTURE.md
+
+11_DATABASE_STANDARD.md
+
+14_OBSERVABILITY_STANDARD.md
+
+19_IMPLEMENTATION_PROTOCOL.md
+
+---
+
+# Sales
+
+Load
+
+10_BUSINESS_ARCHITECTURE.md
+
+11_DATABASE_STANDARD.md
+
+17_DOCUMENT_GENERATION_STANDARD.md
+
+14_OBSERVABILITY_STANDARD.md
+
+---
+
+# Finance
+
+Load
+
+10_BUSINESS_ARCHITECTURE.md
+
+11_DATABASE_STANDARD.md
+
+15_SECURITY_STANDARD.md
+
+14_OBSERVABILITY_STANDARD.md
+
+---
+
+# OCR
+
+Load
+
+10_BUSINESS_ARCHITECTURE.md
+
+17_DOCUMENT_GENERATION_STANDARD.md
+
+11_DATABASE_STANDARD.md
+
+14_OBSERVABILITY_STANDARD.md
+
+---
+
+# UI
+
+Load
+
+13_DESIGN_SYSTEM.md
+
+12_LOCALIZATION_STANDARD.md
+
+08_PYTHON_CODING_STANDARD.md
+
+---
+
+# Security
+
+Load
+
+15_SECURITY_STANDARD.md
+
+14_OBSERVABILITY_STANDARD.md
+
+11_DATABASE_STANDARD.md
+
+---
+
+# Database
+
+Load
+
+11_DATABASE_STANDARD.md
+
+15_SECURITY_STANDARD.md
+
+14_OBSERVABILITY_STANDARD.md
+
+---
+
+# Testing
+
+Load
+
+16_TESTING_AND_QA_STANDARD.md
+
+20_DEFINITION_OF_DONE.md
+
+---
+
+# Deployment
+
+Load
+
+21_DIRECTORY_STRUCTURE.md
+
+22_PROJECT_ROADMAP.md
+
+---
+
+# When Unsure
+
+Only load
+
+Business Architecture
+
+Database Standard
+
+Engineering Constitution
+
+Recursive Engineering Protocol
+
+These four documents answer approximately 80% of engineering questions.
