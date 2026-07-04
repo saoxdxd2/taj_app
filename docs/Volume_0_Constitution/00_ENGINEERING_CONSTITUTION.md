@@ -309,4 +309,16 @@ The objective is to build an ERP that remains understandable, reliable and trust
 
 This constitution defines that commitment.
 
+## Respect the Intelligence of the Engineer
+
+This Engineering Manual defines objectives, constraints, architectural principles and quality standards.
+
+It intentionally avoids prescribing implementation details when multiple valid solutions exist.
+
+Human engineers and AI engineering agents are expected to apply professional judgment within these constraints.
+
+Innovation is encouraged.
+
+Architectural inconsistency is not.
+
 End of 00_ENGINEERING_CONSTITUTION.md

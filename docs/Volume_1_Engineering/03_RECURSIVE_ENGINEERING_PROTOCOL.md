@@ -619,7 +619,21 @@ Innovation is valuable.
 Reliability is more valuable.
 
 Always optimize for the lifetime of the software, not the speed of producing the first version.
+## AI Self Review
 
+Before completing any task, use your internal verification and reasoning capabilities.
+
+Additionally verify compliance with:
+
+• Engineering Constitution
+• Project DNA
+• Quality Gates
+• Security Standard
+• Observability Standard
+• Business Architecture
+• Definition of Done
+
+If any requirement is not satisfied, continue the engineering loop before declaring the task complete.
 ---
 
 # Final Principle
