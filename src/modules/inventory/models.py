@@ -60,3 +60,30 @@ class Product(BaseModel):
     brand: Mapped[Optional["Brand"]] = relationship("Brand")
     category: Mapped[Optional["Category"]] = relationship("Category")
     # Supplier relationship would be declared here, mapped to src.modules.suppliers.models.Supplier
+
+class StockMovementType(str, Enum):
+    """Types of stock movements."""
+    PURCHASE = "Purchase"
+    SALE = "Sale"
+    MANUAL_ADJUSTMENT = "Manual Adjustment"
+    RETURN = "Return"
+
+class StockLevel(BaseModel):
+    """
+    Represents the current available stock for a product.
+    """
+    product_id: Mapped[int] = mapped_column(ForeignKey("product.id"), unique=True, nullable=False, index=True)
+    quantity: Mapped[int] = mapped_column(default=0, nullable=False)
+    
+    product: Mapped["Product"] = relationship("Product")
+
+class StockMovement(BaseModel):
+    """
+    Immutable ledger of all stock changes.
+    """
+    product_id: Mapped[int] = mapped_column(ForeignKey("product.id"), nullable=False, index=True)
+    movement_type: Mapped[StockMovementType] = mapped_column(SQLAlchemyEnum(StockMovementType), nullable=False)
+    quantity_change: Mapped[int] = mapped_column(nullable=False) # Positive or negative
+    reference: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # E.g. Purchase Ref, Invoice Num
+    
+    product: Mapped["Product"] = relationship("Product")

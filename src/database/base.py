@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, timezone
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, declared_attr
 from sqlalchemy.sql import func
 from sqlalchemy import DateTime
 
@@ -17,10 +17,9 @@ class BaseModel(DeclarativeBase):
     __abstract__ = True
 
     # Automatic table name generation
-    @classmethod
-    def __declare_last__(cls):
-        if not hasattr(cls, '__tablename__'):
-            cls.__tablename__ = camel_to_snake(cls.__name__)
+    @declared_attr
+    def __tablename__(cls) -> str:
+        return camel_to_snake(cls.__name__)
 
     # Standard fields for all models
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)

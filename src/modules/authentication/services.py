@@ -56,3 +56,50 @@ class AuthenticationService:
             
         logger.info(f"Authentication successful for user '{username}'.")
         return user
+
+    @staticmethod
+    def login(session, username: str, password: str, workstation: str = "Unknown", language: str = "en") -> bool:
+        """
+        Authenticates a user and initializes CurrentSession.
+        Returns True if successful, False otherwise.
+        """
+        from src.core.session import CurrentSession
+        from src.core.context import RequestContext
+        import uuid
+        import datetime
+
+        user = AuthenticationService.authenticate_user(session, username, password)
+        if not user:
+            return False
+
+        # Resolve permissions based on role
+        permissions = set()
+        if user.role.value == "Administrator":
+            permissions.add(".*")
+        elif user.role.value == "Manager":
+            permissions.update(["Inventory.*", "CRM.*", "Suppliers.*", "Sales.*", "Purchasing.*"])
+        else:
+            permissions.update(["Inventory.Products.View", "CRM.Customers.View", "Sales.Invoices.Create"])
+        
+        context = RequestContext(
+            user_id=str(user.id),
+            username=user.username,
+            role=user.role.value,
+            permissions=permissions,
+            correlation_id=str(uuid.uuid4()),
+            workstation=workstation,
+            language=language,
+            timestamp=datetime.datetime.now(datetime.timezone.utc)
+        )
+        
+        CurrentSession.initialize(context)
+        return True
+
+    @staticmethod
+    def logout():
+        """
+        Clears the active session.
+        """
+        from src.core.session import CurrentSession
+        CurrentSession.clear()
+        logger.info("User logged out successfully.")

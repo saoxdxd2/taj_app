@@ -1,6 +1,9 @@
 import logging
 from decimal import Decimal
 from src.modules.sales.models import Invoice, InvoiceItem, InvoiceState, Quotation, QuotationState
+from src.core.context import RequestContext
+from src.security.permissions import PermissionManager
+from src.modules.audit.services import AuditService
 
 logger = logging.getLogger(__name__)
 
@@ -10,10 +13,19 @@ class SalesService:
     """
 
     @staticmethod
-    def create_invoice_draft(session, invoice_number: str, customer_id: int) -> Invoice:
+    def get_all_invoices(context: RequestContext, session):
+        """
+        Retrieves all invoices.
+        """
+        PermissionManager.verify_permission(context, "Sales.Invoices.View")
+        return session.query(Invoice).all()
+
+    @staticmethod
+    def create_invoice_draft(context: RequestContext, session, invoice_number: str, customer_id: int) -> Invoice:
         """
         Creates a new invoice in Draft state.
         """
+        PermissionManager.verify_permission(context, "Sales.Invoices.Create")
         if not invoice_number:
             raise ValueError("Invoice number is required.")
             
@@ -24,15 +36,23 @@ class SalesService:
             total_amount=Decimal("0.00")
         )
         session.add(invoice)
-        logger.info(f"Created new draft invoice: {invoice_number}")
+        session.flush()
+        
+        AuditService.record_event(
+            session=session, action="CREATE_INVOICE", entity_name="Invoice", entity_id=str(invoice.id),
+            after_values={"invoice_number": invoice_number, "customer_id": customer_id}, 
+            user_id=context.user_id, correlation_id=context.correlation_id
+        )
+        logger.info(f"Created new draft invoice: {invoice_number} by {context.username}")
         return invoice
 
     @staticmethod
-    def add_item_to_invoice(session, invoice_id: int, product_id: int, 
+    def add_item_to_invoice(context: RequestContext, session, invoice_id: int, product_id: int, 
                             quantity: int, unit_price: Decimal, vat_rate: Decimal) -> InvoiceItem:
         """
         Adds an item to a Draft invoice and updates the total amount.
         """
+        PermissionManager.verify_permission(context, "Sales.Invoices.Update")
         invoice = session.query(Invoice).filter(Invoice.id == invoice_id).first()
         if not invoice:
             raise ValueError(f"Invoice ID {invoice_id} not found.")
@@ -55,17 +75,24 @@ class SalesService:
         # Calculate line total including VAT
         line_total = (Decimal(quantity) * unit_price) * (Decimal("1") + (vat_rate / Decimal("100")))
         invoice.total_amount += line_total
+        session.flush()
         
-        logger.info(f"Added item to Invoice ID {invoice_id}.")
+        AuditService.record_event(
+            session=session, action="ADD_INVOICE_ITEM", entity_name="InvoiceItem", entity_id=str(item.id),
+            after_values={"product_id": product_id, "quantity": quantity, "unit_price": float(unit_price)}, 
+            user_id=context.user_id, correlation_id=context.correlation_id
+        )
+        
+        logger.info(f"Added item to Invoice ID {invoice_id} by {context.username}.")
         return item
 
     @staticmethod
-    def validate_invoice(session, invoice_id: int) -> bool:
+    def validate_invoice(context: RequestContext, session, invoice_id: int) -> bool:
         """
         Transitions an invoice to Validated.
-        In a full implementation, this must also create a Stock Movement (reduction) 
-        and Financial Journal Entry as dictated by 10_BUSINESS_ARCHITECTURE.md (Atomic Transaction).
+        Executes an Atomic Transaction across domains.
         """
+        PermissionManager.verify_permission(context, "Sales.Invoices.Validate")
         invoice = session.query(Invoice).filter(Invoice.id == invoice_id).first()
         if not invoice:
             return False
@@ -78,10 +105,42 @@ class SalesService:
             raise ValueError("Cannot validate an invoice with no items.")
             
         invoice.state = InvoiceState.VALIDATED
-        # TODO: Trigger Stock Movement (decrease stock). Enforce invariant: Stock never becomes negative.
-        # TODO: Trigger Profit Calculation
-        # TODO: Trigger Financial Journal Entry
-        # TODO: Trigger Audit Event
         
-        logger.info(f"Validated invoice: {invoice.invoice_number}")
+        from src.modules.inventory.services import InventoryService
+        from src.modules.finance.services import FinanceService
+        from src.modules.finance.models import TransactionType
+        
+        # 1. Trigger Stock Movement (decrease stock). Enforce invariant: Stock never becomes negative.
+        for item in invoice.items:
+            InventoryService.adjust_stock(
+                context=context,
+                session=session,
+                product_id=item.product_id,
+                quantity_change=-item.quantity, # Negative because it's a sale
+                movement_type="Sale",
+                reference=f"INV-{invoice.invoice_number}",
+                enforce_non_negative=True
+            )
+            
+        # 2. Trigger Financial Journal Entry
+        FinanceService.create_journal_entry(
+            session=session,
+            transaction_type=TransactionType.SALE,
+            reference_id=f"INV-{invoice.invoice_number}",
+            description=f"Invoice validated for Customer ID {invoice.customer_id}",
+            amount=invoice.total_amount # Incoming money
+        )
+        
+        # 3. Trigger Audit Event
+        AuditService.record_event(
+            session=session,
+            action="VALIDATE_INVOICE",
+            entity_name="Invoice",
+            entity_id=str(invoice.id),
+            after_values={"total_amount": float(invoice.total_amount), "items_count": len(invoice.items)},
+            user_id=context.user_id,
+            correlation_id=invoice.invoice_number
+        )
+        
+        logger.info(f"Validated invoice: {invoice.invoice_number} by {context.username}.")
         return True
