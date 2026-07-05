@@ -11,11 +11,11 @@ from src.security.permissions import AccessDenied
 
 @pytest.fixture
 def admin_context():
-    return RequestContext(user_id="U1", username="admin", role="Administrator", permissions={"Everything"})
+    return RequestContext(user_id="1", username="admin", role="Administrator", permissions={"Everything"})
 
 @pytest.fixture
 def unauthorized_context():
-    return RequestContext(user_id="U2", username="guest", role="Guest", permissions=set())
+    return RequestContext(user_id="2", username="guest", role="Guest", permissions=set())
 
 # --- Authorization Tests ---
 
@@ -118,9 +118,23 @@ def test_audit_event_generation(session, admin_context):
     # Verify CREATE audit event
     events = session.query(AuditEvent).filter(AuditEvent.entity_name == "Product").all()
     assert len(events) == 1
-    assert events[0].action == "CREATE_PRODUCT"
+    assert events[0].action == "CREATE"
     assert events[0].after_values["sku"] == "AUD-01"
-    assert events[0].user_id == "U1"
+    assert events[0].user_id == 1
+
+    # Update product
+    product = InventoryService.update_product(
+        context=admin_context, session=session, product_id=product.id,
+        name="Audit Test Updated", sku="AUD-02", purchase_price=Decimal("10.00"), sale_price=Decimal("20.00"),
+        product_type=ProductType.PHYSICAL, vat_rate=Decimal("0.00"), brand_id=None, category_id=None
+    )
+
+    # Verify UPDATE audit event
+    events = session.query(AuditEvent).filter(AuditEvent.entity_name == "Product").order_by(AuditEvent.id).all()
+    assert len(events) == 2
+    assert events[1].action == "UPDATE"
+    assert events[1].before_values["sku"] == "AUD-01"
+    assert events[1].after_values["sku"] == "AUD-02"
 
 # --- Performance Smoke Test ---
 

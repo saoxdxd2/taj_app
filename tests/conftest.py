@@ -19,6 +19,12 @@ def session():
     from src.modules.sales.models import Invoice, InvoiceItem, Quotation, QuotationItem
     from src.modules.finance.models import FinancialJournalEntry, Expense
     from src.modules.audit.models import AuditEvent
+    import src.database.audit_listener
+    from src.core.session import CurrentSession
+    from src.core.context import RequestContext
+    
+    # Initialize CurrentSession so audit listeners don't fail
+    CurrentSession.initialize(RequestContext(user_id="1", username="admin", role="Administrator", permissions=set()))
     
     BaseModel.metadata.create_all(engine)
     

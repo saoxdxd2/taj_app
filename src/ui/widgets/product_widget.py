@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, 
-                               QPushButton, QTableWidget, QTableWidgetItem, 
+                               QPushButton, QTableView, 
                                QHeaderView, QMessageBox)
 from PySide6.QtCore import Qt
 from src.modules.inventory.services import InventoryService
 from src.ui.dialogs.product_dialog import ProductDialog
+from src.ui.models.product_model import ProductTableModel
 from src.modules.inventory.models import ProductState
 
 class ProductWidget(QWidget):
@@ -32,13 +33,12 @@ class ProductWidget(QWidget):
         layout.addLayout(toolbar)
 
         # Table
-        self.table = QTableWidget()
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["ID", "SKU", "Name", "Type", "State", "Purchase Price", "Sale Price"])
+        self.table = QTableView()
+        self.table_model = ProductTableModel(self)
+        self.table.setModel(self.table_model)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.table.setSelectionMode(QTableWidget.SingleSelection)
-        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.setSelectionBehavior(QTableView.SelectRows)
+        self.table.setSelectionMode(QTableView.SingleSelection)
         layout.addWidget(self.table)
         
         # Connections
@@ -50,30 +50,17 @@ class ProductWidget(QWidget):
 
     def refresh_table(self):
         from src.core.session import CurrentSession
-        self.table.setRowCount(0)
         try:
             products = InventoryService.get_all_products(CurrentSession.get_context())
-            for row, p in enumerate(products):
-                self.table.insertRow(row)
-                
-                item_id = QTableWidgetItem(str(p.id))
-                item_id.setData(Qt.UserRole, p.id) # Store hidden ID
-                
-                self.table.setItem(row, 0, item_id)
-                self.table.setItem(row, 1, QTableWidgetItem(p.sku))
-                self.table.setItem(row, 2, QTableWidgetItem(p.name))
-                self.table.setItem(row, 3, QTableWidgetItem(p.product_type.value))
-                self.table.setItem(row, 4, QTableWidgetItem(p.state.value))
-                self.table.setItem(row, 5, QTableWidgetItem(f"{p.purchase_price:.2f}"))
-                self.table.setItem(row, 6, QTableWidgetItem(f"{p.sale_price:.2f}"))
+            self.table_model.update_data(products)
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
     def get_selected_product_id(self):
-        selected = self.table.selectedItems()
-        if not selected:
+        selection = self.table.selectionModel()
+        if not selection or not selection.hasSelection():
             return None
-        return selected[0].data(Qt.UserRole)
+        return self.table_model.get_entity_id_at(selection.selectedRows()[0].row())
 
     def on_add_product(self):
         from src.core.session import CurrentSession

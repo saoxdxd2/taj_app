@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-                               QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QSplitter, QLabel)
+                               QTableView, QHeaderView, QMessageBox, QSplitter, QLabel)
 from PySide6.QtCore import Qt
 
 from src.core.session import CurrentSession
 from src.modules.sales.services import SalesService
 from src.ui.dialogs.sales_dialogs import NewInvoiceDialog, InvoiceAddItemDialog
+from src.ui.models.sales_model import InvoiceTableModel, InvoiceItemTableModel
 
 class SalesWidget(QWidget):
     def __init__(self, parent=None):
@@ -37,13 +38,13 @@ class SalesWidget(QWidget):
         top_layout.setContentsMargins(0, 0, 0, 0)
         top_layout.addWidget(QLabel("Invoices"))
         
-        self.invoice_table = QTableWidget()
-        self.invoice_table.setColumnCount(5)
-        self.invoice_table.setHorizontalHeaderLabels(["ID", "Invoice Number", "Customer ID", "State", "Total Amount"])
+        self.invoice_table = QTableView()
+        self.invoice_model = InvoiceTableModel(self)
+        self.invoice_table.setModel(self.invoice_model)
         self.invoice_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.invoice_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.invoice_table.setSelectionMode(QTableWidget.SingleSelection)
-        self.invoice_table.itemSelectionChanged.connect(self.on_invoice_selected)
+        self.invoice_table.setSelectionBehavior(QTableView.SelectRows)
+        self.invoice_table.setSelectionMode(QTableView.SingleSelection)
+        self.invoice_table.selectionModel().selectionChanged.connect(self.on_invoice_selected)
         top_layout.addWidget(self.invoice_table)
 
         # Bottom: Items Table
@@ -59,11 +60,11 @@ class SalesWidget(QWidget):
         item_btn_layout.addStretch()
         bottom_layout.addLayout(item_btn_layout)
 
-        self.item_table = QTableWidget()
-        self.item_table.setColumnCount(5)
-        self.item_table.setHorizontalHeaderLabels(["Item ID", "Product ID", "Quantity", "Unit Price", "VAT (%)"])
+        self.item_table = QTableView()
+        self.item_model = InvoiceItemTableModel(self)
+        self.item_table.setModel(self.item_model)
         self.item_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.item_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.item_table.setSelectionBehavior(QTableView.SelectRows)
         bottom_layout.addWidget(self.item_table)
 
         splitter.addWidget(top_widget)
@@ -78,30 +79,24 @@ class SalesWidget(QWidget):
         self.btn_add_item.clicked.connect(self.add_item)
 
     def load_data(self):
-        self.invoice_table.setRowCount(0)
-        self.item_table.setRowCount(0)
-        
+        self.item_model.update_data([])
         try:
             invoices = SalesService.get_all_invoices(self.context)
-            for row, invoice in enumerate(invoices):
-                self.invoice_table.insertRow(row)
-                self.invoice_table.setItem(row, 0, QTableWidgetItem(str(invoice.id)))
-                self.invoice_table.setItem(row, 1, QTableWidgetItem(invoice.invoice_number))
-                self.invoice_table.setItem(row, 2, QTableWidgetItem(str(invoice.customer_id)))
-                self.invoice_table.setItem(row, 3, QTableWidgetItem(invoice.state.value))
-                self.invoice_table.setItem(row, 4, QTableWidgetItem(str(invoice.total_amount)))
+            self.invoice_model.update_data(invoices)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load invoices: {str(e)}")
 
     def on_invoice_selected(self):
-        self.item_table.setRowCount(0)
-        selected = self.invoice_table.selectedItems()
-        if not selected:
+        self.item_model.update_data([])
+        selection = self.invoice_table.selectionModel()
+        if not selection or not selection.hasSelection():
             self.btn_add_item.setEnabled(False)
             return
 
-        invoice_id = int(self.invoice_table.item(selected[0].row(), 0).text())
-        state = self.invoice_table.item(selected[0].row(), 3).text()
+        row = selection.selectedRows()[0].row()
+        invoice_id = self.invoice_model.get_entity_id_at(row)
+        invoice_entity = self.invoice_model.get_entity_at(row)
+        state = invoice_entity.state.value if invoice_entity and invoice_entity.state else ""
         
         # Only allow adding items if state is Draft
         self.btn_add_item.setEnabled(state == "Draft")
@@ -109,13 +104,7 @@ class SalesWidget(QWidget):
         try:
             invoice = SalesService.get_invoice_with_items(self.context, invoice_id)
             if invoice and invoice.items:
-                for row, item in enumerate(invoice.items):
-                    self.item_table.insertRow(row)
-                    self.item_table.setItem(row, 0, QTableWidgetItem(str(item.id)))
-                    self.item_table.setItem(row, 1, QTableWidgetItem(str(item.product_id)))
-                    self.item_table.setItem(row, 2, QTableWidgetItem(str(item.quantity)))
-                    self.item_table.setItem(row, 3, QTableWidgetItem(str(item.unit_price)))
-                    self.item_table.setItem(row, 4, QTableWidgetItem(str(item.vat_rate)))
+                self.item_model.update_data(invoice.items)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load items: {str(e)}")
 
@@ -134,11 +123,12 @@ class SalesWidget(QWidget):
                 QMessageBox.critical(self, "Error", f"Failed to create draft: {str(e)}")
 
     def add_item(self):
-        selected = self.invoice_table.selectedItems()
-        if not selected:
+        selection = self.invoice_table.selectionModel()
+        if not selection or not selection.hasSelection():
             return
         
-        invoice_id = int(self.invoice_table.item(selected[0].row(), 0).text())
+        row = selection.selectedRows()[0].row()
+        invoice_id = self.invoice_model.get_entity_id_at(row)
 
         dialog = InvoiceAddItemDialog(self.context, parent=self)
         if dialog.exec():
@@ -155,21 +145,23 @@ class SalesWidget(QWidget):
                 self.load_data()
                 
                 # Reselect the invoice to show updated items
-                for i in range(self.invoice_table.rowCount()):
-                    if self.invoice_table.item(i, 0).text() == str(invoice_id):
+                for i in range(self.invoice_model.rowCount()):
+                    if self.invoice_model.get_entity_id_at(i) == invoice_id:
                         self.invoice_table.selectRow(i)
                         break
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to add item: {str(e)}")
 
     def validate_invoice(self):
-        selected = self.invoice_table.selectedItems()
-        if not selected:
+        selection = self.invoice_table.selectionModel()
+        if not selection or not selection.hasSelection():
             QMessageBox.warning(self, "Selection Required", "Please select an invoice to validate.")
             return
 
-        invoice_id = int(self.invoice_table.item(selected[0].row(), 0).text())
-        state = self.invoice_table.item(selected[0].row(), 3).text()
+        row = selection.selectedRows()[0].row()
+        invoice_id = self.invoice_model.get_entity_id_at(row)
+        invoice_entity = self.invoice_model.get_entity_at(row)
+        state = invoice_entity.state.value if invoice_entity and invoice_entity.state else ""
 
         if state != "Draft":
             QMessageBox.warning(self, "Invalid State", "Only Draft invoices can be validated.")

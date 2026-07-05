@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-                               QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QSplitter, QLabel)
+                               QTableView, QHeaderView, QMessageBox, QSplitter, QLabel)
 from PySide6.QtCore import Qt
 
 from src.core.session import CurrentSession
 from src.modules.purchasing.services import PurchasingService
 from src.ui.dialogs.purchase_dialogs import NewPurchaseDialog, PurchaseAddItemDialog
+from src.ui.models.purchase_model import PurchaseTableModel, PurchaseItemTableModel
 
 class PurchaseWidget(QWidget):
     def __init__(self, parent=None):
@@ -37,13 +38,13 @@ class PurchaseWidget(QWidget):
         top_layout.setContentsMargins(0, 0, 0, 0)
         top_layout.addWidget(QLabel("Purchases"))
         
-        self.purchase_table = QTableWidget()
-        self.purchase_table.setColumnCount(5)
-        self.purchase_table.setHorizontalHeaderLabels(["ID", "Reference", "Supplier ID", "State", "Total Amount"])
+        self.purchase_table = QTableView()
+        self.purchase_model = PurchaseTableModel(self)
+        self.purchase_table.setModel(self.purchase_model)
         self.purchase_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.purchase_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.purchase_table.setSelectionMode(QTableWidget.SingleSelection)
-        self.purchase_table.itemSelectionChanged.connect(self.on_purchase_selected)
+        self.purchase_table.setSelectionBehavior(QTableView.SelectRows)
+        self.purchase_table.setSelectionMode(QTableView.SingleSelection)
+        self.purchase_table.selectionModel().selectionChanged.connect(self.on_purchase_selected)
         top_layout.addWidget(self.purchase_table)
 
         # Bottom: Items Table
@@ -59,11 +60,11 @@ class PurchaseWidget(QWidget):
         item_btn_layout.addStretch()
         bottom_layout.addLayout(item_btn_layout)
 
-        self.item_table = QTableWidget()
-        self.item_table.setColumnCount(4)
-        self.item_table.setHorizontalHeaderLabels(["Item ID", "Product ID", "Quantity", "Unit Cost"])
+        self.item_table = QTableView()
+        self.item_model = PurchaseItemTableModel(self)
+        self.item_table.setModel(self.item_model)
         self.item_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.item_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.item_table.setSelectionBehavior(QTableView.SelectRows)
         bottom_layout.addWidget(self.item_table)
 
         splitter.addWidget(top_widget)
@@ -78,30 +79,25 @@ class PurchaseWidget(QWidget):
         self.btn_add_item.clicked.connect(self.add_item)
 
     def load_data(self):
-        self.purchase_table.setRowCount(0)
-        self.item_table.setRowCount(0)
-        
+        self.item_model.update_data([])
         try:
             purchases = PurchasingService.get_all_purchases(self.context)
-            for row, purchase in enumerate(purchases):
-                self.purchase_table.insertRow(row)
-                self.purchase_table.setItem(row, 0, QTableWidgetItem(str(purchase.id)))
-                self.purchase_table.setItem(row, 1, QTableWidgetItem(purchase.reference))
-                self.purchase_table.setItem(row, 2, QTableWidgetItem(str(purchase.supplier_id)))
-                self.purchase_table.setItem(row, 3, QTableWidgetItem(purchase.state.value))
-                self.purchase_table.setItem(row, 4, QTableWidgetItem(str(purchase.total_amount)))
+            self.purchase_model.update_data(purchases)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load purchases: {str(e)}")
 
     def on_purchase_selected(self):
-        self.item_table.setRowCount(0)
-        selected = self.purchase_table.selectedItems()
-        if not selected:
+        self.item_model.update_data([])
+        selection = self.purchase_table.selectionModel()
+        if not selection or not selection.hasSelection():
             self.btn_add_item.setEnabled(False)
             return
 
-        purchase_id = int(self.purchase_table.item(selected[0].row(), 0).text())
-        state = self.purchase_table.item(selected[0].row(), 3).text()
+        row = selection.selectedRows()[0].row()
+        purchase_id = self.purchase_model.get_entity_id_at(row)
+        purchase_entity = self.purchase_model.get_entity_at(row)
+        
+        state = purchase_entity.state.value if purchase_entity and purchase_entity.state else ""
         
         # Only allow adding items if state is Draft
         self.btn_add_item.setEnabled(state == "Draft")
@@ -109,12 +105,7 @@ class PurchaseWidget(QWidget):
         try:
             purchase = PurchasingService.get_purchase_with_items(self.context, purchase_id)
             if purchase and purchase.items:
-                for row, item in enumerate(purchase.items):
-                    self.item_table.insertRow(row)
-                    self.item_table.setItem(row, 0, QTableWidgetItem(str(item.id)))
-                    self.item_table.setItem(row, 1, QTableWidgetItem(str(item.product_id)))
-                    self.item_table.setItem(row, 2, QTableWidgetItem(str(item.quantity)))
-                    self.item_table.setItem(row, 3, QTableWidgetItem(str(item.unit_cost)))
+                self.item_model.update_data(purchase.items)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load items: {str(e)}")
 
@@ -133,11 +124,12 @@ class PurchaseWidget(QWidget):
                 QMessageBox.critical(self, "Error", f"Failed to create draft: {str(e)}")
 
     def add_item(self):
-        selected = self.purchase_table.selectedItems()
-        if not selected:
+        selection = self.purchase_table.selectionModel()
+        if not selection or not selection.hasSelection():
             return
         
-        purchase_id = int(self.purchase_table.item(selected[0].row(), 0).text())
+        row = selection.selectedRows()[0].row()
+        purchase_id = self.purchase_model.get_entity_id_at(row)
 
         dialog = PurchaseAddItemDialog(self.context, parent=self)
         if dialog.exec():
@@ -153,21 +145,23 @@ class PurchaseWidget(QWidget):
                 self.load_data()
                 
                 # Reselect the purchase to show updated items
-                for i in range(self.purchase_table.rowCount()):
-                    if self.purchase_table.item(i, 0).text() == str(purchase_id):
+                for i in range(self.purchase_model.rowCount()):
+                    if self.purchase_model.get_entity_id_at(i) == purchase_id:
                         self.purchase_table.selectRow(i)
                         break
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to add item: {str(e)}")
 
     def validate_purchase(self):
-        selected = self.purchase_table.selectedItems()
-        if not selected:
+        selection = self.purchase_table.selectionModel()
+        if not selection or not selection.hasSelection():
             QMessageBox.warning(self, "Selection Required", "Please select a purchase to validate.")
             return
 
-        purchase_id = int(self.purchase_table.item(selected[0].row(), 0).text())
-        state = self.purchase_table.item(selected[0].row(), 3).text()
+        row = selection.selectedRows()[0].row()
+        purchase_id = self.purchase_model.get_entity_id_at(row)
+        purchase_entity = self.purchase_model.get_entity_at(row)
+        state = purchase_entity.state.value if purchase_entity and purchase_entity.state else ""
 
         if state != "Draft":
             QMessageBox.warning(self, "Invalid State", "Only Draft purchases can be validated.")

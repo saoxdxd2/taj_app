@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, 
-                               QPushButton, QTableWidget, QTableWidgetItem, 
+                               QPushButton, QTableView, 
                                QHeaderView, QMessageBox)
 from PySide6.QtCore import Qt
 from src.modules.suppliers.services import SupplierService
 from src.ui.dialogs.supplier_dialog import SupplierDialog
+from src.ui.models.supplier_model import SupplierTableModel
 
 class SupplierWidget(QWidget):
     def __init__(self, parent=None):
@@ -29,13 +30,12 @@ class SupplierWidget(QWidget):
         layout.addLayout(toolbar)
 
         # Table
-        self.table = QTableWidget()
-        self.table.setColumnCount(6)
-        self.table.setHorizontalHeaderLabels(["ID", "Company Name", "Contact Name", "Email", "Phone", "Status"])
+        self.table = QTableView()
+        self.table_model = SupplierTableModel(self)
+        self.table.setModel(self.table_model)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.table.setSelectionMode(QTableWidget.SingleSelection)
-        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.setSelectionBehavior(QTableView.SelectRows)
+        self.table.setSelectionMode(QTableView.SingleSelection)
         layout.addWidget(self.table)
         
         # Connections
@@ -46,31 +46,17 @@ class SupplierWidget(QWidget):
 
     def refresh_table(self):
         from src.core.session import CurrentSession
-        self.table.setRowCount(0)
         try:
             suppliers = SupplierService.get_all_suppliers(CurrentSession.get_context())
-            for row, s in enumerate(suppliers):
-                self.table.insertRow(row)
-                
-                item_id = QTableWidgetItem(str(s.id))
-                item_id.setData(Qt.UserRole, s.id) # Store hidden ID
-                
-                self.table.setItem(row, 0, item_id)
-                self.table.setItem(row, 1, QTableWidgetItem(s.company_name or ""))
-                self.table.setItem(row, 2, QTableWidgetItem(s.contact_name or ""))
-                self.table.setItem(row, 3, QTableWidgetItem(s.email or ""))
-                self.table.setItem(row, 4, QTableWidgetItem(s.phone or ""))
-                
-                status = "Archived" if s.is_archived else "Active"
-                self.table.setItem(row, 5, QTableWidgetItem(status))
+            self.table_model.update_data(suppliers)
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
     def get_selected_supplier_id(self):
-        selected = self.table.selectedItems()
-        if not selected:
+        selection = self.table.selectionModel()
+        if not selection or not selection.hasSelection():
             return None
-        return selected[0].data(Qt.UserRole)
+        return self.table_model.get_entity_id_at(selection.selectedRows()[0].row())
 
     def on_add_supplier(self):
         from src.core.session import CurrentSession
