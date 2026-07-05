@@ -4,6 +4,7 @@ from src.modules.sales.models import Invoice, InvoiceItem, InvoiceState, Quotati
 from src.core.context import RequestContext
 from src.security.permissions import PermissionManager
 from src.modules.audit.services import AuditService
+from src.database.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ class SalesService:
     """
 
     @staticmethod
+    @transactional
     def get_all_invoices(context: RequestContext, session):
         """
         Retrieves all invoices.
@@ -21,6 +23,17 @@ class SalesService:
         return session.query(Invoice).all()
 
     @staticmethod
+    @transactional
+    def get_invoice_with_items(context: RequestContext, invoice_id: int, session=None):
+        """
+        Retrieves a single invoice by ID, eagerly loading its items.
+        """
+        PermissionManager.verify_permission(context, "Sales.Invoices.View")
+        from sqlalchemy.orm import joinedload
+        return session.query(Invoice).options(joinedload(Invoice.items)).filter(Invoice.id == invoice_id).first()
+
+    @staticmethod
+    @transactional
     def create_invoice_draft(context: RequestContext, session, invoice_number: str, customer_id: int) -> Invoice:
         """
         Creates a new invoice in Draft state.
@@ -36,17 +49,11 @@ class SalesService:
             total_amount=Decimal("0.00")
         )
         session.add(invoice)
-        session.flush()
-        
-        AuditService.record_event(
-            session=session, action="CREATE_INVOICE", entity_name="Invoice", entity_id=str(invoice.id),
-            after_values={"invoice_number": invoice_number, "customer_id": customer_id}, 
-            user_id=context.user_id, correlation_id=context.correlation_id
-        )
         logger.info(f"Created new draft invoice: {invoice_number} by {context.username}")
         return invoice
 
     @staticmethod
+    @transactional
     def add_item_to_invoice(context: RequestContext, session, invoice_id: int, product_id: int, 
                             quantity: int, unit_price: Decimal, vat_rate: Decimal) -> InvoiceItem:
         """
@@ -75,18 +82,11 @@ class SalesService:
         # Calculate line total including VAT
         line_total = (Decimal(quantity) * unit_price) * (Decimal("1") + (vat_rate / Decimal("100")))
         invoice.total_amount += line_total
-        session.flush()
-        
-        AuditService.record_event(
-            session=session, action="ADD_INVOICE_ITEM", entity_name="InvoiceItem", entity_id=str(item.id),
-            after_values={"product_id": product_id, "quantity": quantity, "unit_price": float(unit_price)}, 
-            user_id=context.user_id, correlation_id=context.correlation_id
-        )
-        
         logger.info(f"Added item to Invoice ID {invoice_id} by {context.username}.")
         return item
 
     @staticmethod
+    @transactional
     def validate_invoice(context: RequestContext, session, invoice_id: int) -> bool:
         """
         Transitions an invoice to Validated.

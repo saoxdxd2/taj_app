@@ -6,11 +6,10 @@ from src.modules.crm.services import CRMService
 from src.modules.inventory.services import InventoryService
 
 class NewInvoiceDialog(QDialog):
-    def __init__(self, context, session, parent=None):
+    def __init__(self, context, parent=None):
         super().__init__(parent)
         self.context = context
-        self.session = session
-        self.setWindowTitle("New Draft Invoice")
+        self.setWindowTitle("Create Invoice Draft")
         self.setup_ui()
 
     def setup_ui(self):
@@ -21,7 +20,7 @@ class NewInvoiceDialog(QDialog):
         self.customer_combo = QComboBox()
         
         # Populate customers
-        self.customers = CRMService.get_all_customers(self.context, self.session)
+        self.customers = CRMService.get_all_customers(context=self.context)
         for c in self.customers:
             if not c.is_archived:
                 self.customer_combo.addItem(c.company_name, userData=c.id)
@@ -53,11 +52,10 @@ class NewInvoiceDialog(QDialog):
         }
 
 class InvoiceAddItemDialog(QDialog):
-    def __init__(self, context, session, parent=None):
+    def __init__(self, context, parent=None):
         super().__init__(parent)
         self.context = context
-        self.session = session
-        self.setWindowTitle("Add Invoice Item")
+        self.setWindowTitle("Add Item to Invoice")
         self.setup_ui()
 
     def setup_ui(self):
@@ -78,7 +76,7 @@ class InvoiceAddItemDialog(QDialog):
         self.vat_rate_input.setValue(20.00) # Default VAT
         
         # Populate products
-        self.products = InventoryService.get_all_products(self.context, self.session)
+        self.products = InventoryService.get_all_products(context=self.context)
         for p in self.products:
             if p.state.value == "Active":
                 # Typically, only Active products are sold

@@ -29,7 +29,10 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.close()
 
 # Session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
+
+# Register the audit listener
+import src.database.audit_listener
 
 def get_session():
     """Dependency to provide a database session."""

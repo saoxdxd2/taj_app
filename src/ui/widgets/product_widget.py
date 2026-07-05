@@ -7,9 +7,8 @@ from src.ui.dialogs.product_dialog import ProductDialog
 from src.modules.inventory.models import ProductState
 
 class ProductWidget(QWidget):
-    def __init__(self, session_maker, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.session_maker = session_maker
         self.setup_ui()
         self.refresh_table()
 
@@ -52,8 +51,8 @@ class ProductWidget(QWidget):
     def refresh_table(self):
         from src.core.session import CurrentSession
         self.table.setRowCount(0)
-        with self.session_maker() as session:
-            products = InventoryService.get_all_products(CurrentSession.get_context(), session)
+        try:
+            products = InventoryService.get_all_products(CurrentSession.get_context())
             for row, p in enumerate(products):
                 self.table.insertRow(row)
                 
@@ -67,6 +66,8 @@ class ProductWidget(QWidget):
                 self.table.setItem(row, 4, QTableWidgetItem(p.state.value))
                 self.table.setItem(row, 5, QTableWidgetItem(f"{p.purchase_price:.2f}"))
                 self.table.setItem(row, 6, QTableWidgetItem(f"{p.sale_price:.2f}"))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
 
     def get_selected_product_id(self):
         selected = self.table.selectedItems()
@@ -76,20 +77,16 @@ class ProductWidget(QWidget):
 
     def on_add_product(self):
         from src.core.session import CurrentSession
-        with self.session_maker() as session:
-            dialog = ProductDialog(session, parent=self)
-            if dialog.exec():
-                data = dialog.get_data()
-                try:
-                    InventoryService.create_product(
-                        context=CurrentSession.get_context(),
-                        session=session,
-                        **data
-                    )
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", str(e))
+        dialog = ProductDialog(parent=self)
+        if dialog.exec():
+            data = dialog.get_data()
+            try:
+                InventoryService.create_product(
+                    context=CurrentSession.get_context(),
+                    **data
+                )
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
         self.refresh_table()
 
     def on_edit_product(self):
@@ -99,25 +96,19 @@ class ProductWidget(QWidget):
             QMessageBox.warning(self, "Warning", "Please select a product to edit.")
             return
             
-        with self.session_maker() as session:
-            # Need to get product
-            from src.modules.inventory.models import Product
-            product = session.query(Product).filter(Product.id == product_id).first()
-            
-            dialog = ProductDialog(session, product=product, parent=self)
+        try:
+            product = InventoryService.get_product_by_id(CurrentSession.get_context(), product_id)
+            dialog = ProductDialog(product=product, parent=self)
             if dialog.exec():
                 data = dialog.get_data()
-                try:
-                    InventoryService.update_product(
-                        context=CurrentSession.get_context(),
-                        session=session,
-                        product_id=product_id,
-                        **data
-                    )
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", str(e))
+                InventoryService.update_product(
+                    context=CurrentSession.get_context(),
+                    product_id=product_id,
+                    **data
+                )
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+            
         self.refresh_table()
 
     def on_activate_product(self):
@@ -127,13 +118,11 @@ class ProductWidget(QWidget):
             QMessageBox.warning(self, "Warning", "Please select a product to activate.")
             return
             
-        with self.session_maker() as session:
-            try:
-                InventoryService.activate_product(CurrentSession.get_context(), session, product_id)
-                session.commit()
-            except Exception as e:
-                session.rollback()
-                QMessageBox.critical(self, "Error", str(e))
+        try:
+            InventoryService.activate_product(CurrentSession.get_context(), product_id=product_id)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+            
         self.refresh_table()
 
     def on_archive_product(self):
@@ -146,11 +135,9 @@ class ProductWidget(QWidget):
         reply = QMessageBox.question(self, "Confirm Archive", "Are you sure you want to archive this product?",
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
-            with self.session_maker() as session:
-                try:
-                    InventoryService.archive_product(CurrentSession.get_context(), session, product_id)
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", str(e))
-            self.refresh_table()
+            try:
+                InventoryService.archive_product(CurrentSession.get_context(), product_id=product_id)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+                
+        self.refresh_table()

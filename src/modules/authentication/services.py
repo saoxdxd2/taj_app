@@ -3,6 +3,8 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from src.modules.authentication.models import User, Role
 
+from src.database.transaction import transactional
+
 # Initialize the Argon2id password hasher
 # Argon2id is the preferred algorithm defined in 15_SECURITY_STANDARD.md
 ph = PasswordHasher()
@@ -35,6 +37,7 @@ class AuthenticationService:
             return False
 
     @staticmethod
+    @transactional
     def authenticate_user(session, username: str, password: str) -> User | None:
         """
         Authenticate a user by username and password.
@@ -58,6 +61,7 @@ class AuthenticationService:
         return user
 
     @staticmethod
+    @transactional
     def login(session, username: str, password: str, workstation: str = "Unknown", language: str = "en") -> bool:
         """
         Authenticates a user and initializes CurrentSession.
@@ -72,19 +76,13 @@ class AuthenticationService:
         if not user:
             return False
 
-        # Resolve permissions based on role
-        permissions = set()
-        if user.role.value == "Administrator":
-            permissions.add(".*")
-        elif user.role.value == "Manager":
-            permissions.update(["Inventory.*", "CRM.*", "Suppliers.*", "Sales.*", "Purchasing.*"])
-        else:
-            permissions.update(["Inventory.Products.View", "CRM.Customers.View", "Sales.Invoices.Create"])
+        # Resolve permissions dynamically from the database
+        permissions = {p.name for p in user.role.permissions}
         
         context = RequestContext(
             user_id=str(user.id),
             username=user.username,
-            role=user.role.value,
+            role=user.role.name,
             permissions=permissions,
             correlation_id=str(uuid.uuid4()),
             workstation=workstation,

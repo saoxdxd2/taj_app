@@ -15,6 +15,7 @@ class BaseModel(DeclarativeBase):
     Provides standard audit fields and automatic table naming.
     """
     __abstract__ = True
+    __audit__ = True
 
     # Automatic table name generation
     @declared_attr

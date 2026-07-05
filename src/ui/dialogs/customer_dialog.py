@@ -2,9 +2,8 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QFormLayout,
                                QLineEdit, QDialogButtonBox, QMessageBox)
 
 class CustomerDialog(QDialog):
-    def __init__(self, session, customer=None, parent=None):
+    def __init__(self, customer=None, parent=None):
         super().__init__(parent)
-        self.session = session
         self.customer = customer
         self.setWindowTitle("Edit Customer" if customer else "Create Customer")
         

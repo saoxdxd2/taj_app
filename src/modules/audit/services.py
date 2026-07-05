@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, Dict, Any
 from src.modules.audit.models import AuditEvent
+from src.database.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -10,6 +11,7 @@ class AuditService:
     """
 
     @staticmethod
+    @transactional
     def record_event(session, action: str, entity_name: str, entity_id: Optional[str] = None,
                      before_values: Optional[Dict[str, Any]] = None,
                      after_values: Optional[Dict[str, Any]] = None,

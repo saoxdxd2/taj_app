@@ -2,9 +2,8 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QFormLayout,
                                QLineEdit, QDialogButtonBox, QMessageBox)
 
 class SupplierDialog(QDialog):
-    def __init__(self, session, supplier=None, parent=None):
+    def __init__(self, supplier=None, parent=None):
         super().__init__(parent)
-        self.session = session
         self.supplier = supplier
         self.setWindowTitle("Edit Supplier" if supplier else "Create Supplier")
         

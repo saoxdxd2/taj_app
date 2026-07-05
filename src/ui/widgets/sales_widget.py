@@ -7,9 +7,8 @@ from src.modules.sales.services import SalesService
 from src.ui.dialogs.sales_dialogs import NewInvoiceDialog, InvoiceAddItemDialog
 
 class SalesWidget(QWidget):
-    def __init__(self, session_maker, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.session_maker = session_maker
         self.context = CurrentSession.get_context()
         
         self.setup_ui()
@@ -82,18 +81,17 @@ class SalesWidget(QWidget):
         self.invoice_table.setRowCount(0)
         self.item_table.setRowCount(0)
         
-        with self.session_maker() as session:
-            try:
-                invoices = SalesService.get_all_invoices(self.context, session)
-                for row, invoice in enumerate(invoices):
-                    self.invoice_table.insertRow(row)
-                    self.invoice_table.setItem(row, 0, QTableWidgetItem(str(invoice.id)))
-                    self.invoice_table.setItem(row, 1, QTableWidgetItem(invoice.invoice_number))
-                    self.invoice_table.setItem(row, 2, QTableWidgetItem(str(invoice.customer_id)))
-                    self.invoice_table.setItem(row, 3, QTableWidgetItem(invoice.state.value))
-                    self.invoice_table.setItem(row, 4, QTableWidgetItem(str(invoice.total_amount)))
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Failed to load invoices: {str(e)}")
+        try:
+            invoices = SalesService.get_all_invoices(self.context)
+            for row, invoice in enumerate(invoices):
+                self.invoice_table.insertRow(row)
+                self.invoice_table.setItem(row, 0, QTableWidgetItem(str(invoice.id)))
+                self.invoice_table.setItem(row, 1, QTableWidgetItem(invoice.invoice_number))
+                self.invoice_table.setItem(row, 2, QTableWidgetItem(str(invoice.customer_id)))
+                self.invoice_table.setItem(row, 3, QTableWidgetItem(invoice.state.value))
+                self.invoice_table.setItem(row, 4, QTableWidgetItem(str(invoice.total_amount)))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load invoices: {str(e)}")
 
     def on_invoice_selected(self):
         self.item_table.setRowCount(0)
@@ -108,9 +106,8 @@ class SalesWidget(QWidget):
         # Only allow adding items if state is Draft
         self.btn_add_item.setEnabled(state == "Draft")
 
-        with self.session_maker() as session:
-            from src.modules.sales.models import Invoice
-            invoice = session.query(Invoice).filter(Invoice.id == invoice_id).first()
+        try:
+            invoice = SalesService.get_invoice_with_items(self.context, invoice_id)
             if invoice and invoice.items:
                 for row, item in enumerate(invoice.items):
                     self.item_table.insertRow(row)
@@ -119,23 +116,22 @@ class SalesWidget(QWidget):
                     self.item_table.setItem(row, 2, QTableWidgetItem(str(item.quantity)))
                     self.item_table.setItem(row, 3, QTableWidgetItem(str(item.unit_price)))
                     self.item_table.setItem(row, 4, QTableWidgetItem(str(item.vat_rate)))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load items: {str(e)}")
 
     def create_draft(self):
-        with self.session_maker() as session:
-            dialog = NewInvoiceDialog(self.context, session, self)
-            if dialog.exec() == QDialog.Accepted:
-                data = dialog.get_data()
-                try:
-                    SalesService.create_invoice_draft(
-                        self.context, session, 
-                        invoice_number=data["invoice_number"], 
-                        customer_id=data["customer_id"]
-                    )
-                    session.commit()
-                    self.load_data()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", f"Failed to create draft: {str(e)}")
+        dialog = NewInvoiceDialog(self.context, parent=self)
+        if dialog.exec():
+            data = dialog.get_data()
+            try:
+                SalesService.create_invoice_draft(
+                    self.context, 
+                    invoice_number=data["invoice_number"], 
+                    customer_id=data["customer_id"]
+                )
+                self.load_data()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to create draft: {str(e)}")
 
     def add_item(self):
         selected = self.invoice_table.selectedItems()
@@ -144,30 +140,27 @@ class SalesWidget(QWidget):
         
         invoice_id = int(self.invoice_table.item(selected[0].row(), 0).text())
 
-        with self.session_maker() as session:
-            dialog = InvoiceAddItemDialog(self.context, session, self)
-            if dialog.exec() == QDialog.Accepted:
-                data = dialog.get_data()
-                try:
-                    SalesService.add_item_to_invoice(
-                        self.context, session,
-                        invoice_id=invoice_id,
-                        product_id=data["product_id"],
-                        quantity=data["quantity"],
-                        unit_price=data["unit_price"],
-                        vat_rate=data["vat_rate"]
-                    )
-                    session.commit()
-                    self.load_data()
-                    
-                    # Reselect the invoice to show updated items
-                    for i in range(self.invoice_table.rowCount()):
-                        if self.invoice_table.item(i, 0).text() == str(invoice_id):
-                            self.invoice_table.selectRow(i)
-                            break
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", f"Failed to add item: {str(e)}")
+        dialog = InvoiceAddItemDialog(self.context, parent=self)
+        if dialog.exec():
+            data = dialog.get_data()
+            try:
+                SalesService.add_item_to_invoice(
+                    self.context,
+                    invoice_id=invoice_id,
+                    product_id=data["product_id"],
+                    quantity=data["quantity"],
+                    unit_price=data["unit_price"],
+                    vat_rate=data["vat_rate"]
+                )
+                self.load_data()
+                
+                # Reselect the invoice to show updated items
+                for i in range(self.invoice_table.rowCount()):
+                    if self.invoice_table.item(i, 0).text() == str(invoice_id):
+                        self.invoice_table.selectRow(i)
+                        break
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to add item: {str(e)}")
 
     def validate_invoice(self):
         selected = self.invoice_table.selectedItems()
@@ -186,16 +179,13 @@ class SalesWidget(QWidget):
                                      "Are you sure you want to validate this invoice? This will decrease stock and generate incoming financial entries.",
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
-            with self.session_maker() as session:
-                try:
-                    success = SalesService.validate_invoice(self.context, session, invoice_id)
-                    if success:
-                        session.commit()
-                        QMessageBox.information(self, "Success", "Invoice validated successfully.")
-                        self.load_data()
-                    else:
-                        QMessageBox.warning(self, "Warning", "Invoice could not be validated (may be empty).")
-                except Exception as e:
-                    session.rollback()
-                    # Wait, adjust_stock might raise ValueError("Insufficient stock")
-                    QMessageBox.critical(self, "Error", f"Failed to validate invoice: {str(e)}")
+            try:
+                success = SalesService.validate_invoice(self.context, invoice_id=invoice_id)
+                if success:
+                    QMessageBox.information(self, "Success", "Invoice validated successfully.")
+                    self.load_data()
+                else:
+                    QMessageBox.warning(self, "Warning", "Invoice could not be validated (may be empty).")
+            except Exception as e:
+                # Wait, adjust_stock might raise ValueError("Insufficient stock")
+                QMessageBox.critical(self, "Error", f"Failed to validate invoice: {str(e)}")

@@ -14,9 +14,8 @@ from src.ui.widgets.purchase_widget import PurchaseWidget
 from src.ui.widgets.sales_widget import SalesWidget
 
 class LoginDialog(QDialog):
-    def __init__(self, session_maker, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.session_maker = session_maker
         self.setWindowTitle("Taj ERP - Login")
         self.setup_ui()
 
@@ -42,18 +41,19 @@ class LoginDialog(QDialog):
         username = self.username_input.text().strip()
         password = self.password_input.text()
 
-        with self.session_maker() as session:
-            success = AuthenticationService.login(session, username, password)
+        try:
+            success = AuthenticationService.login(username=username, password=password)
             if success:
                 self.accept()
             else:
                 QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
+        except Exception as e:
+            QMessageBox.critical(self, "Login Error", f"An error occurred: {str(e)}")
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, session_maker):
+    def __init__(self):
         super().__init__()
-        self.session_maker = session_maker
         self.setWindowTitle("Taj ERP - Enterprise Dashboard")
         self.resize(1024, 768)
 
@@ -82,11 +82,11 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
 
         # Initialize widgets
-        self.product_widget = ProductWidget(self.session_maker)
-        self.customer_widget = CustomerWidget(self.session_maker)
-        self.supplier_widget = SupplierWidget(self.session_maker)
-        self.purchase_widget = PurchaseWidget(self.session_maker)
-        self.sales_widget = SalesWidget(self.session_maker)
+        self.product_widget = ProductWidget()
+        self.customer_widget = CustomerWidget()
+        self.supplier_widget = SupplierWidget()
+        self.purchase_widget = PurchaseWidget()
+        self.sales_widget = SalesWidget()
 
         self.stack.addWidget(self.product_widget)
         self.stack.addWidget(self.customer_widget)

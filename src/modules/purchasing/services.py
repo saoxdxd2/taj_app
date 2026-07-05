@@ -5,6 +5,7 @@ from src.modules.purchasing.models import Purchase, PurchaseItem, PurchaseState
 from src.core.context import RequestContext
 from src.security.permissions import PermissionManager
 from src.modules.audit.services import AuditService
+from src.database.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ class PurchasingService:
     """
 
     @staticmethod
+    @transactional
     def get_all_purchases(context: RequestContext, session):
         """
         Retrieves all purchases.
@@ -22,6 +24,17 @@ class PurchasingService:
         return session.query(Purchase).all()
 
     @staticmethod
+    @transactional
+    def get_purchase_with_items(context: RequestContext, purchase_id: int, session=None):
+        """
+        Retrieves a single purchase by ID, eagerly loading its items.
+        """
+        PermissionManager.verify_permission(context, "Purchasing.Purchases.View")
+        from sqlalchemy.orm import joinedload
+        return session.query(Purchase).options(joinedload(Purchase.items)).filter(Purchase.id == purchase_id).first()
+
+    @staticmethod
+    @transactional
     def create_purchase_draft(context: RequestContext, session, reference: str, supplier_id: int) -> Purchase:
         """
         Creates a new purchase order in Draft state.
@@ -37,17 +50,11 @@ class PurchasingService:
             total_amount=Decimal("0.00")
         )
         session.add(purchase)
-        session.flush()
-        
-        AuditService.record_event(
-            session=session, action="CREATE_PURCHASE", entity_name="Purchase", entity_id=str(purchase.id),
-            after_values={"reference": reference, "supplier_id": supplier_id}, user_id=context.user_id,
-            correlation_id=context.correlation_id
-        )
         logger.info(f"Created new draft purchase: {reference} by {context.username}")
         return purchase
 
     @staticmethod
+    @transactional
     def add_item_to_purchase(context: RequestContext, session, purchase_id: int, product_id: int, 
                              quantity: int, unit_cost: Decimal) -> PurchaseItem:
         """
@@ -77,18 +84,11 @@ class PurchasingService:
         
         # Update total
         purchase.total_amount += (Decimal(quantity) * unit_cost)
-        session.flush()
-        
-        AuditService.record_event(
-            session=session, action="ADD_PURCHASE_ITEM", entity_name="PurchaseItem", entity_id=str(item.id),
-            after_values={"product_id": product_id, "quantity": quantity, "unit_cost": float(unit_cost)}, 
-            user_id=context.user_id, correlation_id=context.correlation_id
-        )
-        
         logger.info(f"Added item (Product ID {product_id}, Qty {quantity}) to Purchase ID {purchase_id} by {context.username}.")
         return item
 
     @staticmethod
+    @transactional
     def validate_purchase(context: RequestContext, session, purchase_id: int) -> bool:
         """
         Transitions a purchase to Validated.

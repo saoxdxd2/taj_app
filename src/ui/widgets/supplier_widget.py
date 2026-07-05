@@ -6,9 +6,8 @@ from src.modules.suppliers.services import SupplierService
 from src.ui.dialogs.supplier_dialog import SupplierDialog
 
 class SupplierWidget(QWidget):
-    def __init__(self, session_maker, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.session_maker = session_maker
         self.setup_ui()
         self.refresh_table()
 
@@ -48,8 +47,8 @@ class SupplierWidget(QWidget):
     def refresh_table(self):
         from src.core.session import CurrentSession
         self.table.setRowCount(0)
-        with self.session_maker() as session:
-            suppliers = SupplierService.get_all_suppliers(CurrentSession.get_context(), session)
+        try:
+            suppliers = SupplierService.get_all_suppliers(CurrentSession.get_context())
             for row, s in enumerate(suppliers):
                 self.table.insertRow(row)
                 
@@ -64,6 +63,8 @@ class SupplierWidget(QWidget):
                 
                 status = "Archived" if s.is_archived else "Active"
                 self.table.setItem(row, 5, QTableWidgetItem(status))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
 
     def get_selected_supplier_id(self):
         selected = self.table.selectedItems()
@@ -73,20 +74,16 @@ class SupplierWidget(QWidget):
 
     def on_add_supplier(self):
         from src.core.session import CurrentSession
-        with self.session_maker() as session:
-            dialog = SupplierDialog(session, parent=self)
-            if dialog.exec():
-                data = dialog.get_data()
-                try:
-                    SupplierService.create_supplier(
-                        context=CurrentSession.get_context(),
-                        session=session,
-                        **data
-                    )
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", str(e))
+        dialog = SupplierDialog(parent=self)
+        if dialog.exec():
+            data = dialog.get_data()
+            try:
+                SupplierService.create_supplier(
+                    context=CurrentSession.get_context(),
+                    **data
+                )
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
         self.refresh_table()
 
     def on_edit_supplier(self):
@@ -96,24 +93,19 @@ class SupplierWidget(QWidget):
             QMessageBox.warning(self, "Warning", "Please select a supplier to edit.")
             return
             
-        with self.session_maker() as session:
-            from src.modules.suppliers.models import Supplier
-            supplier = session.query(Supplier).filter(Supplier.id == supplier_id).first()
-            
-            dialog = SupplierDialog(session, supplier=supplier, parent=self)
+        try:
+            supplier = SupplierService.get_supplier_by_id(CurrentSession.get_context(), supplier_id)
+            dialog = SupplierDialog(supplier=supplier, parent=self)
             if dialog.exec():
                 data = dialog.get_data()
-                try:
-                    SupplierService.update_supplier(
-                        context=CurrentSession.get_context(),
-                        session=session,
-                        supplier_id=supplier_id,
-                        **data
-                    )
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", str(e))
+                SupplierService.update_supplier(
+                    context=CurrentSession.get_context(),
+                    supplier_id=supplier_id,
+                    **data
+                )
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+            
         self.refresh_table()
 
     def on_archive_supplier(self):
@@ -126,11 +118,9 @@ class SupplierWidget(QWidget):
         reply = QMessageBox.question(self, "Confirm Archive", "Are you sure you want to archive this supplier?",
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
-            with self.session_maker() as session:
-                try:
-                    SupplierService.archive_supplier(CurrentSession.get_context(), session, supplier_id)
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", str(e))
-            self.refresh_table()
+            try:
+                SupplierService.archive_supplier(CurrentSession.get_context(), supplier_id=supplier_id)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+                
+        self.refresh_table()

@@ -6,11 +6,10 @@ from src.modules.suppliers.services import SupplierService
 from src.modules.inventory.services import InventoryService
 
 class NewPurchaseDialog(QDialog):
-    def __init__(self, context, session, parent=None):
+    def __init__(self, context, parent=None):
         super().__init__(parent)
         self.context = context
-        self.session = session
-        self.setWindowTitle("New Draft Purchase")
+        self.setWindowTitle("Create Purchase Draft")
         self.setup_ui()
 
     def setup_ui(self):
@@ -21,7 +20,7 @@ class NewPurchaseDialog(QDialog):
         self.supplier_combo = QComboBox()
         
         # Populate suppliers
-        self.suppliers = SupplierService.get_all_suppliers(self.context, self.session)
+        self.suppliers = SupplierService.get_all_suppliers(self.context)
         for s in self.suppliers:
             # Check if archived? We shouldn't buy from archived suppliers normally, 
             # but for simplicity we show all or just active.
@@ -55,11 +54,10 @@ class NewPurchaseDialog(QDialog):
         }
 
 class PurchaseAddItemDialog(QDialog):
-    def __init__(self, context, session, parent=None):
+    def __init__(self, context, parent=None):
         super().__init__(parent)
         self.context = context
-        self.session = session
-        self.setWindowTitle("Add Purchase Item")
+        self.setWindowTitle("Add Item to Purchase")
         self.setup_ui()
 
     def setup_ui(self):
@@ -75,7 +73,7 @@ class PurchaseAddItemDialog(QDialog):
         self.unit_cost_input.setDecimals(2)
         
         # Populate products
-        self.products = InventoryService.get_all_products(self.context, self.session)
+        self.products = InventoryService.get_all_products(context=self.context)
         for p in self.products:
             # We can buy draft or active products
             if p.state.value != "Archived":

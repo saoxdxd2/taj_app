@@ -2,6 +2,7 @@ import logging
 from decimal import Decimal
 from typing import Optional
 from src.modules.finance.models import FinancialJournalEntry, TransactionType, Expense, ExpenseCategory
+from src.database.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +12,7 @@ class FinanceService:
     """
 
     @staticmethod
+    @transactional
     def create_journal_entry(session, transaction_type: TransactionType, reference_id: str, 
                              description: str, amount: Decimal, user_id: Optional[int] = None) -> FinancialJournalEntry:
         """
@@ -29,6 +31,7 @@ class FinanceService:
         return entry
 
     @staticmethod
+    @transactional
     def reverse_journal_entry(session, original_entry_id: int, reversal_reference: str, user_id: Optional[int] = None) -> FinancialJournalEntry:
         """
         Reverses a journal entry by creating a counter-entry. 
@@ -61,6 +64,7 @@ class FinanceService:
         return counter_entry
 
     @staticmethod
+    @transactional
     def record_expense(session, reference: str, description: str, amount: Decimal, 
                        category: ExpenseCategory = ExpenseCategory.OTHER, 
                        user_id: Optional[int] = None) -> Expense:

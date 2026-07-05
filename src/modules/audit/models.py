@@ -9,6 +9,8 @@ class AuditEvent(BaseModel):
     Represents an immutable record of a business or security event.
     Must never be edited or deleted.
     """
+    __audit__ = False
+
     action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     entity_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     entity_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)

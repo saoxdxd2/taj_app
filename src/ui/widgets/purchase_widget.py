@@ -7,9 +7,8 @@ from src.modules.purchasing.services import PurchasingService
 from src.ui.dialogs.purchase_dialogs import NewPurchaseDialog, PurchaseAddItemDialog
 
 class PurchaseWidget(QWidget):
-    def __init__(self, session_maker, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.session_maker = session_maker
         self.context = CurrentSession.get_context()
         
         self.setup_ui()
@@ -82,18 +81,17 @@ class PurchaseWidget(QWidget):
         self.purchase_table.setRowCount(0)
         self.item_table.setRowCount(0)
         
-        with self.session_maker() as session:
-            try:
-                purchases = PurchasingService.get_all_purchases(self.context, session)
-                for row, purchase in enumerate(purchases):
-                    self.purchase_table.insertRow(row)
-                    self.purchase_table.setItem(row, 0, QTableWidgetItem(str(purchase.id)))
-                    self.purchase_table.setItem(row, 1, QTableWidgetItem(purchase.reference))
-                    self.purchase_table.setItem(row, 2, QTableWidgetItem(str(purchase.supplier_id)))
-                    self.purchase_table.setItem(row, 3, QTableWidgetItem(purchase.state.value))
-                    self.purchase_table.setItem(row, 4, QTableWidgetItem(str(purchase.total_amount)))
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Failed to load purchases: {str(e)}")
+        try:
+            purchases = PurchasingService.get_all_purchases(self.context)
+            for row, purchase in enumerate(purchases):
+                self.purchase_table.insertRow(row)
+                self.purchase_table.setItem(row, 0, QTableWidgetItem(str(purchase.id)))
+                self.purchase_table.setItem(row, 1, QTableWidgetItem(purchase.reference))
+                self.purchase_table.setItem(row, 2, QTableWidgetItem(str(purchase.supplier_id)))
+                self.purchase_table.setItem(row, 3, QTableWidgetItem(purchase.state.value))
+                self.purchase_table.setItem(row, 4, QTableWidgetItem(str(purchase.total_amount)))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load purchases: {str(e)}")
 
     def on_purchase_selected(self):
         self.item_table.setRowCount(0)
@@ -108,10 +106,8 @@ class PurchaseWidget(QWidget):
         # Only allow adding items if state is Draft
         self.btn_add_item.setEnabled(state == "Draft")
 
-        with self.session_maker() as session:
-            # Re-fetch purchase to get items (since session is isolated)
-            from src.modules.purchasing.models import Purchase
-            purchase = session.query(Purchase).filter(Purchase.id == purchase_id).first()
+        try:
+            purchase = PurchasingService.get_purchase_with_items(self.context, purchase_id)
             if purchase and purchase.items:
                 for row, item in enumerate(purchase.items):
                     self.item_table.insertRow(row)
@@ -119,23 +115,22 @@ class PurchaseWidget(QWidget):
                     self.item_table.setItem(row, 1, QTableWidgetItem(str(item.product_id)))
                     self.item_table.setItem(row, 2, QTableWidgetItem(str(item.quantity)))
                     self.item_table.setItem(row, 3, QTableWidgetItem(str(item.unit_cost)))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load items: {str(e)}")
 
     def create_draft(self):
-        with self.session_maker() as session:
-            dialog = NewPurchaseDialog(self.context, session, self)
-            if dialog.exec() == QDialog.Accepted:
-                data = dialog.get_data()
-                try:
-                    PurchasingService.create_purchase_draft(
-                        self.context, session, 
-                        reference=data["reference"], 
-                        supplier_id=data["supplier_id"]
-                    )
-                    session.commit()
-                    self.load_data()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", f"Failed to create draft: {str(e)}")
+        dialog = NewPurchaseDialog(self.context, parent=self)
+        if dialog.exec():
+            data = dialog.get_data()
+            try:
+                PurchasingService.create_purchase_draft(
+                    self.context, 
+                    reference=data["reference"], 
+                    supplier_id=data["supplier_id"]
+                )
+                self.load_data()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to create draft: {str(e)}")
 
     def add_item(self):
         selected = self.purchase_table.selectedItems()
@@ -144,29 +139,26 @@ class PurchaseWidget(QWidget):
         
         purchase_id = int(self.purchase_table.item(selected[0].row(), 0).text())
 
-        with self.session_maker() as session:
-            dialog = PurchaseAddItemDialog(self.context, session, self)
-            if dialog.exec() == QDialog.Accepted:
-                data = dialog.get_data()
-                try:
-                    PurchasingService.add_item_to_purchase(
-                        self.context, session,
-                        purchase_id=purchase_id,
-                        product_id=data["product_id"],
-                        quantity=data["quantity"],
-                        unit_cost=data["unit_cost"]
-                    )
-                    session.commit()
-                    self.load_data()
-                    
-                    # Reselect the purchase to show updated items
-                    for i in range(self.purchase_table.rowCount()):
-                        if self.purchase_table.item(i, 0).text() == str(purchase_id):
-                            self.purchase_table.selectRow(i)
-                            break
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", f"Failed to add item: {str(e)}")
+        dialog = PurchaseAddItemDialog(self.context, parent=self)
+        if dialog.exec():
+            data = dialog.get_data()
+            try:
+                PurchasingService.add_item_to_purchase(
+                    self.context,
+                    purchase_id=purchase_id,
+                    product_id=data["product_id"],
+                    quantity=data["quantity"],
+                    unit_cost=data["unit_cost"]
+                )
+                self.load_data()
+                
+                # Reselect the purchase to show updated items
+                for i in range(self.purchase_table.rowCount()):
+                    if self.purchase_table.item(i, 0).text() == str(purchase_id):
+                        self.purchase_table.selectRow(i)
+                        break
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to add item: {str(e)}")
 
     def validate_purchase(self):
         selected = self.purchase_table.selectedItems()
@@ -185,15 +177,12 @@ class PurchaseWidget(QWidget):
                                      "Are you sure you want to validate this purchase? This will update stock and generate financial entries.",
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
-            with self.session_maker() as session:
-                try:
-                    success = PurchasingService.validate_purchase(self.context, session, purchase_id)
-                    if success:
-                        session.commit()
-                        QMessageBox.information(self, "Success", "Purchase validated successfully.")
-                        self.load_data()
-                    else:
-                        QMessageBox.warning(self, "Warning", "Purchase could not be validated (may be empty).")
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", f"Failed to validate purchase: {str(e)}")
+            try:
+                success = PurchasingService.validate_purchase(self.context, purchase_id=purchase_id)
+                if success:
+                    QMessageBox.information(self, "Success", "Purchase validated successfully.")
+                    self.load_data()
+                else:
+                    QMessageBox.warning(self, "Warning", "Purchase could not be validated (may be empty).")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to validate purchase: {str(e)}")

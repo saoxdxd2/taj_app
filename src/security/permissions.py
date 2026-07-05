@@ -39,26 +39,3 @@ class PermissionManager:
                        f"attempted to access {required_permission} without permission.")
         raise AccessDenied(f"Access Denied: Missing permission '{required_permission}'")
 
-    @staticmethod
-    def get_role_permissions(role: str) -> set[str]:
-        """
-        Pre-defined roles mapped to permission sets.
-        """
-        roles = {
-            "Administrator": {"Everything"},
-            "Inventory Employee": {"Inventory.*"},
-            "Sales Employee": {"Sales.*", "CRM.*"},
-            "Purchasing Employee": {"Purchasing.*", "Suppliers.*"},
-            "Manager": {
-                "Inventory.View",
-                "Inventory.Export",
-                "Sales.View",
-                "Sales.Export",
-                "Purchasing.View",
-                "CRM.View",
-                "Suppliers.View",
-                "Finance.View",
-                "Audit.View"
-            }
-        }
-        return roles.get(role, set())

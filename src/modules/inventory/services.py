@@ -5,6 +5,7 @@ from src.modules.inventory.models import Product, ProductState, ProductType
 from src.core.context import RequestContext
 from src.security.permissions import PermissionManager
 from src.modules.audit.services import AuditService
+from src.database.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -14,18 +15,21 @@ class InventoryService:
     """
 
     @staticmethod
-    def get_all_brands(context: RequestContext, session):
+    @transactional
+    def get_all_brands(context: RequestContext, session=None):
         PermissionManager.verify_permission(context, "Inventory.Brands.View")
         from src.modules.inventory.models import Brand
         return session.query(Brand).all()
 
     @staticmethod
+    @transactional
     def get_all_categories(context: RequestContext, session):
         PermissionManager.verify_permission(context, "Inventory.Categories.View")
         from src.modules.inventory.models import Category
         return session.query(Category).all()
 
     @staticmethod
+    @transactional
     def get_all_products(context: RequestContext, session):
         """
         Retrieves all products, including their brand and category relationships.
@@ -34,6 +38,16 @@ class InventoryService:
         return session.query(Product).all()
 
     @staticmethod
+    @transactional
+    def get_product_by_id(context: RequestContext, product_id: int, session=None):
+        """
+        Retrieves a single product by ID.
+        """
+        PermissionManager.verify_permission(context, "Inventory.Products.View")
+        return session.query(Product).filter(Product.id == product_id).first()
+
+    @staticmethod
+    @transactional
     def update_product(context: RequestContext, session, product_id: int, name: str, sku: str, 
                        product_type: ProductType, purchase_price: Decimal, 
                        sale_price: Decimal, vat_rate: Decimal, 
@@ -70,22 +84,11 @@ class InventoryService:
         product.category_id = category_id
         
         session.flush() # flush to generate updates before audit
-        
-        after_values = {
-            "name": product.name, "sku": product.sku, "purchase_price": float(product.purchase_price),
-            "sale_price": float(product.sale_price)
-        }
-        
-        AuditService.record_event(
-            session=session, action="UPDATE_PRODUCT", entity_name="Product", entity_id=str(product.id),
-            before_values=before_values, after_values=after_values, user_id=context.user_id,
-            correlation_id=context.correlation_id
-        )
-        
         logger.info(f"Updated product: {sku} - {name} by {context.username}")
         return product
 
     @staticmethod
+    @transactional
     def create_product(context: RequestContext, session, name: str, sku: str, 
                        product_type: ProductType = ProductType.PHYSICAL,
                        purchase_price: Decimal = Decimal("0.00"),
@@ -123,17 +126,11 @@ class InventoryService:
         )
         session.add(product)
         session.flush() # Flush to get ID
-        
-        AuditService.record_event(
-            session=session, action="CREATE_PRODUCT", entity_name="Product", entity_id=str(product.id),
-            after_values={"sku": sku, "name": name}, user_id=context.user_id,
-            correlation_id=context.correlation_id
-        )
-        
         logger.info(f"Created new draft product: {sku} - {name} by {context.username}")
         return product
 
     @staticmethod
+    @transactional
     def activate_product(context: RequestContext, session, product_id: int) -> bool:
         """
         Transitions a product from Draft to Active.
@@ -147,18 +144,12 @@ class InventoryService:
             logger.warning(f"Product {product.sku} is not in Draft state.")
             return False
             
-        before = product.state.value
         product.state = ProductState.ACTIVE
-        
-        AuditService.record_event(
-            session=session, action="ACTIVATE_PRODUCT", entity_name="Product", entity_id=str(product.id),
-            before_values={"state": before}, after_values={"state": product.state.value}, 
-            user_id=context.user_id, correlation_id=context.correlation_id
-        )
         logger.info(f"Activated product: {product.sku} by {context.username}")
         return True
 
     @staticmethod
+    @transactional
     def archive_product(context: RequestContext, session, product_id: int) -> bool:
         """
         Transitions a product to Archived.
@@ -169,18 +160,12 @@ class InventoryService:
         if not product:
             return False
             
-        before = product.state.value
         product.state = ProductState.ARCHIVED
-        
-        AuditService.record_event(
-            session=session, action="ARCHIVE_PRODUCT", entity_name="Product", entity_id=str(product.id),
-            before_values={"state": before}, after_values={"state": product.state.value}, 
-            user_id=context.user_id, correlation_id=context.correlation_id
-        )
         logger.info(f"Archived product: {product.sku} by {context.username}")
         return True
 
     @staticmethod
+    @transactional
     def adjust_stock(context: RequestContext, session, product_id: int, quantity_change: int, 
                      movement_type: str, reference: str, enforce_non_negative: bool = True) -> int:
         """
@@ -218,13 +203,5 @@ class InventoryService:
             reference=reference
         )
         session.add(movement)
-        
-        AuditService.record_event(
-            session=session, action="ADJUST_STOCK", entity_name="StockLevel", entity_id=str(level.id),
-            before_values={"quantity": level.quantity - quantity_change}, 
-            after_values={"quantity": new_quantity}, 
-            user_id=context.user_id, correlation_id=context.correlation_id
-        )
-        
         logger.info(f"Adjusted stock for Product ID {product_id} by {quantity_change}. Ref: {reference} by {context.username}")
         return new_quantity

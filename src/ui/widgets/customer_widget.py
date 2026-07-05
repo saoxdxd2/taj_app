@@ -6,9 +6,8 @@ from src.modules.crm.services import CRMService
 from src.ui.dialogs.customer_dialog import CustomerDialog
 
 class CustomerWidget(QWidget):
-    def __init__(self, session_maker, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.session_maker = session_maker
         self.setup_ui()
         self.refresh_table()
 
@@ -48,8 +47,8 @@ class CustomerWidget(QWidget):
     def refresh_table(self):
         from src.core.session import CurrentSession
         self.table.setRowCount(0)
-        with self.session_maker() as session:
-            customers = CRMService.get_all_customers(CurrentSession.get_context(), session)
+        try:
+            customers = CRMService.get_all_customers(CurrentSession.get_context())
             for row, c in enumerate(customers):
                 self.table.insertRow(row)
                 
@@ -64,6 +63,8 @@ class CustomerWidget(QWidget):
                 
                 status = "Archived" if c.is_archived else "Active"
                 self.table.setItem(row, 5, QTableWidgetItem(status))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
 
     def get_selected_customer_id(self):
         selected = self.table.selectedItems()
@@ -73,20 +74,16 @@ class CustomerWidget(QWidget):
 
     def on_add_customer(self):
         from src.core.session import CurrentSession
-        with self.session_maker() as session:
-            dialog = CustomerDialog(session, parent=self)
-            if dialog.exec():
-                data = dialog.get_data()
-                try:
-                    CRMService.create_customer(
-                        context=CurrentSession.get_context(),
-                        session=session,
-                        **data
-                    )
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", str(e))
+        dialog = CustomerDialog(parent=self)
+        if dialog.exec():
+            data = dialog.get_data()
+            try:
+                CRMService.create_customer(
+                    context=CurrentSession.get_context(),
+                    **data
+                )
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
         self.refresh_table()
 
     def on_edit_customer(self):
@@ -96,24 +93,21 @@ class CustomerWidget(QWidget):
             QMessageBox.warning(self, "Warning", "Please select a customer to edit.")
             return
             
-        with self.session_maker() as session:
-            from src.modules.crm.models import Customer
-            customer = session.query(Customer).filter(Customer.id == customer_id).first()
-            
-            dialog = CustomerDialog(session, customer=customer, parent=self)
+        try:
+            # Reusing get_all_customers to find the specific customer to avoid adding a new method
+            # if we don't strictly have to, though adding it is better. I will add get_customer_by_id later.
+            customer = CRMService.get_customer_by_id(CurrentSession.get_context(), customer_id)
+            dialog = CustomerDialog(customer=customer, parent=self)
             if dialog.exec():
                 data = dialog.get_data()
-                try:
-                    CRMService.update_customer(
-                        context=CurrentSession.get_context(),
-                        session=session,
-                        customer_id=customer_id,
-                        **data
-                    )
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", str(e))
+                CRMService.update_customer(
+                    context=CurrentSession.get_context(),
+                    customer_id=customer_id,
+                    **data
+                )
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+            
         self.refresh_table()
 
     def on_archive_customer(self):
@@ -126,11 +120,9 @@ class CustomerWidget(QWidget):
         reply = QMessageBox.question(self, "Confirm Archive", "Are you sure you want to archive this customer?",
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
-            with self.session_maker() as session:
-                try:
-                    CRMService.archive_customer(CurrentSession.get_context(), session, customer_id)
-                    session.commit()
-                except Exception as e:
-                    session.rollback()
-                    QMessageBox.critical(self, "Error", str(e))
-            self.refresh_table()
+            try:
+                CRMService.archive_customer(CurrentSession.get_context(), customer_id=customer_id)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+                
+        self.refresh_table()

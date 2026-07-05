@@ -5,9 +5,8 @@ from src.modules.inventory.models import ProductType, ProductState
 from decimal import Decimal
 
 class ProductDialog(QDialog):
-    def __init__(self, session, product=None, parent=None):
+    def __init__(self, product=None, parent=None):
         super().__init__(parent)
-        self.session = session
         self.product = product
         self.setWindowTitle("Edit Product" if product else "Create Product")
         
@@ -40,8 +39,10 @@ class ProductDialog(QDialog):
 
         # Simplified: Brands and Categories could be combo boxes populated from DB
         from src.modules.inventory.services import InventoryService
-        self.brands = InventoryService.get_all_brands(self.session)
-        self.categories = InventoryService.get_all_categories(self.session)
+        from src.core.session import CurrentSession
+        context = CurrentSession.get_context()
+        self.brands = InventoryService.get_all_brands(context=context)
+        self.categories = InventoryService.get_all_categories(context=context)
         
         self.brand_combo = QComboBox()
         self.brand_combo.addItem("None", None)
