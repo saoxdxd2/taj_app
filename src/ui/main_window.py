@@ -12,6 +12,7 @@ from src.ui.widgets.customer_widget import CustomerWidget
 from src.ui.widgets.supplier_widget import SupplierWidget
 from src.ui.widgets.purchase_widget import PurchaseWidget
 from src.ui.widgets.sales_widget import SalesWidget
+from src.ui.widgets.settings_widget import SettingsWidget
 
 class LoginDialog(QDialog):
     def __init__(self, parent=None):
@@ -74,7 +75,8 @@ class MainWindow(QMainWindow):
             "CRM",
             "Suppliers",
             "Purchasing",
-            "Sales"
+            "Sales",
+            "Settings"
         ]
         self.sidebar.addItems(nav_items)
 
@@ -87,12 +89,14 @@ class MainWindow(QMainWindow):
         self.supplier_widget = SupplierWidget()
         self.purchase_widget = PurchaseWidget()
         self.sales_widget = SalesWidget()
+        self.settings_widget = SettingsWidget()
 
         self.stack.addWidget(self.product_widget)
         self.stack.addWidget(self.customer_widget)
         self.stack.addWidget(self.supplier_widget)
         self.stack.addWidget(self.purchase_widget)
         self.stack.addWidget(self.sales_widget)
+        self.stack.addWidget(self.settings_widget)
 
         layout.addWidget(self.sidebar)
         layout.addWidget(self.stack)

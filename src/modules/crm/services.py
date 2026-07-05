@@ -15,12 +15,18 @@ class CRMService:
 
     @staticmethod
     @transactional
-    def get_all_customers(context: RequestContext, session):
+    def get_all_customers(context: RequestContext, session, limit: int = 100, offset: int = 0):
         """
-        Retrieves all customers.
+        Retrieves customers with pagination.
         """
         PermissionManager.verify_permission(context, "CRM.Customers.View")
-        return session.query(Customer).all()
+        return session.query(Customer).order_by(Customer.id.desc()).limit(limit).offset(offset).all()
+
+    @staticmethod
+    @transactional
+    def count_all_customers(context: RequestContext, session) -> int:
+        PermissionManager.verify_permission(context, "CRM.Customers.View")
+        return session.query(Customer).count()
 
     @staticmethod
     @transactional

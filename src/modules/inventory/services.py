@@ -30,12 +30,18 @@ class InventoryService:
 
     @staticmethod
     @transactional
-    def get_all_products(context: RequestContext, session):
+    def get_all_products(context: RequestContext, session, limit: int = 100, offset: int = 0):
         """
-        Retrieves all products, including their brand and category relationships.
+        Retrieves products with pagination.
         """
         PermissionManager.verify_permission(context, "Inventory.Products.View")
-        return session.query(Product).all()
+        return session.query(Product).order_by(Product.id.desc()).limit(limit).offset(offset).all()
+
+    @staticmethod
+    @transactional
+    def count_all_products(context: RequestContext, session) -> int:
+        PermissionManager.verify_permission(context, "Inventory.Products.View")
+        return session.query(Product).count()
 
     @staticmethod
     @transactional

@@ -23,12 +23,14 @@ class ProductWidget(QWidget):
         self.btn_edit = QPushButton("Edit")
         self.btn_activate = QPushButton("Activate")
         self.btn_archive = QPushButton("Archive")
+        self.btn_export_csv = QPushButton("Export CSV")
         
         toolbar.addWidget(self.btn_refresh)
         toolbar.addWidget(self.btn_add)
         toolbar.addWidget(self.btn_edit)
         toolbar.addWidget(self.btn_activate)
         toolbar.addWidget(self.btn_archive)
+        toolbar.addWidget(self.btn_export_csv)
         toolbar.addStretch()
         layout.addLayout(toolbar)
 
@@ -41,17 +43,45 @@ class ProductWidget(QWidget):
         self.table.setSelectionMode(QTableView.SingleSelection)
         layout.addWidget(self.table)
         
+        # Pagination
+        from src.ui.widgets.pagination_widget import PaginationWidget
+        self.pagination = PaginationWidget(limit=50)
+        self.pagination.page_changed.connect(self._load_page)
+        layout.addWidget(self.pagination)
+        
         # Connections
         self.btn_refresh.clicked.connect(self.refresh_table)
         self.btn_add.clicked.connect(self.on_add_product)
         self.btn_edit.clicked.connect(self.on_edit_product)
         self.btn_activate.clicked.connect(self.on_activate_product)
         self.btn_archive.clicked.connect(self.on_archive_product)
+        self.btn_export_csv.clicked.connect(self.export_csv)
+
+    def export_csv(self):
+        import os
+        from PySide6.QtWidgets import QMessageBox
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+        if not os.path.exists(desktop_path) or not os.path.isdir(desktop_path):
+            desktop_path = os.path.expanduser("~")
+        filepath = os.path.join(desktop_path, "Products_Export.csv")
+        try:
+            self.table_model.export_to_csv(filepath)
+            QMessageBox.information(self, "Export Successful", f"Data exported to:\n{filepath}")
+        except Exception as e:
+            QMessageBox.critical(self, "Export Failed", f"Failed to export CSV: {str(e)}")
 
     def refresh_table(self):
+        self.pagination.reset()
+
+    def _load_page(self, limit: int, offset: int):
         from src.core.session import CurrentSession
         try:
-            products = InventoryService.get_all_products(CurrentSession.get_context())
+            total = InventoryService.count_all_products(CurrentSession.get_context())
+            self.pagination.update_state(total)
+            
+            products = InventoryService.get_all_products(
+                CurrentSession.get_context(), limit=limit, offset=offset
+            )
             self.table_model.update_data(products)
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))

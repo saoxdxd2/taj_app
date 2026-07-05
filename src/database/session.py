@@ -2,13 +2,8 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# Define database path inside the 'data/' directory
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DATA_DIR = BASE_DIR / "data"
-# Ensure the data directory exists
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+from src.core.paths import DB_PATH
 
-DB_PATH = DATA_DIR / "taj_app.db"
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 # Engine with SQLite specific foreign key constraint enforcement

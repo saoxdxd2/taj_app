@@ -38,6 +38,12 @@ class CustomerWidget(QWidget):
         self.table.setSelectionMode(QTableView.SingleSelection)
         layout.addWidget(self.table)
         
+        # Pagination
+        from src.ui.widgets.pagination_widget import PaginationWidget
+        self.pagination = PaginationWidget(limit=50)
+        self.pagination.page_changed.connect(self._load_page)
+        layout.addWidget(self.pagination)
+        
         # Connections
         self.btn_refresh.clicked.connect(self.refresh_table)
         self.btn_add.clicked.connect(self.on_add_customer)
@@ -45,9 +51,17 @@ class CustomerWidget(QWidget):
         self.btn_archive.clicked.connect(self.on_archive_customer)
 
     def refresh_table(self):
+        self.pagination.reset()
+
+    def _load_page(self, limit: int, offset: int):
         from src.core.session import CurrentSession
         try:
-            customers = CRMService.get_all_customers(CurrentSession.get_context())
+            total = CRMService.count_all_customers(CurrentSession.get_context())
+            self.pagination.update_state(total)
+            
+            customers = CRMService.get_all_customers(
+                CurrentSession.get_context(), limit=limit, offset=offset
+            )
             self.table_model.update_data(customers)
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))

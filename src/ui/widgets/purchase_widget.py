@@ -47,6 +47,12 @@ class PurchaseWidget(QWidget):
         self.purchase_table.selectionModel().selectionChanged.connect(self.on_purchase_selected)
         top_layout.addWidget(self.purchase_table)
 
+        # Pagination
+        from src.ui.widgets.pagination_widget import PaginationWidget
+        self.pagination = PaginationWidget(limit=50)
+        self.pagination.page_changed.connect(self._load_page)
+        top_layout.addWidget(self.pagination)
+
         # Bottom: Items Table
         bottom_widget = QWidget()
         bottom_layout = QVBoxLayout(bottom_widget)
@@ -80,8 +86,17 @@ class PurchaseWidget(QWidget):
 
     def load_data(self):
         self.item_model.update_data([])
+        self.pagination.reset()
+
+    def _load_page(self, limit: int, offset: int):
+        self.item_model.update_data([])
         try:
-            purchases = PurchasingService.get_all_purchases(self.context)
+            total = PurchasingService.count_all_purchases(self.context)
+            self.pagination.update_state(total)
+            
+            purchases = PurchasingService.get_all_purchases(
+                self.context, limit=limit, offset=offset
+            )
             self.purchase_model.update_data(purchases)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load purchases: {str(e)}")
@@ -171,6 +186,7 @@ class PurchaseWidget(QWidget):
                                      "Are you sure you want to validate this purchase? This will update stock and generate financial entries.",
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
+            self.btn_validate.setEnabled(False)
             try:
                 success = PurchasingService.validate_purchase(self.context, purchase_id=purchase_id)
                 if success:
@@ -180,3 +196,5 @@ class PurchaseWidget(QWidget):
                     QMessageBox.warning(self, "Warning", "Purchase could not be validated (may be empty).")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to validate purchase: {str(e)}")
+            finally:
+                self.btn_validate.setEnabled(True)

@@ -15,12 +15,18 @@ class SalesService:
 
     @staticmethod
     @transactional
-    def get_all_invoices(context: RequestContext, session):
+    def get_all_invoices(context: RequestContext, session, limit: int = 100, offset: int = 0):
         """
-        Retrieves all invoices.
+        Retrieves invoices with pagination.
         """
         PermissionManager.verify_permission(context, "Sales.Invoices.View")
-        return session.query(Invoice).all()
+        return session.query(Invoice).order_by(Invoice.id.desc()).limit(limit).offset(offset).all()
+
+    @staticmethod
+    @transactional
+    def count_all_invoices(context: RequestContext, session) -> int:
+        PermissionManager.verify_permission(context, "Sales.Invoices.View")
+        return session.query(Invoice).count()
 
     @staticmethod
     @transactional

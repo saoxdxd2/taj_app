@@ -15,12 +15,18 @@ class SupplierService:
 
     @staticmethod
     @transactional
-    def get_all_suppliers(context: RequestContext, session):
+    def get_all_suppliers(context: RequestContext, session, limit: int = 100, offset: int = 0):
         """
-        Retrieves all suppliers.
+        Retrieves suppliers with pagination.
         """
         PermissionManager.verify_permission(context, "Suppliers.Suppliers.View")
-        return session.query(Supplier).all()
+        return session.query(Supplier).order_by(Supplier.id.desc()).limit(limit).offset(offset).all()
+
+    @staticmethod
+    @transactional
+    def count_all_suppliers(context: RequestContext, session) -> int:
+        PermissionManager.verify_permission(context, "Suppliers.Suppliers.View")
+        return session.query(Supplier).count()
 
     @staticmethod
     @transactional

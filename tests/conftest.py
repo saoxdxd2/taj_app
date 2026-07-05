@@ -26,7 +26,18 @@ def session():
     # Initialize CurrentSession so audit listeners don't fail
     CurrentSession.initialize(RequestContext(user_id="1", username="admin", role="Administrator", permissions=set()))
     
-    BaseModel.metadata.create_all(engine)
+    from alembic.config import Config
+    from alembic import command
+    import os
+    
+    # Run Alembic migrations on the test memory database
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    alembic_ini_path = os.path.join(project_root, "alembic.ini")
+    alembic_cfg = Config(alembic_ini_path)
+    # We must use the same engine for Alembic
+    with engine.begin() as connection:
+        alembic_cfg.attributes['connection'] = connection
+        command.upgrade(alembic_cfg, "head")
     
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -35,4 +46,3 @@ def session():
     
     session.rollback()
     session.close()
-    BaseModel.metadata.drop_all(engine)

@@ -23,10 +23,14 @@ class SalesWidget(QWidget):
         self.btn_new_draft = QPushButton("New Draft Invoice")
         self.btn_validate = QPushButton("Validate Invoice")
         self.btn_refresh = QPushButton("Refresh")
+        self.btn_export_csv = QPushButton("Export CSV")
+        self.btn_export_pdf = QPushButton("Export PDF")
 
         btn_layout.addWidget(self.btn_new_draft)
         btn_layout.addWidget(self.btn_validate)
         btn_layout.addWidget(self.btn_refresh)
+        btn_layout.addWidget(self.btn_export_csv)
+        btn_layout.addWidget(self.btn_export_pdf)
         btn_layout.addStretch()
 
         # Splitter for Invoices and Items
@@ -46,6 +50,12 @@ class SalesWidget(QWidget):
         self.invoice_table.setSelectionMode(QTableView.SingleSelection)
         self.invoice_table.selectionModel().selectionChanged.connect(self.on_invoice_selected)
         top_layout.addWidget(self.invoice_table)
+
+        # Pagination
+        from src.ui.widgets.pagination_widget import PaginationWidget
+        self.pagination = PaginationWidget(limit=50)
+        self.pagination.page_changed.connect(self._load_page)
+        top_layout.addWidget(self.pagination)
 
         # Bottom: Items Table
         bottom_widget = QWidget()
@@ -77,11 +87,28 @@ class SalesWidget(QWidget):
         self.btn_validate.clicked.connect(self.validate_invoice)
         self.btn_refresh.clicked.connect(self.load_data)
         self.btn_add_item.clicked.connect(self.add_item)
+        self.btn_export_csv.clicked.connect(self.export_csv)
+        self.btn_export_pdf.clicked.connect(self.export_pdf)
+
+        # Graceful degradation for PDF
+        from src.core.pdf_engine import PDFEngine
+        if not PDFEngine.is_available():
+            self.btn_export_pdf.setEnabled(False)
+            self.btn_export_pdf.setToolTip("PDF generation requires 'reportlab'.")
 
     def load_data(self):
         self.item_model.update_data([])
+        self.pagination.reset()
+
+    def _load_page(self, limit: int, offset: int):
+        self.item_model.update_data([])
         try:
-            invoices = SalesService.get_all_invoices(self.context)
+            total = SalesService.count_all_invoices(self.context)
+            self.pagination.update_state(total)
+            
+            invoices = SalesService.get_all_invoices(
+                self.context, limit=limit, offset=offset
+            )
             self.invoice_model.update_data(invoices)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load invoices: {str(e)}")
@@ -171,6 +198,7 @@ class SalesWidget(QWidget):
                                      "Are you sure you want to validate this invoice? This will decrease stock and generate incoming financial entries.",
                                      QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.Yes:
+            self.btn_validate.setEnabled(False)
             try:
                 success = SalesService.validate_invoice(self.context, invoice_id=invoice_id)
                 if success:
@@ -181,3 +209,54 @@ class SalesWidget(QWidget):
             except Exception as e:
                 # Wait, adjust_stock might raise ValueError("Insufficient stock")
                 QMessageBox.critical(self, "Error", f"Failed to validate invoice: {str(e)}")
+            finally:
+                self.btn_validate.setEnabled(True)
+
+    def export_csv(self):
+        import os
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+        if not os.path.exists(desktop_path) or not os.path.isdir(desktop_path):
+            desktop_path = os.path.expanduser("~")
+        filepath = os.path.join(desktop_path, "Invoices_Export.csv")
+        try:
+            self.invoice_model.export_to_csv(filepath)
+            QMessageBox.information(self, "Export Successful", f"Data exported to:\n{filepath}")
+        except Exception as e:
+            QMessageBox.critical(self, "Export Failed", f"Failed to export CSV: {str(e)}")
+
+    def export_pdf(self):
+        selection = self.invoice_table.selectionModel()
+        if not selection or not selection.hasSelection():
+            QMessageBox.warning(self, "Selection Required", "Please select an invoice to export.")
+            return
+
+        row = selection.selectedRows()[0].row()
+        invoice_entity = self.invoice_model.get_entity_at(row)
+        
+        if not invoice_entity:
+            return
+
+        invoice_data = {
+            "invoice_number": invoice_entity.invoice_number,
+            "customer_id": invoice_entity.customer_id,
+            "total_amount": float(invoice_entity.total_amount)
+        }
+        
+        # Re-fetch with items to ensure we have them
+        try:
+            invoice = SalesService.get_invoice_with_items(self.context, invoice_entity.id)
+            items_data = []
+            if invoice and invoice.items:
+                for item in invoice.items:
+                    items_data.append({
+                        "product_id": item.product_id,
+                        "quantity": item.quantity,
+                        "unit_price": float(item.unit_price),
+                        "vat_rate": float(item.vat_rate)
+                    })
+            
+            from src.core.pdf_engine import PDFEngine
+            filepath = PDFEngine.generate_invoice_pdf(invoice_data, items_data)
+            QMessageBox.information(self, "PDF Exported", f"Invoice PDF saved to:\n{filepath}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to generate PDF: {str(e)}")

@@ -54,3 +54,23 @@ class BaseTableModel(QAbstractTableModel):
         if entity:
             return getattr(entity, 'id', None)
         return None
+
+    def export_to_csv(self, file_path: str):
+        """
+        Exports the current table view to a CSV file.
+        """
+        import csv
+        with open(file_path, mode='w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            # Write headers
+            writer.writerow(self._headers)
+            
+            # Write data rows
+            for row in range(self.rowCount()):
+                row_data = []
+                for col in range(self.columnCount()):
+                    index = self.index(row, col)
+                    # We rely on data() returning string representation for DisplayRole
+                    data = self.data(index, Qt.DisplayRole)
+                    row_data.append(str(data) if data is not None else "")
+                writer.writerow(row_data)

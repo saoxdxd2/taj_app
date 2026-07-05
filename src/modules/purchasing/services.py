@@ -16,12 +16,18 @@ class PurchasingService:
 
     @staticmethod
     @transactional
-    def get_all_purchases(context: RequestContext, session):
+    def get_all_purchases(context: RequestContext, session, limit: int = 100, offset: int = 0):
         """
-        Retrieves all purchases.
+        Retrieves purchases with pagination.
         """
         PermissionManager.verify_permission(context, "Purchasing.Purchases.View")
-        return session.query(Purchase).all()
+        return session.query(Purchase).order_by(Purchase.id.desc()).limit(limit).offset(offset).all()
+
+    @staticmethod
+    @transactional
+    def count_all_purchases(context: RequestContext, session) -> int:
+        PermissionManager.verify_permission(context, "Purchasing.Purchases.View")
+        return session.query(Purchase).count()
 
     @staticmethod
     @transactional
