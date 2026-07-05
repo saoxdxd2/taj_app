@@ -1,0 +1,4 @@
+SQLAlchemy>=2.0.0
+alembic
+PySide6
+argon2-cffi
