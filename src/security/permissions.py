@@ -20,8 +20,8 @@ class PermissionManager:
                  context.permissions={"Inventory.*"} -> Access Granted
                  context.permissions={"Everything"} -> Access Granted (Admin)
         """
-        # Admin override
-        if "Everything" in context.permissions:
+        # Admin / superuser override — both '.*' and 'Everything' grant full access
+        if "Everything" in context.permissions or ".*" in context.permissions:
             return True
             
         # Exact match

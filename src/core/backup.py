@@ -38,10 +38,16 @@ class BackupManager:
             with tempfile.TemporaryDirectory() as temp_dir:
                 temp_db_path = os.path.join(temp_dir, "taj_froid.db")
                 
-                # Safely copy using sqlite3 backup API to avoid torn database
-                with sqlite3.connect(DB_PATH) as src:
-                    with sqlite3.connect(temp_db_path) as dst:
-                        src.backup(dst)
+                # Safely copy using sqlite3 backup API to avoid torn database.
+                # Explicitly close connections before the temp dir is zipped —
+                # sqlite3's context manager commits but does NOT close on Windows.
+                src = sqlite3.connect(str(DB_PATH))
+                dst = sqlite3.connect(temp_db_path)
+                try:
+                    src.backup(dst)
+                finally:
+                    dst.close()
+                    src.close()
                         
                 # Zip the safe snapshot
                 with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:

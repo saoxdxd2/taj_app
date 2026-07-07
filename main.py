@@ -1,8 +1,8 @@
 import sys
 from PySide6.QtWidgets import QApplication
 
-from src.database.config import get_session_maker
-from src.database.base import BaseModel, engine
+from src.database.session import SessionLocal, engine
+from src.database.base import BaseModel
 from src.modules.authentication.models import User, Role
 from src.modules.authentication.services import AuthenticationService
 
@@ -102,7 +102,7 @@ def init_db():
         msg.exec()
         sys.exit(1)
         
-    session_maker = get_session_maker()
+    session_maker = SessionLocal
     
     with session_maker() as session:
         from src.modules.authentication.models import Role, Permission
@@ -154,9 +154,10 @@ def init_db():
             
         session.flush()
 
-        # 3. Create default admin if not exists
-        admin = session.query(User).filter(User.username == "admin").first()
-        if not admin:
+        # 3. Create default admin if NO Administrator-role user exists yet.
+        # Check by role, not by username — the wizard may have renamed 'admin'.
+        existing_admin_user = session.query(User).filter(User.role_id == role_admin.id).first()
+        if not existing_admin_user:
             admin = User(
                 username="admin",
                 password_hash=AuthenticationService.hash_password("admin"),
@@ -171,7 +172,6 @@ def main():
     
     # Initialize DB and ensure default admin exists
     init_db()
-    session_maker = get_session_maker()
 
     # Add automatic backup on shutdown
     def shutdown_backup():
@@ -184,6 +184,29 @@ def main():
             logger.error(f"Shutdown backup failed: {e}")
 
     app.aboutToQuit.connect(shutdown_backup)
+
+    # --- FIRST-RUN SETUP ---
+    # Check if ANY Administrator user still has the factory default password.
+    # We search by role so a renamed 'admin' account is still detected.
+    from src.modules.authentication.services import AuthenticationService
+    from src.modules.authentication.models import User as UserModel
+    from src.ui.dialogs.auth_dialogs import FirstRunSetupDialog
+    from src.database.session import SessionLocal as _SL
+    _needs_setup = False
+    with _SL() as _s:
+        from src.modules.authentication.models import Role as RoleModel
+        _admin_role = _s.query(RoleModel).filter(RoleModel.name == "Administrator").first()
+        if _admin_role:
+            _admin_users = _s.query(UserModel).filter(UserModel.role_id == _admin_role.id).all()
+            for _u in _admin_users:
+                if AuthenticationService.verify_password("admin", _u.password_hash):
+                    _needs_setup = True
+                    break
+    if _needs_setup:
+        setup = FirstRunSetupDialog()
+        if setup.exec() != FirstRunSetupDialog.Accepted:
+            sys.exit(0)
+    # --- END FIRST-RUN SETUP ---
 
     # Show Login Gateway
     login = LoginDialog()

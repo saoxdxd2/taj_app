@@ -94,6 +94,38 @@ class AuthenticationService:
         return True
 
     @staticmethod
+    @transactional
+    def change_password(session, username: str, new_password: str) -> bool:
+        """
+        Changes the password for a given user.
+        The new password is hashed with Argon2id before storage.
+        Returns True if successful.
+        """
+        if not new_password or len(new_password) < 8:
+            raise ValueError("Password must be at least 8 characters long.")
+        
+        user = session.query(User).filter(User.username == username).first()
+        if not user:
+            raise ValueError(f"User '{username}' not found.")
+        
+        user.password_hash = AuthenticationService.hash_password(new_password)
+        session.flush()
+        logger.info(f"Password changed successfully for user '{username}'.")
+        return True
+
+    @staticmethod
+    @transactional
+    def is_default_password(session, username: str) -> bool:
+        """
+        Returns True if the user still has the factory-default 'admin' password.
+        Used to trigger the first-run setup wizard.
+        """
+        user = session.query(User).filter(User.username == username).first()
+        if not user:
+            return False
+        return AuthenticationService.verify_password("admin", user.password_hash)
+
+    @staticmethod
     def logout():
         """
         Clears the active session.

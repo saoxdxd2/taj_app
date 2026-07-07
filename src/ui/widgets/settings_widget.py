@@ -84,7 +84,18 @@ class SettingsWidget(QWidget):
         
         version_group.setLayout(version_layout)
         layout.addWidget(version_group)
-        
+
+        # Account Security Section
+        security_group = QGroupBox("Account Security")
+        security_layout = QVBoxLayout()
+
+        self.btn_change_password = QPushButton("Change Password...")
+        self.btn_change_password.clicked.connect(self.change_password)
+        security_layout.addWidget(self.btn_change_password)
+
+        security_group.setLayout(security_layout)
+        layout.addWidget(security_group)
+
         layout.addStretch()
 
     def refresh_backups(self):
@@ -165,3 +176,13 @@ class SettingsWidget(QWidget):
                 QMessageBox.information(self, "Success", "Database optimization completed successfully.")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to optimize database:\n{e}")
+
+    def change_password(self):
+        from src.core.session import CurrentSession
+        from src.ui.dialogs.auth_dialogs import ChangePasswordDialog
+        context = CurrentSession.get_context()
+        if not context:
+            QMessageBox.warning(self, "Error", "No active session found.")
+            return
+        dialog = ChangePasswordDialog(username=context.username, parent=self)
+        dialog.exec()
