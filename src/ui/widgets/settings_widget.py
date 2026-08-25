@@ -85,6 +85,20 @@ class SettingsWidget(QWidget):
         version_group.setLayout(version_layout)
         layout.addWidget(version_group)
 
+        # Website Sync Section
+        websync_group = QGroupBox("Website Sync")
+        websync_layout = QVBoxLayout()
+
+        self.btn_export_catalog = QPushButton("Export Catalog for Website...")
+        self.btn_export_catalog.clicked.connect(self.export_catalog)
+        self.btn_import_prices = QPushButton("Import Web Price Updates...")
+        self.btn_import_prices.clicked.connect(self.import_prices)
+        websync_layout.addWidget(self.btn_export_catalog)
+        websync_layout.addWidget(self.btn_import_prices)
+
+        websync_group.setLayout(websync_layout)
+        layout.addWidget(websync_group)
+
         # Account Security Section
         security_group = QGroupBox("Account Security")
         security_layout = QVBoxLayout()
@@ -176,6 +190,46 @@ class SettingsWidget(QWidget):
                 QMessageBox.information(self, "Success", "Database optimization completed successfully.")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to optimize database:\n{e}")
+
+    def export_catalog(self):
+        from src.core.session import CurrentSession
+        from src.modules.websync.services import WebsiteSyncService
+        context = CurrentSession.get_context()
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Website Catalog", "website_catalog.json", "JSON Files (*.json)"
+        )
+        if not path:
+            return
+        try:
+            result = WebsiteSyncService.export_catalog(context, output_path=path)
+            QMessageBox.information(
+                self, "Export Successful",
+                f"{result['count']} products exported to:\n{result['path']}"
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Export Failed", f"Failed to export catalog:\n{e}")
+
+    def import_prices(self):
+        from src.core.session import CurrentSession
+        from src.modules.websync.services import WebsiteSyncService
+        context = CurrentSession.get_context()
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import Web Price Updates", "", "JSON Files (*.json)"
+        )
+        if not path:
+            return
+        try:
+            result = WebsiteSyncService.import_price_updates(context, input_path=path)
+            msg = (
+                f"Updated {result['updated_count']} prices.\n"
+                f"Unknown SKUs skipped: {len(result['unknown_skus'])}\n"
+                f"Errors: {len(result['errors'])}"
+            )
+            if result["errors"]:
+                msg += "\n\n" + "\n".join(result["errors"][:5])
+            QMessageBox.information(self, "Import Complete", msg)
+        except Exception as e:
+            QMessageBox.critical(self, "Import Failed", f"Failed to import price updates:\n{e}")
 
     def change_password(self):
         from src.core.session import CurrentSession
