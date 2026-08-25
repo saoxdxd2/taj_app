@@ -169,7 +169,11 @@ def init_db():
 
 def main():
     app = QApplication(sys.argv)
-    
+
+    # Apply the global visual theme before any window is created
+    from src.ui.theme import apply_theme
+    apply_theme(app)
+
     # Initialize DB and ensure default admin exists
     init_db()
 

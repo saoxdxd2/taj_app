@@ -1,7 +1,8 @@
 import sys
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                               QHBoxLayout, QListWidget, QStackedWidget, QMessageBox, 
-                               QDialog, QFormLayout, QLineEdit, QDialogButtonBox)
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
+                               QHBoxLayout, QListWidget, QStackedWidget, QMessageBox,
+                               QDialog, QFormLayout, QLineEdit, QDialogButtonBox,
+                               QLabel)
 from PySide6.QtCore import Qt
 
 from src.core.session import CurrentSession
@@ -20,19 +21,30 @@ class LoginDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Taj ERP - Login")
+        self.setFixedWidth(380)
         self.setup_ui()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
+        layout.setSpacing(14)
+        layout.setContentsMargins(28, 28, 28, 20)
+
+        title = QLabel("<h2 style='color:#1f3a5f;'>Taj ERP</h2>"
+                       "<p style='color:#718096;'>Sign in to continue</p>")
+        title.setTextFormat(Qt.RichText)
+        layout.addWidget(title)
+
         form_layout = QFormLayout()
+        form_layout.setSpacing(10)
 
         self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Username")
         self.password_input = QLineEdit()
+        self.password_input.setPlaceholderText("Password")
         self.password_input.setEchoMode(QLineEdit.Password)
 
         form_layout.addRow("Username", self.username_input)
         form_layout.addRow("Password", self.password_input)
-
         layout.addLayout(form_layout)
 
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -58,7 +70,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Taj ERP - Enterprise Dashboard")
-        self.resize(1024, 768)
+        self.resize(1280, 800)
+        self.setMinimumSize(1024, 680)
 
         self.setup_ui()
 
@@ -67,25 +80,29 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         layout = QHBoxLayout(central_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
         # Sidebar navigation
         self.sidebar = QListWidget()
-        self.sidebar.setFixedWidth(200)
-        
+        self.sidebar.setObjectName("sidebar")
+        self.sidebar.setFixedWidth(220)
+
         nav_items = [
-            "Dashboard",
-            "Inventory",
-            "CRM",
-            "Suppliers",
-            "Purchasing",
-            "Finance",
-            "Sales",
-            "Settings"
+            "🏠  Dashboard",
+            "📦  Inventory",
+            "👥  CRM",
+            "🚚  Suppliers",
+            "🛒  Purchasing",
+            "💰  Finance",
+            "🧾  Sales",
+            "⚙️  Settings"
         ]
         self.sidebar.addItems(nav_items)
 
         # Main content area
         self.stack = QStackedWidget()
+        self.stack.setContentsMargins(16, 16, 16, 16)
 
         # Initialize widgets
         self.dashboard_widget = DashboardWidget()

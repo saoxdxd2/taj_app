@@ -25,8 +25,13 @@ class DashboardWidget(QWidget):
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(10)
 
-        title = QLabel("<h2>Dashboard</h2>")
+        today = datetime.now().strftime("%A %d %B %Y")
+        title = QLabel(f"<h2 style='color:#1f3a5f;'>Dashboard</h2>"
+                       f"<span style='color:#718096;'>{today}</span>")
+        title.setTextFormat(Qt.RichText)
         layout.addWidget(title)
 
         # --- Low stock section ---
