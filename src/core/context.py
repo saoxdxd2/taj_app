@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 from typing import Set
 
@@ -16,4 +16,4 @@ class RequestContext:
     correlation_id: str = field(default_factory=lambda: str(uuid4()))
     workstation: str = "Unknown"
     language: str = "en"
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

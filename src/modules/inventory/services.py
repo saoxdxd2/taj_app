@@ -36,9 +36,19 @@ class InventoryService:
     def get_all_products(context: RequestContext, session, limit: int = 100, offset: int = 0):
         """
         Retrieves products with pagination.
+        Brand/category are eager-loaded: the list views display them and
+        lazy loading would fire 2 extra queries per row (N+1 problem).
         """
         PermissionManager.verify_permission(context, "Inventory.Products.View")
-        return session.query(Product).order_by(Product.id.desc()).limit(limit).offset(offset).all()
+        from sqlalchemy.orm import joinedload
+        return (
+            session.query(Product)
+            .options(joinedload(Product.brand), joinedload(Product.category))
+            .order_by(Product.id.desc())
+            .limit(limit)
+            .offset(offset)
+            .all()
+        )
 
     @staticmethod
     @transactional
@@ -241,9 +251,13 @@ class InventoryService:
         reorder threshold, with current quantity and shortfall.
         """
         PermissionManager.verify_permission(context, "Inventory.Stock.View")
-        levels = session.query(StockLevel).filter(
-            StockLevel.quantity <= StockLevel.min_quantity
-        ).all()
+        from sqlalchemy.orm import joinedload
+        levels = (
+            session.query(StockLevel)
+            .options(joinedload(StockLevel.product))
+            .filter(StockLevel.quantity <= StockLevel.min_quantity)
+            .all()
+        )
         return [
             {
                 "product_id": lvl.product_id,
@@ -358,7 +372,13 @@ class InventoryService:
     @transactional
     def get_product_attributes(context: RequestContext, session, product_id: int) -> List[dict]:
         PermissionManager.verify_permission(context, "Inventory.Attributes.View")
-        pas = session.query(ProductAttribute).filter(ProductAttribute.product_id == product_id).all()
+        from sqlalchemy.orm import joinedload
+        pas = (
+            session.query(ProductAttribute)
+            .options(joinedload(ProductAttribute.attribute_def))
+            .filter(ProductAttribute.product_id == product_id)
+            .all()
+        )
         return [
             {
                 "key": pa.attribute_def.key,

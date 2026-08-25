@@ -26,7 +26,15 @@ class SalesService:
         Retrieves invoices with pagination.
         """
         PermissionManager.verify_permission(context, "Sales.Invoices.View")
-        return session.query(Invoice).order_by(Invoice.id.desc()).limit(limit).offset(offset).all()
+        from sqlalchemy.orm import joinedload
+        return (
+            session.query(Invoice)
+            .options(joinedload(Invoice.customer))
+            .order_by(Invoice.id.desc())
+            .limit(limit)
+            .offset(offset)
+            .all()
+        )
 
     @staticmethod
     @transactional
@@ -42,7 +50,15 @@ class SalesService:
         """
         PermissionManager.verify_permission(context, "Sales.Invoices.View")
         from sqlalchemy.orm import joinedload
-        return session.query(Invoice).options(joinedload(Invoice.items)).filter(Invoice.id == invoice_id).first()
+        return (
+            session.query(Invoice)
+            .options(
+                joinedload(Invoice.customer),
+                joinedload(Invoice.items).joinedload(InvoiceItem.product),
+            )
+            .filter(Invoice.id == invoice_id)
+            .first()
+        )
 
     @staticmethod
     @transactional
