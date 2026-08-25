@@ -1,9 +1,15 @@
 import os
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-                               QLabel, QListWidget, QMessageBox, QGroupBox, QFileDialog)
+                               QLabel, QListWidget, QMessageBox, QGroupBox, QFileDialog,
+                               QTableWidget, QTableWidgetItem, QHeaderView)
 from PySide6.QtCore import Qt
 from src.core.backup import BackupManager
 from loguru import logger
+
+def Qt_red():
+    from PySide6.QtGui import QColor
+    return QColor("#c0392b")
+
 
 class SettingsWidget(QWidget):
     def __init__(self, parent=None):
@@ -84,6 +90,25 @@ class SettingsWidget(QWidget):
         
         version_group.setLayout(version_layout)
         layout.addWidget(version_group)
+
+        # System Health Section
+        health_group = QGroupBox("System Health")
+        health_layout = QVBoxLayout()
+
+        self.health_table = QTableWidget(0, 3)
+        self.health_table.setHorizontalHeaderLabels(["Check", "Status", "Detail"])
+        self.health_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.health_table.verticalHeader().setVisible(False)
+        self.health_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.health_table.setMaximumHeight(140)
+        health_layout.addWidget(self.health_table)
+
+        self.btn_run_health = QPushButton("Run Health Checks")
+        self.btn_run_health.clicked.connect(self.run_health_checks)
+        health_layout.addWidget(self.btn_run_health)
+
+        health_group.setLayout(health_layout)
+        layout.addWidget(health_group)
 
         # Website Sync Section
         websync_group = QGroupBox("Website Sync")
@@ -190,6 +215,30 @@ class SettingsWidget(QWidget):
                 QMessageBox.information(self, "Success", "Database optimization completed successfully.")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to optimize database:\n{e}")
+
+    def run_health_checks(self):
+        from src.core.health_monitor import HealthMonitor, HealthStatus
+        try:
+            results = HealthMonitor.run_all_checks()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to run health checks:\n{e}")
+            return
+
+        colors = {
+            HealthStatus.OK.value: "#27ae60",
+            HealthStatus.WARN.value: "#e67e22",
+            HealthStatus.CRIT.value: "#c0392b",
+        }
+        from PySide6.QtGui import QColor
+        self.health_table.setRowCount(len(results))
+        for row, r in enumerate(results):
+            name_item = QTableWidgetItem(r["name"])
+            status_item = QTableWidgetItem(r["status"])
+            status_item.setForeground(QColor(colors.get(r["status"], "#c0392b")))
+            detail_item = QTableWidgetItem(r["detail"])
+            self.health_table.setItem(row, 0, name_item)
+            self.health_table.setItem(row, 1, status_item)
+            self.health_table.setItem(row, 2, detail_item)
 
     def export_catalog(self):
         from src.core.session import CurrentSession
