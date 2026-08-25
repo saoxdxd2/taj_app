@@ -83,16 +83,24 @@ class SalesService:
 
     @staticmethod
     @transactional
-    def create_invoice_draft(context: RequestContext, session, customer_id: int,
+    def create_invoice_draft(context: RequestContext, session, customer_id: Optional[int],
                              invoice_number: Optional[str] = None) -> Invoice:
         """
         Creates a new invoice in Draft state.
         If no number is given, one is generated automatically (N°XX-YY).
+        customer_id=None means an anonymous cash sale — it is booked on the
+        shared 'Client de passage (Walk-in)' customer.
         """
         PermissionManager.verify_permission(context, "Sales.Invoices.Create")
         if invoice_number is None:
             invoice_number = SalesService.generate_invoice_number(context, session=session)
-            
+
+        if customer_id is None:
+            from src.modules.crm.services import CRMService
+            customer_id = CRMService.get_or_create_walk_in_customer(
+                context=context, session=session
+            ).id
+
         invoice = Invoice(
             invoice_number=invoice_number,
             customer_id=customer_id,

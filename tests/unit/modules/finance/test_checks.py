@@ -54,25 +54,21 @@ def test_create_incoming_check(session, admin_context, customer):
 
 
 def test_create_check_validation(session, admin_context, customer, supplier):
-    """Unknown/walk-in parties are allowed (name only); amount must be > 0."""
+    """Checks/virements need a known customer/supplier; amount > 0.
+    (Cash sales are the ones that may be anonymous — not checks.)"""
     due = datetime.now() + timedelta(days=5)
-    # Incoming check from an unknown walk-in party — no customer record needed
-    walk_in = FinanceService.create_check(
-        context=admin_context, session=session,
-        check_number="X1", direction="Incoming",
-        amount=Decimal("100.00"), due_date=due, party_name="Walk-in Client",
-    )
-    assert walk_in.customer_id is None
-    assert walk_in.party_name == "Walk-in Client"
-
-    # Outgoing check to an unnamed party without a supplier record also works
-    outgoing = FinanceService.create_check(
-        context=admin_context, session=session,
-        check_number="X2", direction="Outgoing",
-        amount=Decimal("100.00"), due_date=due, party_name="Misc Supplier",
-    )
-    assert outgoing.supplier_id is None
-
+    with pytest.raises(ValueError, match="linked to a customer"):
+        FinanceService.create_check(
+            context=admin_context, session=session,
+            check_number="X1", direction="Incoming",
+            amount=Decimal("100.00"), due_date=due, party_name="Someone",
+        )
+    with pytest.raises(ValueError, match="linked to a supplier"):
+        FinanceService.create_check(
+            context=admin_context, session=session,
+            check_number="X2", direction="Outgoing",
+            amount=Decimal("100.00"), due_date=due, party_name="Someone",
+        )
     with pytest.raises(ValueError, match="strictly positive"):
         FinanceService.create_check(
             context=admin_context, session=session,

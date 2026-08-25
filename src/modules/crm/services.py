@@ -38,6 +38,27 @@ class CRMService:
         PermissionManager.verify_permission(context, "CRM.Customers.View")
         return session.query(Customer).filter(Customer.id == customer_id).first()
 
+    WALK_IN_NAME = "Client de passage (Walk-in)"
+
+    @staticmethod
+    def get_or_create_walk_in_customer(context: RequestContext, session) -> Customer:
+        """
+        Returns the shared 'walk-in' customer used for anonymous cash sales,
+        creating it on first use. Keeps the Invoice.customer_id NOT NULL
+        constraint intact while letting cash sales skip customer entry.
+        """
+        walk_in = (
+            session.query(Customer)
+            .filter(Customer.company_name == CRMService.WALK_IN_NAME)
+            .first()
+        )
+        if not walk_in:
+            walk_in = Customer(company_name=CRMService.WALK_IN_NAME)
+            session.add(walk_in)
+            session.flush()
+            logger.info("Created shared walk-in customer for anonymous cash sales.")
+        return walk_in
+
     @staticmethod
     @transactional
     def update_customer(context: RequestContext, session, customer_id: int, company_name: str, contact_name: Optional[str] = None, 

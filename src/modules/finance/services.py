@@ -133,9 +133,14 @@ class FinanceService:
         except ValueError:
             raise ValueError(f"Invalid check direction: {direction}")
         
-        # Known customer/supplier links are optional: walk-in ("unknown")
-        # parties are allowed — the free-text party_name is what matters.
-        
+        # Checks/virements always trace back to a real account:
+        # incoming must be linked to a known customer, outgoing to a
+        # known supplier. (Cash sales are the ones that may be anonymous.)
+        if dir_enum == CheckDirection.INCOMING and not customer_id:
+            raise ValueError("Incoming checks must be linked to a customer.")
+        if dir_enum == CheckDirection.OUTGOING and not supplier_id:
+            raise ValueError("Outgoing checks must be linked to a supplier.")
+
         check = Check(
             check_number=check_number,
             direction=dir_enum,
@@ -166,12 +171,12 @@ class FinanceService:
         check = session.query(Check).filter(Check.id == check_id).first()
         if not check:
             raise ValueError(f"Check ID {check_id} not found.")
-        
+
         try:
             status_enum = CheckStatus(new_status)
         except ValueError:
             raise ValueError(f"Invalid check status: {new_status}")
-        
+
         allowed = {
             CheckStatus.PENDING: {CheckStatus.DEPOSITED, CheckStatus.CLEARED, CheckStatus.CANCELLED},
             CheckStatus.DEPOSITED: {CheckStatus.CLEARED, CheckStatus.BOUNCED},

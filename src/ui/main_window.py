@@ -98,6 +98,7 @@ class MainWindow(QMainWindow):
             "🛒  Purchasing",
             "💰  Finance",
             "🧾  Sales",
+            "📊  Analytics",
             "⚙️  Settings"
         ]
         self.sidebar.addItems(nav_items)
@@ -115,6 +116,8 @@ class MainWindow(QMainWindow):
         self.purchase_widget = PurchaseWidget()
         self.finance_widget = FinanceWidget()
         self.sales_widget = SalesWidget()
+        from src.ui.widgets.analytics_widget import AnalyticsWidget
+        self.analytics_widget = AnalyticsWidget()
         self.settings_widget = SettingsWidget()
 
         self.stack.addWidget(self.dashboard_widget)
@@ -125,6 +128,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.purchase_widget)
         self.stack.addWidget(self.finance_widget)
         self.stack.addWidget(self.sales_widget)
+        self.stack.addWidget(self.analytics_widget)
         self.stack.addWidget(self.settings_widget)
 
         layout.addWidget(self.sidebar)

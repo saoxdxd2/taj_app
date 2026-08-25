@@ -31,14 +31,19 @@ class NewInvoiceDialog(FormDialog):
         except Exception:
             pass  # leave empty; service will generate at save time
 
+        # Cash sales can be anonymous: "Walk-in" books them on a shared
+        # 'Client de passage' customer — no need to create one first.
         self.customer_combo = QComboBox()
+        self.customer_combo.addItem(
+            "Walk-in / anonymous (cash sale)", userData=None
+        )
         self.customers = CRMService.get_all_customers(context=self.context)
         for c in self.customers:
-            if not c.is_archived:
+            if not c.is_archived and c.company_name != CRMService.WALK_IN_NAME:
                 self.customer_combo.addItem(c.company_name, userData=c.id)
 
         form.addRow("Invoice Number *", self.invoice_number_input)
-        form.addRow("Customer *", self.customer_combo)
+        form.addRow("Customer", self.customer_combo)
 
         box = self.add_buttons(
             QDialogButtonBox.Save | QDialogButtonBox.Cancel, ok_text="Create Draft"
@@ -49,12 +54,6 @@ class NewInvoiceDialog(FormDialog):
     def validate_and_accept(self):
         if not self.invoice_number_input.text().strip():
             QMessageBox.warning(self, "Validation Error", "Invoice number is required.")
-            return
-        if self.customer_combo.currentData() is None:
-            QMessageBox.warning(
-                self, "Validation Error",
-                "Please select a customer. Add customers in CRM first."
-            )
             return
 
         self.accept()
