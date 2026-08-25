@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from src.database.base import BaseModel
 
@@ -9,6 +9,13 @@ def session():
     Creates an in-memory SQLite session for testing.
     """
     engine = create_engine("sqlite:///:memory:")
+
+    # Enforce foreign keys on this engine (each engine registers its own pragmas)
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
     
     # Import all models to ensure metadata is populated
     from src.modules.authentication.models import User

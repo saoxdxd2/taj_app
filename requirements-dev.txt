@@ -1,0 +1,3 @@
+# TAJ FROID ERP — development & test dependencies
+pytest>=9.0
+pytest-benchmark>=5.2

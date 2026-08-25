@@ -1,0 +1,58 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Databases / runtime data ---
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite3
+
+# --- Logs & debug artifacts ---
+logs/
+*.log
+error.txt
+trace.txt
+
+# --- Secrets & credentials ---
+.env
+.env.*
+*.key
+secrets/
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+
+# --- Testing / coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# --- PyInstaller ---
+*.spec.bak
+
+# --- AI/engineering scratch ---
+text
+*.tmp
