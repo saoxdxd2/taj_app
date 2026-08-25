@@ -23,8 +23,12 @@ def session():
     from src.modules.suppliers.models import Supplier
     from src.modules.inventory.models import Product, Brand, Category, StockLevel, StockMovement
     from src.modules.purchasing.models import Purchase, PurchaseItem
-    from src.modules.sales.models import Invoice, InvoiceItem, Quotation, QuotationItem
-    from src.modules.finance.models import FinancialJournalEntry, Expense
+    from src.modules.sales.models import (
+        Invoice, InvoiceItem, Quotation, QuotationItem,
+        Payment, CustomerDeposit, SalesReturn, ReturnItem,
+    )
+    from src.modules.finance.models import FinancialJournalEntry, Expense, Check
+    from src.modules.inventory.models import AttributeDef, ProductAttribute
     from src.modules.audit.models import AuditEvent
     import src.database.audit_listener
     from src.core.session import CurrentSession

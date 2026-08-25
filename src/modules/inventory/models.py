@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey, Numeric, Enum as SQLAlchemyEnum
@@ -75,7 +75,43 @@ class StockLevel(BaseModel):
     product_id: Mapped[int] = mapped_column(ForeignKey("product.id"), unique=True, nullable=False, index=True)
     quantity: Mapped[int] = mapped_column(default=0, nullable=False)
     
+    # Reorder threshold: boss decides what to reorder when quantity <= min_quantity
+    min_quantity: Mapped[int] = mapped_column(default=0, nullable=False)
+    
     product: Mapped["Product"] = relationship("Product")
+
+
+class AttributeDataType(str, Enum):
+    """Dynamic attribute value types (user-definable, nothing hard-coded)."""
+    TEXT = "Text"
+    NUMBER = "Number"
+
+
+class AttributeDef(BaseModel):
+    """
+    User-defined attribute definition (e.g. BTU, capacity, sound level,
+    max cold temperature, energy efficiency). Created/modified/deleted by
+    the user; used as filters on the website.
+    """
+    key: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)   # e.g. "btu"
+    label: Mapped[str] = mapped_column(String(100), nullable=False)                          # e.g. "BTU"
+    data_type: Mapped[AttributeDataType] = mapped_column(SQLAlchemyEnum(AttributeDataType), default=AttributeDataType.TEXT, nullable=False)
+    unit: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)                   # e.g. "BTU", "dB", "°C"
+    
+    values: Mapped[List["ProductAttribute"]] = relationship("ProductAttribute", back_populates="attribute_def", cascade="all, delete-orphan")
+
+
+class ProductAttribute(BaseModel):
+    """
+    A concrete attribute value on a product (e.g. product X has BTU=12000).
+    Stored as text; NUMBER type is validated by the service layer.
+    """
+    product_id: Mapped[int] = mapped_column(ForeignKey("product.id"), nullable=False, index=True)
+    attribute_def_id: Mapped[int] = mapped_column(ForeignKey("attribute_def.id"), nullable=False, index=True)
+    value_text: Mapped[str] = mapped_column(String(255), nullable=False)
+    
+    attribute_def: Mapped["AttributeDef"] = relationship("AttributeDef", back_populates="values")
+    product: Mapped["Product"] = relationship("Product") # type: ignore
 
 class StockMovement(BaseModel):
     """

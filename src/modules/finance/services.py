@@ -1,7 +1,13 @@
 import logging
+from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
-from src.modules.finance.models import FinancialJournalEntry, TransactionType, Expense, ExpenseCategory
+from typing import List, Optional
+from src.modules.finance.models import (
+    FinancialJournalEntry, TransactionType, Expense, ExpenseCategory,
+    Check, CheckDirection, CheckStatus,
+)
+from src.core.context import RequestContext
+from src.security.permissions import PermissionManager
 from src.database.transaction import transactional
 
 logger = logging.getLogger(__name__)
@@ -96,3 +102,118 @@ class FinanceService:
         
         logger.info(f"Recorded expense {reference} for amount {amount}.")
         return expense
+
+    # ------------------------------------------------------------------
+    # Check ledger (calendrier des chèques)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    @transactional
+    def create_check(context: RequestContext, session, check_number: str, direction: str,
+                     amount: Decimal, due_date: datetime, party_name: str,
+                     bank: Optional[str] = None,
+                     customer_id: Optional[int] = None,
+                     supplier_id: Optional[int] = None,
+                     notes: Optional[str] = None) -> Check:
+        """
+        Registers a physical check (incoming from a customer or outgoing to
+        a supplier) with its due date. Starts in Pending status.
+        """
+        PermissionManager.verify_permission(context, "Finance.Checks.Create")
+        
+        if amount <= 0:
+            raise ValueError("Check amount must be strictly positive.")
+        if not check_number:
+            raise ValueError("Check number is required.")
+        if not party_name:
+            raise ValueError("Party name is required.")
+            
+        try:
+            dir_enum = CheckDirection(direction)
+        except ValueError:
+            raise ValueError(f"Invalid check direction: {direction}")
+        
+        if dir_enum == CheckDirection.INCOMING and not customer_id:
+            raise ValueError("Incoming checks must be linked to a customer.")
+        if dir_enum == CheckDirection.OUTGOING and not supplier_id:
+            raise ValueError("Outgoing checks must be linked to a supplier.")
+        
+        check = Check(
+            check_number=check_number,
+            direction=dir_enum,
+            status=CheckStatus.PENDING,
+            amount=amount,
+            due_date=due_date,
+            bank=bank,
+            party_name=party_name,
+            customer_id=customer_id,
+            supplier_id=supplier_id,
+            notes=notes,
+        )
+        session.add(check)
+        session.flush()
+        logger.info(f"Registered {dir_enum.value} check #{check_number} for {amount} DH, due {due_date:%Y-%m-%d}.")
+        return check
+
+    @staticmethod
+    @transactional
+    def update_check_status(context: RequestContext, session, check_id: int, new_status: str) -> Check:
+        """
+        Transitions a check through its lifecycle: Pending -> Deposited ->
+        Cleared / Bounced / Cancelled. Clearing an INCOMING check records
+        the money as received; clearing an OUTGOING check records it as sent.
+        """
+        PermissionManager.verify_permission(context, "Finance.Checks.Update")
+        
+        check = session.query(Check).filter(Check.id == check_id).first()
+        if not check:
+            raise ValueError(f"Check ID {check_id} not found.")
+        
+        try:
+            status_enum = CheckStatus(new_status)
+        except ValueError:
+            raise ValueError(f"Invalid check status: {new_status}")
+        
+        allowed = {
+            CheckStatus.PENDING: {CheckStatus.DEPOSITED, CheckStatus.CLEARED, CheckStatus.CANCELLED},
+            CheckStatus.DEPOSITED: {CheckStatus.CLEARED, CheckStatus.BOUNCED},
+            CheckStatus.BOUNCED: {CheckStatus.DEPOSITED, CheckStatus.CANCELLED},
+        }
+        if status_enum != check.status and status_enum not in allowed.get(check.status, set()):
+            raise ValueError(f"Cannot move check from {check.status.value} to {status_enum.value}.")
+        
+        check.status = status_enum
+        
+        # Money actually moved -> journal entry
+        if status_enum == CheckStatus.CLEARED:
+            FinanceService.create_journal_entry(
+                session=session,
+                transaction_type=TransactionType.PAYMENT_RECEIVED if check.direction == CheckDirection.INCOMING else TransactionType.PAYMENT_SENT,
+                reference_id=f"CHECK-{check.check_number}",
+                description=f"Check #{check.check_number} cleared ({check.party_name})",
+                amount=check.amount if check.direction == CheckDirection.INCOMING else -check.amount,
+                user_id=int(context.user_id) if context.user_id else None,
+            )
+        
+        logger.info(f"Check #{check.check_number} moved to {status_enum.value} by {context.username}.")
+        return check
+
+    @staticmethod
+    @transactional
+    def get_checks_due_within(context: RequestContext, session, days: int = 7,
+                              include_overdue: bool = True) -> List[Check]:
+        """
+        Returns pending checks whose due date falls within the next `days`
+        days (plus any already overdue). Powers the friendly reminders.
+        """
+        PermissionManager.verify_permission(context, "Finance.Checks.View")
+        
+        now = datetime.now()
+        horizon = now + timedelta(days=days)
+        
+        query = session.query(Check).filter(Check.status == CheckStatus.PENDING)
+        if include_overdue:
+            query = query.filter(Check.due_date <= horizon)
+        else:
+            query = query.filter(Check.due_date >= now, Check.due_date <= horizon)
+        return query.order_by(Check.due_date.asc()).all()

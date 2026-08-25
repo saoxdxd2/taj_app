@@ -1,6 +1,6 @@
 from typing import Optional
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Boolean
+from sqlalchemy import String, Boolean, Integer
 
 from src.database.base import BaseModel
 
@@ -14,5 +14,8 @@ class Supplier(BaseModel):
     email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     ice_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # Identifiant Commun de l'Entreprise
+    
+    # Agreed payment terms in days (0 = cash on delivery, 30/60/90 = à terme)
+    payment_terms_days: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

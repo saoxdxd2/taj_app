@@ -1,8 +1,9 @@
 from enum import Enum
 from typing import Optional
+from datetime import datetime
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Numeric, Enum as SQLAlchemyEnum
+from sqlalchemy import String, Numeric, ForeignKey, DateTime, Enum as SQLAlchemyEnum
 
 from src.database.base import BaseModel
 
@@ -48,6 +49,45 @@ class ExpenseCategory(str, Enum):
     TRAVEL = "Travel"
     TAX = "Tax"
     OTHER = "Other"
+
+class CheckDirection(str, Enum):
+    """Incoming = check we must RECEIVE from a customer. Outgoing = check we must PAY."""
+    INCOMING = "Incoming"
+    OUTGOING = "Outgoing"
+
+
+class CheckStatus(str, Enum):
+    """Lifecycle of a physical check."""
+    PENDING = "Pending"        # Waiting, due date in the future
+    DEPOSITED = "Deposited"    # Handed to the bank
+    CLEARED = "Cleared"        # Money actually moved
+    BOUNCED = "Bounced"        # Unpaid (no funds)
+    CANCELLED = "Cancelled"
+
+
+class Check(BaseModel):
+    """
+    A physical check (incoming or outgoing) with its due date.
+    The boss gets friendly reminders N days before each due date.
+    """
+    # 'check' is a SQL reserved word — use an explicit safe table name
+    __tablename__ = "checks"
+    
+    check_number: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    direction: Mapped[CheckDirection] = mapped_column(SQLAlchemyEnum(CheckDirection), nullable=False, index=True)
+    status: Mapped[CheckStatus] = mapped_column(SQLAlchemyEnum(CheckStatus), default=CheckStatus.PENDING, nullable=False, index=True)
+    
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    due_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
+    
+    bank: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    # Denormalized display name of the payer/payee (customer or supplier)
+    party_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    customer_id: Mapped[Optional[int]] = mapped_column(ForeignKey("customer.id"), nullable=True)
+    supplier_id: Mapped[Optional[int]] = mapped_column(ForeignKey("supplier.id"), nullable=True)
+    
+    notes: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
 
 class Expense(BaseModel):
     """
