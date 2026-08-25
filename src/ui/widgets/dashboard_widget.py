@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt
 from src.core.session import CurrentSession
 from src.modules.inventory.services import InventoryService
 from src.modules.finance.services import FinanceService
+from src.modules.analytics.services import ForecastService
 
 
 class DashboardWidget(QWidget):
@@ -65,9 +66,61 @@ class DashboardWidget(QWidget):
         self.checks_table.setEditTriggers(QTableWidget.NoEditTriggers)
         layout.addWidget(self.checks_table)
 
+        # --- Reorder forecast section ---
+        forecast_header = QHBoxLayout()
+        forecast_header.addWidget(
+            QLabel("<b>Reorder Suggestions (next 30 days, from sales velocity)</b>")
+        )
+        self.forecast_count_label = QLabel("")
+        forecast_header.addWidget(self.forecast_count_label)
+        forecast_header.addStretch()
+        layout.addLayout(forecast_header)
+
+        self.forecast_table = QTableWidget(0, 6)
+        self.forecast_table.setHorizontalHeaderLabels(
+            ["SKU", "Product", "In Stock", "Sold (90d)", "Need (30d)", "Suggested Order"]
+        )
+        self.forecast_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.forecast_table.verticalHeader().setVisible(False)
+        self.forecast_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        layout.addWidget(self.forecast_table)
+
     def refresh(self):
         self._load_low_stock()
         self._load_checks_due()
+        self._load_forecast()
+
+    def _load_forecast(self):
+        try:
+            suggestions = ForecastService.get_reorder_suggestions(self.context)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load reorder forecast: {e}")
+            return
+
+        self.forecast_table.setRowCount(len(suggestions))
+        for row, s in enumerate(suggestions):
+            values = [
+                s["sku"],
+                s["name"],
+                str(s["stock"]),
+                str(s["sold_in_window"]),
+                str(s["horizon_need"]),
+                str(s["suggested_qty"]),
+            ]
+            for col, value in enumerate(values):
+                cell = QTableWidgetItem(value)
+                if col == 5:
+                    cell.setForeground(Qt.red)
+                    font = cell.font()
+                    font.setBold(True)
+                    cell.setFont(font)
+                self.forecast_table.setItem(row, col, cell)
+
+        count = len(suggestions)
+        self.forecast_count_label.setText(
+            f"({count} product{'s' if count != 1 else ''})"
+            if count else "(no restocking needed)"
+        )
 
     def _load_low_stock(self):
         try:
