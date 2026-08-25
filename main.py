@@ -215,20 +215,29 @@ def main():
                 if AuthenticationService.verify_password("admin", _u.password_hash):
                     _needs_setup = True
                     break
+    logged_in = False
     if _needs_setup:
         setup = FirstRunSetupDialog()
         if setup.exec() != FirstRunSetupDialog.Accepted:
             sys.exit(0)
+        # Auto-login with the credentials just created — no need to
+        # type them again on the login screen.
+        AuthenticationService.login(
+            username=setup.username_input.text().strip(),
+            password=setup.password_input.text(),
+        )
+        logged_in = True
     # --- END FIRST-RUN SETUP ---
 
-    # Show Login Gateway
-    login = LoginDialog()
-    if login.exec() == LoginDialog.Accepted:
-        window = MainWindow()
-        window.show()
-        sys.exit(app.exec())
-    else:
-        sys.exit(0)
+    # Show Login Gateway (skipped when auto-logged-in after setup)
+    if not logged_in:
+        login = LoginDialog()
+        if login.exec() != LoginDialog.Accepted:
+            sys.exit(0)
+
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()

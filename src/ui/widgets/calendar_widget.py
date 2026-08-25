@@ -94,15 +94,15 @@ class CalendarWidget(QWidget):
             return
 
         # Mark dates that have pending checks
-        fmt = self.calendar.dateTextFormat()
         from PySide6.QtGui import QTextCharFormat, QBrush, QColor
-        fmt.clear()  # reset previous markings
+        from PySide6.QtCore import QDate
+        # Reset all previous markings (null QDate clears every special format)
+        self.calendar.setDateTextFormat(QDate(), QTextCharFormat())
         for d in self._due_map:
             f = QTextCharFormat()
             f.setForeground(QBrush(QColor("#e67e22")))
             f.setFontWeight(QTextCharFormat.Bold)
-            fmt[d] = f
-        self.calendar.setDateTextFormat(fmt)
+            self.calendar.setDateTextFormat(QDate(d), f)
 
         self._on_date_clicked(self.calendar.selectedDate())
 
