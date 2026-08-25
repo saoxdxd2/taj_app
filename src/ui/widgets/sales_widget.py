@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                                QTableView, QHeaderView, QMessageBox, QSplitter, QLabel)
 from PySide6.QtCore import Qt
+from datetime import datetime
 
 from src.core.session import CurrentSession
 from src.modules.sales.services import SalesService
@@ -293,27 +294,65 @@ class SalesWidget(QWidget):
         if not invoice_entity:
             return
 
-        invoice_data = {
-            "invoice_number": invoice_entity.invoice_number,
-            "customer_id": invoice_entity.customer_id,
-            "total_amount": float(invoice_entity.total_amount)
-        }
-        
-        # Re-fetch with items to ensure we have them
         try:
+            from src.modules.settings.services import SettingsService
+            company = SettingsService.get_company_settings(self.context)
+            company_data = {
+                "company_name": company.company_name,
+                "ice_number": company.ice_number,
+                "rc_number": company.rc_number,
+                "if_number": company.if_number,
+                "patente_number": company.patente_number,
+                "address_street": company.address_street,
+                "address_city": company.address_city,
+                "phone": company.phone,
+                "email": company.email,
+                "bank_name": company.bank_name,
+                "bank_rib": company.bank_rib,
+                "invoice_footer_note": company.invoice_footer_note,
+            }
+
+            # Re-fetch with items + customer to build the facture
             invoice = SalesService.get_invoice_with_items(self.context, invoice_entity.id)
             items_data = []
             if invoice and invoice.items:
                 for item in invoice.items:
+                    description = item.description_override or (
+                        item.product.name if item.product else f"Produit #{item.product_id}"
+                    )
                     items_data.append({
-                        "product_id": item.product_id,
+                        "description": description,
                         "quantity": item.quantity,
                         "unit_price": float(item.unit_price),
-                        "vat_rate": float(item.vat_rate)
+                        "vat_rate": float(item.vat_rate),
                     })
-            
+
+            customer = invoice.customer if invoice else None
+            customer_data = {
+                "company_name": customer.company_name if customer else None,
+                "ice_number": customer.ice_number if customer else None,
+                "phone": customer.phone if customer else None,
+            }
+            primary_address = next(
+                (a for a in (customer.addresses if customer else []) if a.is_primary), None
+            ) if customer else None
+            if primary_address is None and customer and customer.addresses:
+                primary_address = customer.addresses[0]
+            if primary_address:
+                customer_data["address_street"] = primary_address.street
+                customer_data["address_city"] = primary_address.city
+
+            invoice_data = {
+                "invoice_number": invoice_entity.invoice_number,
+                "customer_id": invoice_entity.customer_id,
+                "date": datetime.now().strftime("%d/%m/%Y"),
+            }
+
             from src.core.pdf_engine import PDFEngine
-            filepath = PDFEngine.generate_invoice_pdf(invoice_data, items_data)
-            QMessageBox.information(self, "PDF Exported", f"Invoice PDF saved to:\n{filepath}")
+            filepath = PDFEngine.generate_facture_pdf(
+                invoice_data, items_data,
+                customer_data=customer_data, company_data=company_data,
+            )
+            QMessageBox.information(self, "Facture Exported", f"Facture saved to:\n{filepath}")
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to generate PDF: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Failed to generate facture: {str(e)}")
