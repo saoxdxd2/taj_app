@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from src.core.session import CurrentSession
 from src.modules.authentication.services import AuthenticationService
 
+from src.ui.widgets.dashboard_widget import DashboardWidget
 from src.ui.widgets.product_widget import ProductWidget
 from src.ui.widgets.customer_widget import CustomerWidget
 from src.ui.widgets.supplier_widget import SupplierWidget
@@ -71,6 +72,7 @@ class MainWindow(QMainWindow):
         self.sidebar.setFixedWidth(200)
         
         nav_items = [
+            "Dashboard",
             "Inventory",
             "CRM",
             "Suppliers",
@@ -84,6 +86,7 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
 
         # Initialize widgets
+        self.dashboard_widget = DashboardWidget()
         self.product_widget = ProductWidget()
         self.customer_widget = CustomerWidget()
         self.supplier_widget = SupplierWidget()
@@ -91,6 +94,7 @@ class MainWindow(QMainWindow):
         self.sales_widget = SalesWidget()
         self.settings_widget = SettingsWidget()
 
+        self.stack.addWidget(self.dashboard_widget)
         self.stack.addWidget(self.product_widget)
         self.stack.addWidget(self.customer_widget)
         self.stack.addWidget(self.supplier_widget)
@@ -101,9 +105,16 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.sidebar)
         layout.addWidget(self.stack)
 
-        self.sidebar.currentRowChanged.connect(self.stack.setCurrentIndex)
+        self.sidebar.currentRowChanged.connect(self._on_nav_changed)
         self.sidebar.setCurrentRow(0)
 
         # Context Label
         context = CurrentSession.get_context()
         self.statusBar().showMessage(f"Logged in as: {context.username} ({context.role})")
+
+    def _on_nav_changed(self, index: int):
+        """Refresh the dashboard each time it is opened so reminders stay current."""
+        widget = self.stack.widget(index)
+        if widget is self.dashboard_widget:
+            self.dashboard_widget.refresh()
+        self.stack.setCurrentIndex(index)

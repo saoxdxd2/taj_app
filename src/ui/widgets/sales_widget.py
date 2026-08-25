@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 
 from src.core.session import CurrentSession
 from src.modules.sales.services import SalesService
-from src.ui.dialogs.sales_dialogs import NewInvoiceDialog, InvoiceAddItemDialog
+from src.ui.dialogs.sales_dialogs import NewInvoiceDialog, InvoiceAddItemDialog, PaymentDialog, DepositDialog
 from src.ui.models.sales_model import InvoiceTableModel, InvoiceItemTableModel
 
 class SalesWidget(QWidget):
@@ -22,12 +22,16 @@ class SalesWidget(QWidget):
         btn_layout = QHBoxLayout()
         self.btn_new_draft = QPushButton("New Draft Invoice")
         self.btn_validate = QPushButton("Validate Invoice")
+        self.btn_payment = QPushButton("Register Payment")
+        self.btn_deposit = QPushButton("New Deposit (Bon)")
         self.btn_refresh = QPushButton("Refresh")
         self.btn_export_csv = QPushButton("Export CSV")
         self.btn_export_pdf = QPushButton("Export PDF")
 
         btn_layout.addWidget(self.btn_new_draft)
         btn_layout.addWidget(self.btn_validate)
+        btn_layout.addWidget(self.btn_payment)
+        btn_layout.addWidget(self.btn_deposit)
         btn_layout.addWidget(self.btn_refresh)
         btn_layout.addWidget(self.btn_export_csv)
         btn_layout.addWidget(self.btn_export_pdf)
@@ -85,6 +89,8 @@ class SalesWidget(QWidget):
         # Connect signals
         self.btn_new_draft.clicked.connect(self.create_draft)
         self.btn_validate.clicked.connect(self.validate_invoice)
+        self.btn_payment.clicked.connect(self.register_payment)
+        self.btn_deposit.clicked.connect(self.new_deposit)
         self.btn_refresh.clicked.connect(self.load_data)
         self.btn_add_item.clicked.connect(self.add_item)
         self.btn_export_csv.clicked.connect(self.export_csv)
@@ -99,6 +105,7 @@ class SalesWidget(QWidget):
     def load_data(self):
         self.item_model.update_data([])
         self.pagination.reset()
+        self.btn_payment.setEnabled(False)
 
     def _load_page(self, limit: int, offset: int):
         self.item_model.update_data([])
@@ -125,8 +132,9 @@ class SalesWidget(QWidget):
         invoice_entity = self.invoice_model.get_entity_at(row)
         state = invoice_entity.state.value if invoice_entity and invoice_entity.state else ""
         
-        # Only allow adding items if state is Draft
+        # Only allow adding items if state is Draft; payments on validated/issued/paid
         self.btn_add_item.setEnabled(state == "Draft")
+        self.btn_payment.setEnabled(state in ("Validated", "Issued", "Paid"))
 
         try:
             invoice = SalesService.get_invoice_with_items(self.context, invoice_id)
@@ -167,7 +175,9 @@ class SalesWidget(QWidget):
                     product_id=data["product_id"],
                     quantity=data["quantity"],
                     unit_price=data["unit_price"],
-                    vat_rate=data["vat_rate"]
+                    vat_rate=data["vat_rate"],
+                    unit_cost=data.get("unit_cost"),
+                    warranty_months=data.get("warranty_months", 12),
                 )
                 self.load_data()
                 
@@ -211,6 +221,53 @@ class SalesWidget(QWidget):
                 QMessageBox.critical(self, "Error", f"Failed to validate invoice: {str(e)}")
             finally:
                 self.btn_validate.setEnabled(True)
+
+    def register_payment(self):
+        selection = self.invoice_table.selectionModel()
+        if not selection or not selection.hasSelection():
+            return
+        row = selection.selectedRows()[0].row()
+        invoice_id = self.invoice_model.get_entity_id_at(row)
+        invoice_entity = self.invoice_model.get_entity_at(row)
+
+        try:
+            balance = SalesService.get_invoice_balance(self.context, invoice_id=invoice_id)
+            if balance <= 0:
+                QMessageBox.information(self, "Nothing Due", "This invoice is already fully paid.")
+                return
+            dialog = PaymentDialog(self.context, invoice_entity.invoice_number, balance, parent=self)
+            if dialog.exec():
+                data = dialog.get_data()
+                SalesService.register_payment(
+                    self.context,
+                    invoice_id=invoice_id,
+                    method=data["method"],
+                    amount=data["amount"],
+                    reference=data["reference"],
+                )
+                self.load_data()
+                for i in range(self.invoice_model.rowCount()):
+                    if self.invoice_model.get_entity_id_at(i) == invoice_id:
+                        self.invoice_table.selectRow(i)
+                        break
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to register payment: {str(e)}")
+
+    def new_deposit(self):
+        dialog = DepositDialog(self.context, parent=self)
+        if dialog.exec():
+            data = dialog.get_data()
+            try:
+                SalesService.create_deposit(
+                    self.context,
+                    deposit_number=data["deposit_number"],
+                    customer_id=data["customer_id"],
+                    amount=data["amount"],
+                    method=data["method"],
+                )
+                QMessageBox.information(self, "Success", f"Deposit {data['deposit_number']} recorded.")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to create deposit: {str(e)}")
 
     def export_csv(self):
         import os

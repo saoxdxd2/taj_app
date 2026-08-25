@@ -21,11 +21,13 @@ class CustomerWidget(QWidget):
         self.btn_add = QPushButton("Add Customer")
         self.btn_edit = QPushButton("Edit")
         self.btn_archive = QPushButton("Archive")
+        self.btn_stats = QPushButton("Trade Stats")
         
         toolbar.addWidget(self.btn_refresh)
         toolbar.addWidget(self.btn_add)
         toolbar.addWidget(self.btn_edit)
         toolbar.addWidget(self.btn_archive)
+        toolbar.addWidget(self.btn_stats)
         toolbar.addStretch()
         layout.addLayout(toolbar)
 
@@ -49,6 +51,7 @@ class CustomerWidget(QWidget):
         self.btn_add.clicked.connect(self.on_add_customer)
         self.btn_edit.clicked.connect(self.on_edit_customer)
         self.btn_archive.clicked.connect(self.on_archive_customer)
+        self.btn_stats.clicked.connect(self.on_trade_stats)
 
     def refresh_table(self):
         self.pagination.reset()
@@ -109,6 +112,55 @@ class CustomerWidget(QWidget):
             QMessageBox.critical(self, "Error", str(e))
             
         self.refresh_table()
+
+    def on_trade_stats(self):
+        """Show the commercial relationship summary for the selected client."""
+        from src.core.session import CurrentSession
+        from decimal import Decimal
+        from PySide6.QtWidgets import QDialog, QFormLayout, QLabel, QDialogButtonBox
+
+        customer_id = self.get_selected_customer_id()
+        if not customer_id:
+            QMessageBox.warning(self, "Warning", "Please select a customer to view their trade stats.")
+            return
+
+        try:
+            stats = CRMService.get_customer_trade_stats(
+                CurrentSession.get_context(), customer_id=customer_id
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+            return
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Trade Stats - {stats['company_name']}")
+        form = QFormLayout(dialog)
+
+        def money(v):
+            return f"{v:,.2f} DH"
+
+        last_purchase = stats["last_purchase"]
+        form.addRow(QLabel("<b>Commercial Relationship</b>"))
+        form.addRow("Invoices:", QLabel(str(stats["invoices_count"])))
+        form.addRow("Total invoiced (VAT incl.):", QLabel(money(stats["total_invoiced"])))
+        form.addRow("Total paid:", QLabel(money(stats["total_paid"])))
+        outstanding = stats["outstanding_balance"]
+        outstanding_label = QLabel(money(outstanding))
+        if outstanding > 0:
+            outstanding_label.setStyleSheet("color: #c0392b; font-weight: bold;")
+        form.addRow("Outstanding balance:", outstanding_label)
+        deposits = stats["available_deposits"]
+        deposit_label = QLabel(money(deposits))
+        if deposits > 0:
+            deposit_label.setStyleSheet("color: #27ae60; font-weight: bold;")
+        form.addRow("Available deposits ('bons'):", deposit_label)
+        form.addRow("Last purchase:", QLabel(str(last_purchase.strftime("%Y-%m-%d")) if last_purchase else "-"))
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons.rejected.connect(dialog.reject)
+        buttons.clicked.connect(dialog.accept)
+        form.addRow(buttons)
+        dialog.exec()
 
     def on_archive_customer(self):
         from src.core.session import CurrentSession
