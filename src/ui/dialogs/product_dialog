@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import (QFormLayout, QDialogButtonBox,
+from PySide6.QtWidgets import (QFormLayout,
                                QLineEdit, QComboBox, QDoubleSpinBox)
 from PySide6.QtCore import Qt
 from src.modules.inventory.models import ProductType
@@ -75,13 +75,11 @@ class ProductDialog(FormDialog):
         form.addRow("Brand", self.brand_combo)
         form.addRow("Category", self.category_combo)
 
-        box = self.add_buttons(
-            QDialogButtonBox.Save | QDialogButtonBox.Cancel,
+        self.add_buttons(
+            __import__("PySide6.QtWidgets", fromlist=["QDialogButtonBox"]).QDialogButtonBox.Save
+            | __import__("PySide6.QtWidgets", fromlist=["QDialogButtonBox"]).QDialogButtonBox.Cancel,
             ok_text="Save Product",
         )
-        # Route Save through validation before accepting
-        box.accepted.disconnect()
-        box.accepted.connect(self.validate_and_accept)
 
     def load_data(self):
         if self.product:
