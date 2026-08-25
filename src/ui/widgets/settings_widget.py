@@ -1,6 +1,7 @@
 import os
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-                               QLabel, QListWidget, QMessageBox, QGroupBox, QFileDialog,
+from datetime import datetime
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
+                               QLabel, QListWidget, QListWidgetItem, QMessageBox, QGroupBox, QFileDialog,
                                QTableWidget, QTableWidgetItem, QHeaderView)
 from PySide6.QtCore import Qt
 from src.core.backup import BackupManager
@@ -23,26 +24,29 @@ class SettingsWidget(QWidget):
         # Backup Section
         backup_group = QGroupBox("Backup & Recovery")
         backup_layout = QVBoxLayout()
-        
+
         self.backup_btn = QPushButton("Create Manual Backup")
         self.backup_btn.clicked.connect(self.create_backup)
         backup_layout.addWidget(self.backup_btn)
-        
+
+        backup_layout.addWidget(QLabel("Available Backups (newest first):"))
         self.backup_list = QListWidget()
-        backup_layout.addWidget(QLabel("Available Backups:"))
+        self.backup_list.setMinimumHeight(120)
+        self.backup_list.itemSelectionChanged.connect(self._on_backup_selection)
         backup_layout.addWidget(self.backup_list)
-        
+
         restore_layout = QHBoxLayout()
         self.restore_btn = QPushButton("Restore Selected Backup")
         self.restore_btn.clicked.connect(self.restore_backup)
-        
+        self.restore_btn.setEnabled(False)
+
         self.restore_external_btn = QPushButton("Restore from File...")
         self.restore_external_btn.clicked.connect(self.restore_external)
-        
+
         restore_layout.addWidget(self.restore_btn)
         restore_layout.addWidget(self.restore_external_btn)
         backup_layout.addLayout(restore_layout)
-        
+
         backup_group.setLayout(backup_layout)
         layout.addWidget(backup_group)
         
@@ -137,12 +141,26 @@ class SettingsWidget(QWidget):
 
         layout.addStretch()
 
+    def _on_backup_selection(self):
+        self.restore_btn.setEnabled(bool(self.backup_list.selectedItems()))
+
     def refresh_backups(self):
         self.backup_list.clear()
         try:
             backups = BackupManager.list_backups()
-            for b in backups:
-                self.backup_list.addItem(os.path.basename(b))
+            for b in sorted(backups, reverse=True):
+                name = os.path.basename(b)
+                try:
+                    stat = os.stat(b)
+                    size_mb = stat.st_size / (1024 * 1024)
+                    modified = datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M")
+                    label = f"{name}   ({modified}  •  {size_mb:.1f} MB)"
+                except OSError:
+                    label = name
+                item = QListWidgetItem(label)
+                item.setData(Qt.UserRole, name)  # keep raw filename for restore
+                self.backup_list.addItem(item)
+            self._on_backup_selection()
         except Exception as e:
             logger.error(f"Failed to list backups: {e}")
 
@@ -159,11 +177,11 @@ class SettingsWidget(QWidget):
         if not selected:
             QMessageBox.warning(self, "Warning", "Please select a backup to restore.")
             return
-            
-        filename = selected.text()
+
+        filename = selected.data(Qt.UserRole)
         from src.core.paths import BACKUP_DIR
-        full_path = os.path.join(BACKUP_DIR, filename)
-        
+        full_path = os.path.join(str(BACKUP_DIR), filename)
+
         self._execute_restore(full_path)
 
     def restore_external(self):
