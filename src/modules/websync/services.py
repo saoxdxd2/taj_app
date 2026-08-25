@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from decimal import Decimal, InvalidOperation
@@ -22,14 +23,8 @@ class WebsiteSyncService:
     """
 
     @staticmethod
-    @transactional
-    def export_catalog(context: RequestContext, session, output_path: str) -> Dict:
-        """
-        Writes the website catalog JSON and returns a summary.
-        Only non-archived products are exported; stock comes from StockLevel.
-        """
-        PermissionManager.verify_permission(context, "Settings.WebsiteSync.Export")
-
+    def _build_catalog_payload(session) -> Dict:
+        """Builds the catalog payload from the current session state."""
         from src.modules.inventory.models import Product, ProductState, StockLevel
 
         rows = (
@@ -52,11 +47,23 @@ class WebsiteSyncService:
                 "brand": product.brand.name if product.brand else None,
             })
 
-        payload = {
+        return {
             "exported_at": datetime.now(timezone.utc).isoformat(),
             "product_count": len(products),
             "products": products,
         }
+
+    @staticmethod
+    @transactional
+    def export_catalog(context: RequestContext, session, output_path: str) -> Dict:
+        """
+        Manual export with permission check and audit trail.
+        Only non-archived products are exported; stock comes from StockLevel.
+        """
+        PermissionManager.verify_permission(context, "Settings.WebsiteSync.Export")
+
+        payload = WebsiteSyncService._build_catalog_payload(session)
+        products = payload["products"]
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
 
@@ -71,16 +78,69 @@ class WebsiteSyncService:
         return {"path": output_path, "count": len(products)}
 
     @staticmethod
-    @transactional
-    def import_price_updates(context: RequestContext, session, input_path: str) -> Dict:
+    def auto_export_catalog() -> Optional[Dict]:
         """
-        Applies website price updates. Expects a JSON file that is either a
-        list of {sku, sale_price} objects or an object with a 'products' key.
-        Unknown SKUs are skipped and reported; invalid prices are reported.
-        Returns a summary dict.
+        Silent automatic export to the sync folder using its own DB
+        session. Never raises — failures are logged only. Called after
+        every product/stock commit and at startup.
         """
-        PermissionManager.verify_permission(context, "Settings.WebsiteSync.Import")
+        try:
+            from src.modules.websync.sync_config import get_sync_folder
+            from src.database.session import SessionLocal
 
+            out = get_sync_folder() / "website_catalog.json"
+            with SessionLocal() as session:
+                payload = WebsiteSyncService._build_catalog_payload(session)
+            tmp = out.with_suffix(".tmp")
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
+            os.replace(tmp, out)  # atomic: readers never see a half file
+            logger.debug(f"Auto-exported catalog ({payload['product_count']} products) to {out}")
+            return {"path": str(out), "count": payload["product_count"]}
+        except Exception as e:
+            logger.error(f"Auto-export of website catalog failed: {e}")
+            return None
+
+    @staticmethod
+    def process_pending_updates() -> Optional[Dict]:
+        """
+        Automatic import: looks for price_updates.json in the sync folder.
+        If found, applies it and renames it to
+        price_updates.applied-<timestamp>.json so it is never applied twice.
+        Returns the summary dict, or None when there was nothing to do.
+        Never raises — failures are logged only.
+        """
+        try:
+            from src.modules.websync.sync_config import get_sync_folder
+            from src.database.session import SessionLocal
+
+            pending = get_sync_folder() / "price_updates.json"
+            if not pending.exists():
+                return None
+
+            summary = None
+            with SessionLocal() as session:
+                summary = WebsiteSyncService._apply_updates(session, str(pending))
+                session.commit()
+
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            done = pending.with_name(f"price_updates.applied-{stamp}.json")
+            os.replace(pending, done)
+            logger.info(
+                f"Auto-imported website prices: {summary['updated_count']} updated, "
+                f"{len(summary['unknown_skus'])} unknown, {len(summary['errors'])} errors."
+            )
+            return summary
+        except Exception as e:
+            logger.error(f"Auto-import of website prices failed: {e}")
+            return None
+
+    @staticmethod
+    def _apply_updates(session, input_path: str, user_id=None) -> Dict:
+        """
+        Core price-update application shared by the manual and automatic
+        paths. Parses the JSON file and applies it to the session.
+        """
         with open(input_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
@@ -130,7 +190,7 @@ class WebsiteSyncService:
                     entity_id=str(product.id),
                     before_values={"sale_price": float(old_price or 0)},
                     after_values={"sale_price": float(price)},
-                    user_id=context.user_id,
+                    user_id=user_id,
                 )
 
         summary = {
@@ -144,3 +204,14 @@ class WebsiteSyncService:
             f"{len(skipped_unknown)} unknown SKUs, {len(errors)} errors."
         )
         return summary
+
+    @staticmethod
+    @transactional
+    def import_price_updates(context: RequestContext, session, input_path: str) -> Dict:
+        """
+        Manual import with permission check and user attribution.
+        Expects a JSON file that is either a list of {sku, sale_price}
+        objects or an object with a 'products' key.
+        """
+        PermissionManager.verify_permission(context, "Settings.WebsiteSync.Import")
+        return WebsiteSyncService._apply_updates(session, input_path, user_id=context.user_id)

@@ -177,6 +177,15 @@ def main():
     # Initialize DB and ensure default admin exists
     init_db()
 
+    # Start automatic website synchronization (catalog auto-export +
+    # pending price-update auto-import)
+    try:
+        from src.modules.websync.auto import setup_auto_sync
+        setup_auto_sync()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Website auto-sync failed to start: {e}")
+
     # Add automatic backup on shutdown
     def shutdown_backup():
         from src.core.backup import BackupManager

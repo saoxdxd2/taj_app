@@ -129,6 +129,17 @@ class MainWindow(QMainWindow):
         self.sidebar.currentRowChanged.connect(self._on_nav_changed)
         self.sidebar.setCurrentRow(0)
 
+        # Periodically pick up website price updates dropped in the
+        # sync folder (every 5 minutes)
+        from PySide6.QtCore import QTimer
+        from src.modules.websync.services import WebsiteSyncService
+        self._sync_timer = QTimer(self)
+        self._sync_timer.setInterval(5 * 60 * 1000)
+        self._sync_timer.timeout.connect(
+            lambda: WebsiteSyncService.process_pending_updates()
+        )
+        self._sync_timer.start()
+
         # Context Label
         context = CurrentSession.get_context()
         self.statusBar().showMessage(f"Logged in as: {context.username} ({context.role})")

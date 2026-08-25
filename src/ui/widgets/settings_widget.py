@@ -115,12 +115,30 @@ class SettingsWidget(QWidget):
         layout.addWidget(health_group)
 
         # Website Sync Section
-        websync_group = QGroupBox("Website Sync")
+        websync_group = QGroupBox("Website Sync (automatic)")
         websync_layout = QVBoxLayout()
 
-        self.btn_export_catalog = QPushButton("Export Catalog for Website...")
+        from src.modules.websync.sync_config import get_sync_folder
+        self.sync_folder_label = QLabel(
+            f"<b>Sync folder:</b> {get_sync_folder()}<br>"
+            "<span style='color:#718096;'>The catalog is refreshed here automatically on every "
+            "product/stock change. Drop a <i>price_updates.json</i> file here and it is applied "
+            "automatically within 5 minutes.</span>"
+        )
+        self.sync_folder_label.setTextFormat(Qt.RichText)
+        self.sync_folder_label.setWordWrap(True)
+        websync_layout.addWidget(self.sync_folder_label)
+
+        folder_row = QHBoxLayout()
+        self.btn_change_sync_folder = QPushButton("Change Sync Folder...")
+        self.btn_change_sync_folder.clicked.connect(self.change_sync_folder)
+        folder_row.addWidget(self.btn_change_sync_folder)
+        folder_row.addStretch()
+        websync_layout.addLayout(folder_row)
+
+        self.btn_export_catalog = QPushButton("Export Catalog Now...")
         self.btn_export_catalog.clicked.connect(self.export_catalog)
-        self.btn_import_prices = QPushButton("Import Web Price Updates...")
+        self.btn_import_prices = QPushButton("Import Price Updates Now...")
         self.btn_import_prices.clicked.connect(self.import_prices)
         websync_layout.addWidget(self.btn_export_catalog)
         websync_layout.addWidget(self.btn_import_prices)
@@ -257,6 +275,29 @@ class SettingsWidget(QWidget):
             self.health_table.setItem(row, 0, name_item)
             self.health_table.setItem(row, 1, status_item)
             self.health_table.setItem(row, 2, detail_item)
+
+    def change_sync_folder(self):
+        from src.modules.websync.sync_config import get_sync_folder, set_sync_folder
+        path = QFileDialog.getExistingDirectory(
+            self, "Choose Website Sync Folder", str(get_sync_folder())
+        )
+        if not path:
+            return
+        try:
+            set_sync_folder(path)
+            self.sync_folder_label.setText(
+                f"<b>Sync folder:</b> {path}<br>"
+                "<span style='color:#718096;'>The catalog is refreshed here automatically on every "
+                "product/stock change. Drop a <i>price_updates.json</i> file here and it is applied "
+                "automatically within 5 minutes.</span>"
+            )
+            QMessageBox.information(
+                self, "Sync Folder Updated",
+                "The website sync folder was updated.\n"
+                "Point the website (or its copy task) to this folder."
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to change sync folder:\n{e}")
 
     def export_catalog(self):
         from src.core.session import CurrentSession

@@ -4,9 +4,9 @@ from sqlalchemy.orm import sessionmaker
 from src.database.base import BaseModel
 
 @pytest.fixture(scope="function")
-def session():
+def db_engine():
     """
-    Creates an in-memory SQLite session for testing.
+    Creates an in-memory SQLite engine with migrations applied.
     """
     engine = create_engine("sqlite:///:memory:")
 
@@ -50,10 +50,18 @@ def session():
         alembic_cfg.attributes['connection'] = connection
         command.upgrade(alembic_cfg, "head")
     
-    Session = sessionmaker(bind=engine)
+    return engine
+
+
+@pytest.fixture(scope="function")
+def session(db_engine):
+    """
+    Creates an in-memory SQLite session for testing.
+    """
+    Session = sessionmaker(bind=db_engine)
     session = Session()
-    
+
     yield session
-    
+
     session.rollback()
     session.close()

@@ -2,9 +2,29 @@
 
 The ERP and the website are **decoupled on purpose**: they never talk to
 each other directly over the network. Instead they exchange two simple
-**JSON files**. This works with *any* website technology (WordPress,
-WooCommerce, Shopify, custom PHP/Node site…) and cannot break if the
-website is offline.
+**JSON files** through a shared **sync folder**. This works with *any*
+website technology (WordPress, WooCommerce, Shopify, custom PHP/Node
+site…) and cannot break if the website is offline.
+
+## 0. It is automatic
+
+You do **not** need to import or export anything by hand:
+
+- **ERP → Website**: every time a product is created, edited,
+  activated/archived, its price changes, or stock moves, the ERP
+  silently rewrites `website_catalog.json` in the sync folder
+  (atomically — the site never reads a half-written file).
+- **Website → ERP**: drop a `price_updates.json` file in the sync
+  folder; the ERP picks it up automatically at startup and every
+  5 minutes while running, applies it, then renames it to
+  `price_updates.applied-<timestamp>.json` so it is never applied twice.
+
+The sync folder defaults to `C:\Users\<you>\AppData\Local\TAJ_FROID\website_sync`
+and can be changed in Settings → Website Sync → *Change Sync Folder...*.
+Point the website side (admin import, FTP task, Dropbox…) at that folder.
+
+Manual buttons ("Export Catalog Now...", "Import Price Updates Now...")
+remain available for one-off operations.
 
 ```
 ┌─────────────┐   website_catalog.json    ┌──────────────────┐
