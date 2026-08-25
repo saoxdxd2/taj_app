@@ -56,3 +56,7 @@ htmlcov/
 # --- AI/engineering scratch ---
 text
 *.tmp
+# --- Local research / scratch (not part of the product) ---
+crypto-research/
+error.txt
+trace.txt
