@@ -17,6 +17,7 @@ class SettingsWidget(QWidget):
         super().__init__(parent)
         self.setup_ui()
         self.refresh_backups()
+        self.refresh_users()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -145,6 +146,31 @@ class SettingsWidget(QWidget):
 
         websync_group.setLayout(websync_layout)
         layout.addWidget(websync_group)
+
+        # User Management Section
+        users_group = QGroupBox("User Management")
+        users_layout = QVBoxLayout()
+
+        self.users_table = QTableWidget(0, 3)
+        self.users_table.setHorizontalHeaderLabels(["Username", "Role", "Status"])
+        self.users_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.users_table.verticalHeader().setVisible(False)
+        self.users_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.users_table.setMaximumHeight(160)
+        users_layout.addWidget(self.users_table)
+
+        users_btn_row = QHBoxLayout()
+        self.btn_add_user = QPushButton("Add User...")
+        self.btn_add_user.clicked.connect(self.add_user)
+        self.btn_toggle_user = QPushButton("Enable / Disable Selected")
+        self.btn_toggle_user.clicked.connect(self.toggle_selected_user)
+        users_btn_row.addWidget(self.btn_add_user)
+        users_btn_row.addWidget(self.btn_toggle_user)
+        users_btn_row.addStretch()
+        users_layout.addLayout(users_btn_row)
+
+        users_group.setLayout(users_layout)
+        layout.addWidget(users_group)
 
         # Account Security Section
         security_group = QGroupBox("Account Security")
@@ -338,6 +364,47 @@ class SettingsWidget(QWidget):
             QMessageBox.information(self, "Import Complete", msg)
         except Exception as e:
             QMessageBox.critical(self, "Import Failed", f"Failed to import price updates:\n{e}")
+
+    def refresh_users(self):
+        from src.database.session import SessionLocal
+        from src.modules.authentication.services import AuthenticationService
+        try:
+            with SessionLocal() as session:
+                users = AuthenticationService.list_users(session)
+            self.users_table.setRowCount(len(users))
+            for row, u in enumerate(users):
+                status = "Active" if u["is_active"] else "Disabled"
+                for col, value in enumerate([u["username"], u["role"], status]):
+                    item = QTableWidgetItem(value)
+                    if col == 2 and not u["is_active"]:
+                        from PySide6.QtGui import QColor
+                        item.setForeground(QColor("#c0392b"))
+                    self.users_table.setItem(row, col, item)
+        except Exception as e:
+            logger.error(f"Failed to list users: {e}")
+
+    def add_user(self):
+        from src.ui.dialogs.auth_dialogs import CreateUserDialog
+        dialog = CreateUserDialog(parent=self)
+        if dialog.exec():
+            self.refresh_users()
+
+    def toggle_selected_user(self):
+        from src.database.session import SessionLocal
+        from src.modules.authentication.services import AuthenticationService
+        selected = self.users_table.currentItem()
+        if not selected:
+            QMessageBox.warning(self, "Warning", "Please select a user first.")
+            return
+        username = self.users_table.item(selected.row(), 0).text()
+        currently_active = self.users_table.item(selected.row(), 2).text() == "Active"
+        try:
+            with SessionLocal() as session:
+                AuthenticationService.set_user_active(session, username, not currently_active)
+                session.commit()
+            self.refresh_users()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to update user:\n{e}")
 
     def change_password(self):
         from src.core.session import CurrentSession

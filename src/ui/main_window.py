@@ -16,6 +16,7 @@ from src.ui.widgets.purchase_widget import PurchaseWidget
 from src.ui.widgets.finance_widget import FinanceWidget
 from src.ui.widgets.sales_widget import SalesWidget
 from src.ui.widgets.settings_widget import SettingsWidget
+from src.ui.widgets.calendar_widget import CalendarWidget
 
 class LoginDialog(QDialog):
     def __init__(self, parent=None):
@@ -90,6 +91,7 @@ class MainWindow(QMainWindow):
 
         nav_items = [
             "🏠  Dashboard",
+            "📅  Calendar",
             "📦  Inventory",
             "👥  CRM",
             "🚚  Suppliers",
@@ -106,6 +108,7 @@ class MainWindow(QMainWindow):
 
         # Initialize widgets
         self.dashboard_widget = DashboardWidget()
+        self.calendar_widget = CalendarWidget()
         self.product_widget = ProductWidget()
         self.customer_widget = CustomerWidget()
         self.supplier_widget = SupplierWidget()
@@ -115,6 +118,7 @@ class MainWindow(QMainWindow):
         self.settings_widget = SettingsWidget()
 
         self.stack.addWidget(self.dashboard_widget)
+        self.stack.addWidget(self.calendar_widget)
         self.stack.addWidget(self.product_widget)
         self.stack.addWidget(self.customer_widget)
         self.stack.addWidget(self.supplier_widget)

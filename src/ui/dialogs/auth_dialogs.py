@@ -2,6 +2,7 @@
 Authentication dialogs:
 - FirstRunSetupDialog: Shown on first launch to force admin to set real credentials.
 - ChangePasswordDialog: Available in Settings to change the current user's password.
+- CreateUserDialog: Administrator creates a new user account with a role.
 """
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QFormLayout, QLineEdit,
@@ -234,4 +235,90 @@ class ChangePasswordDialog(QDialog):
             QMessageBox.warning(self, "Validation Error", str(e))
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to change password: {str(e)}")
+
+
+class CreateUserDialog(QDialog):
+    """
+    Administrator creates a new user account (username, password, role).
+    The account is persisted in the database immediately.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Add User")
+        self.setMinimumWidth(400)
+        self._setup_ui()
+
+    def _setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setSpacing(14)
+
+        form = QFormLayout()
+        form.setLabelAlignment(Qt.AlignRight)
+        form.setSpacing(10)
+
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("e.g. yassine")
+        form.addRow("Username:", self.username_input)
+
+        self.password_input = QLineEdit()
+        self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.setPlaceholderText("Minimum 8 characters")
+        form.addRow("Password:", self.password_input)
+
+        self.confirm_input = QLineEdit()
+        self.confirm_input.setEchoMode(QLineEdit.Password)
+        self.confirm_input.setPlaceholderText("Repeat password")
+        form.addRow("Confirm Password:", self.confirm_input)
+
+        from PySide6.QtWidgets import QComboBox
+        self.role_combo = QComboBox()
+        from src.database.session import SessionLocal
+        from src.modules.authentication.models import Role
+        with SessionLocal() as session:
+            roles = session.query(Role).all()
+        for r in roles:
+            self.role_combo.addItem(r.name)
+        form.addRow("Role:", self.role_combo)
+
+        layout.addLayout(form)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.button(QDialogButtonBox.Ok).setText("Create User")
+        buttons.accepted.connect(self._on_accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def _on_accept(self):
+        username = self.username_input.text().strip()
+        password = self.password_input.text()
+        confirm = self.confirm_input.text()
+        role_name = self.role_combo.currentText()
+
+        if not username:
+            QMessageBox.warning(self, "Validation Error", "Username cannot be empty.")
+            return
+        if len(password) < 8:
+            QMessageBox.warning(self, "Validation Error", "Password must be at least 8 characters.")
+            return
+        if password != confirm:
+            QMessageBox.warning(self, "Validation Error", "Passwords do not match.")
+            return
+
+        try:
+            from src.modules.authentication.services import AuthenticationService
+            from src.database.session import SessionLocal
+            with SessionLocal() as session:
+                AuthenticationService.create_user(session, username, password, role_name)
+                session.commit()
+            QMessageBox.information(
+                self, "User Created",
+                f"User '{username}' ({role_name}) created successfully.\n"
+                "They can now log in with these credentials."
+            )
+            self.accept()
+        except ValueError as e:
+            QMessageBox.warning(self, "Validation Error", str(e))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to create user: {str(e)}")
 

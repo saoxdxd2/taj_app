@@ -123,6 +123,13 @@ QLabel {{
     background: transparent;
 }}
 
+/* ---------- KPI cards ---------- */
+QFrame#kpi_card {{
+    background: {CARD};
+    border: 1px solid {BORDER};
+    border-radius: 10px;
+}}
+
 /* ---------- Status bar & misc ---------- */
 QStatusBar {{
     background: {SIDEBAR_BG};

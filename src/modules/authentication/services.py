@@ -126,6 +126,64 @@ class AuthenticationService:
         return AuthenticationService.verify_password("admin", user.password_hash)
 
     @staticmethod
+    @transactional
+    def create_user(session, username: str, password: str, role_name: str) -> User:
+        """
+        Creates a new user with a hashed password and an existing role.
+        Users are persisted in the SQLite database like everything else.
+        """
+        if not username or not username.strip():
+            raise ValueError("Username is required.")
+        username = username.strip()
+        if len(password) < 8:
+            raise ValueError("Password must be at least 8 characters long.")
+
+        if session.query(User).filter(User.username == username).first():
+            raise ValueError(f"User '{username}' already exists.")
+
+        role = session.query(Role).filter(Role.name == role_name).first()
+        if not role:
+            raise ValueError(f"Role '{role_name}' does not exist.")
+
+        user = User(
+            username=username,
+            password_hash=AuthenticationService.hash_password(password),
+            role_id=role.id,
+        )
+        session.add(user)
+        session.flush()
+        logger.info(f"Created user '{username}' with role '{role_name}'.")
+        return user
+
+    @staticmethod
+    @transactional
+    def list_users(session) -> list:
+        """
+        Returns all users with their role names, for the management UI.
+        """
+        users = session.query(User).all()
+        return [
+            {
+                "id": u.id,
+                "username": u.username,
+                "role": u.role.name if u.role else "-",
+                "is_active": bool(u.is_active),
+            }
+            for u in users
+        ]
+
+    @staticmethod
+    @transactional
+    def set_user_active(session, username: str, is_active: bool) -> bool:
+        """Enables or disables a user account."""
+        user = session.query(User).filter(User.username == username).first()
+        if not user:
+            raise ValueError(f"User '{username}' not found.")
+        user.is_active = is_active
+        logger.info(f"User '{username}' {'enabled' if is_active else 'disabled'}.")
+        return True
+
+    @staticmethod
     def logout():
         """
         Clears the active session.

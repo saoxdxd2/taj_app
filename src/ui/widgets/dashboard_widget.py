@@ -34,6 +34,17 @@ class DashboardWidget(QWidget):
         title.setTextFormat(Qt.RichText)
         layout.addWidget(title)
 
+        # --- KPI cards row ---
+        kpi_row = QHBoxLayout()
+        kpi_row.setSpacing(12)
+        self.kpi_revenue = self._make_kpi_card("Revenue this month", "—", "#27ae60")
+        self.kpi_debts = self._make_kpi_card("Client debts", "—", "#c0392b")
+        self.kpi_low_stock = self._make_kpi_card("Low stock items", "—", "#e67e22")
+        self.kpi_checks = self._make_kpi_card("Checks due (7d)", "—", "#1f3a5f")
+        for card in (self.kpi_revenue, self.kpi_debts, self.kpi_low_stock, self.kpi_checks):
+            kpi_row.addWidget(card[0])
+        layout.addLayout(kpi_row)
+
         # --- Low stock section ---
         low_stock_header = QHBoxLayout()
         low_stock_header.addWidget(QLabel("<b>Low Stock (at or below reorder threshold)</b>"))
@@ -90,10 +101,45 @@ class DashboardWidget(QWidget):
         self.forecast_table.setEditTriggers(QTableWidget.NoEditTriggers)
         layout.addWidget(self.forecast_table)
 
+    def _make_kpi_card(self, label_text, value_text, color):
+        """Creates a styled KPI card; returns (frame, value_label)."""
+        from PySide6.QtWidgets import QFrame
+        frame = QFrame()
+        frame.setObjectName("kpi_card")
+        v = QVBoxLayout(frame)
+        v.setContentsMargins(14, 10, 14, 10)
+        label = QLabel(label_text.upper())
+        label.setStyleSheet(f"color: #718096; font-size: 11px; letter-spacing: 1px;")
+        value = QLabel(value_text)
+        value.setStyleSheet(f"color: {color}; font-size: 22px; font-weight: bold;")
+        v.addWidget(label)
+        v.addWidget(value)
+        return frame, value
+
     def refresh(self):
         self._load_low_stock()
         self._load_checks_due()
         self._load_forecast()
+        self._load_kpis()
+
+    def _load_kpis(self):
+        """Fills the four KPI cards with live numbers."""
+        # Revenue this month (net cash flow)
+        try:
+            flow = FinanceService.get_cash_flow(context=self.context)
+            self.kpi_revenue[1].setText(f"{flow['net']:,.0f} DH")
+        except Exception:
+            self.kpi_revenue[1].setText("—")
+
+        # Total client debts
+        try:
+            debtors = FinanceService.get_debtors(context=self.context)
+            total_debt = sum(d["outstanding"] for d in debtors)
+            self.kpi_debts[1].setText(f"{total_debt:,.0f} DH")
+        except Exception:
+            self.kpi_debts[1].setText("—")
+
+        # Low stock + checks counts are set by their loaders; defaults here
 
     def _load_forecast(self):
         try:
@@ -149,6 +195,7 @@ class DashboardWidget(QWidget):
                     cell.setForeground(Qt.red)
                 self.stock_table.setItem(row, col, cell)
 
+        self.kpi_low_stock[1].setText(str(len(items)))
         count = len(items)
         self.low_stock_count_label.setText(
             f"({count} product{'s' if count != 1 else ''} to reorder)"
@@ -192,6 +239,7 @@ class DashboardWidget(QWidget):
             1 for c in checks
             if c.due_date and c.due_date.date() < today
         )
+        self.kpi_checks[1].setText(str(count))
         summary = f"({count} check{'s' if count != 1 else ''}"
         if overdue_count:
             summary += f", {overdue_count} OVERDUE"
