@@ -1,4 +1,10 @@
+import os
 import sys
+
+# Silence Qt's "Cannot find font directory" console warning by pointing
+# it at the Windows system fonts (Qt no longer bundles fonts).
+os.environ.setdefault("QT_QPA_FONTDIR", r"C:\Windows\Fonts")
+
 from PySide6.QtWidgets import QApplication
 
 from src.database.session import SessionLocal, engine
