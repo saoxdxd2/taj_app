@@ -61,14 +61,37 @@ class SalesService:
         )
 
     @staticmethod
-    @transactional
-    def create_invoice_draft(context: RequestContext, session, invoice_number: str, customer_id: int) -> Invoice:
+    def generate_invoice_number(context: RequestContext, session) -> str:
         """
-        Creates a new invoice in Draft state.
+        Sequential invoice number per year: N°01-26, N°02-26, ...
+        Scans the numbers already used for the current year and returns
+        the next free sequence. Zero-padded to 2 digits (rolls to 3+ past 99).
         """
         PermissionManager.verify_permission(context, "Sales.Invoices.Create")
-        if not invoice_number:
-            raise ValueError("Invoice number is required.")
+        now = datetime.now(timezone.utc)
+        yy = f"{now.year % 100:02d}"
+        suffix = f"-{yy}"
+        rows = session.query(Invoice.invoice_number).filter(
+            Invoice.invoice_number.like(f"N°%{suffix}")
+        ).all()
+        max_seq = 0
+        for (number,) in rows:
+            middle = number[2:-len(suffix)]  # strip 'N°' prefix and '-YY' suffix
+            if middle.isdigit():
+                max_seq = max(max_seq, int(middle))
+        return f"N°{max_seq + 1:02d}-{yy}"
+
+    @staticmethod
+    @transactional
+    def create_invoice_draft(context: RequestContext, session, customer_id: int,
+                             invoice_number: Optional[str] = None) -> Invoice:
+        """
+        Creates a new invoice in Draft state.
+        If no number is given, one is generated automatically (N°XX-YY).
+        """
+        PermissionManager.verify_permission(context, "Sales.Invoices.Create")
+        if invoice_number is None:
+            invoice_number = SalesService.generate_invoice_number(context, session=session)
             
         invoice = Invoice(
             invoice_number=invoice_number,

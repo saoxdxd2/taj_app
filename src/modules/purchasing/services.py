@@ -1,6 +1,7 @@
 import logging
 from decimal import Decimal
-from typing import List, Tuple
+from datetime import datetime
+from typing import List, Optional, Tuple
 from src.modules.purchasing.models import Purchase, PurchaseItem, PurchaseState
 from src.core.context import RequestContext
 from src.security.permissions import PermissionManager
@@ -56,6 +57,7 @@ class PurchasingService:
             total_amount=Decimal("0.00")
         )
         session.add(purchase)
+        session.flush()  # Flush to get ID
         logger.info(f"Created new draft purchase: {reference} by {context.username}")
         return purchase
 
@@ -151,3 +153,54 @@ class PurchasingService:
         
         logger.info(f"Validated purchase: {purchase.reference} by {context.username}.")
         return True
+
+    # ------------------------------------------------------------------
+    # Cost history (what did we really pay for this product over time?)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    @transactional
+    def get_product_cost_history(context: RequestContext, session, product_id: int,
+                                 limit: int = 20) -> List[dict]:
+        """
+        Chronological cost history for a product from VALIDATED purchases only
+        (drafts are not real costs yet). Newest first. Single indexed join,
+        limited rows — O(limit), not O(table).
+        """
+        PermissionManager.verify_permission(context, "Purchasing.Purchases.View")
+
+        from sqlalchemy.orm import joinedload
+        rows = (
+            session.query(PurchaseItem)
+            .join(Purchase)
+            .options(joinedload(PurchaseItem.purchase).joinedload(Purchase.supplier))
+            .filter(
+                PurchaseItem.product_id == product_id,
+                Purchase.state == PurchaseState.VALIDATED,
+            )
+            .order_by(Purchase.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+        return [
+            {
+                "date": item.purchase.created_at,
+                "reference": item.purchase.reference,
+                "supplier": item.purchase.supplier.company_name if item.purchase.supplier else None,
+                "quantity": item.quantity,
+                "unit_cost": item.unit_cost,
+            }
+            for item in rows
+        ]
+
+    @staticmethod
+    @transactional
+    def get_last_purchase_cost(context: RequestContext, session, product_id: int) -> Optional[Decimal]:
+        """
+        The most recent validated unit cost for a product — the number to
+        pre-fill when selling or re-ordering. Returns None if never purchased.
+        """
+        history = PurchasingService.get_product_cost_history(
+            context, session=session, product_id=product_id, limit=1
+        )
+        return history[0]["unit_cost"] if history else None

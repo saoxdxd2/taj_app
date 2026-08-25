@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from typing import Optional, List
 from src.modules.crm.models import Customer, Address
 from src.core.context import RequestContext
@@ -127,3 +128,54 @@ class CRMService:
         session.add(address)
         logger.info(f"Added address to customer ID {customer_id} by {context.username}.")
         return address
+
+    @staticmethod
+    @transactional
+    def get_customer_trade_stats(context: RequestContext, session, customer_id: int) -> dict:
+        """
+        Commercial relationship summary for one client:
+        - invoices count / total invoiced (VAT incl.)
+        - total paid and outstanding balance
+        - last purchase date
+        - available deposit ('bon') balance
+        Aggregated in Python over this customer's rows only — volumes per
+        client are small (hundreds), so this is faster than multi-join SQL.
+        """
+        PermissionManager.verify_permission(context, "CRM.Customers.View")
+
+        from src.modules.sales.models import Invoice, Payment, CustomerDeposit, DepositState
+
+        customer = session.query(Customer).filter(Customer.id == customer_id).first()
+        if not customer:
+            raise ValueError(f"Customer ID {customer_id} not found.")
+
+        invoices = session.query(Invoice).filter(Invoice.customer_id == customer_id).all()
+        total_invoiced = sum((inv.total_amount for inv in invoices), Decimal("0.00"))
+        invoice_ids = [inv.id for inv in invoices]
+
+        total_paid = Decimal("0.00")
+        if invoice_ids:
+            payments = session.query(Payment).filter(Payment.invoice_id.in_(invoice_ids)).all()
+            total_paid = sum((p.amount for p in payments), Decimal("0.00"))
+
+        deposits = session.query(CustomerDeposit).filter(
+            CustomerDeposit.customer_id == customer_id,
+            CustomerDeposit.state == DepositState.OPEN,
+        ).all()
+        available_deposits = sum(
+            (d.amount - d.amount_used for d in deposits), Decimal("0.00")
+        )
+
+        dated = [inv.created_at for inv in invoices if inv.created_at is not None]
+        last_purchase = max(dated) if dated else None
+
+        return {
+            "customer_id": customer_id,
+            "company_name": customer.company_name,
+            "invoices_count": len(invoices),
+            "total_invoiced": total_invoiced,
+            "total_paid": total_paid,
+            "outstanding_balance": total_invoiced - total_paid,
+            "last_purchase": last_purchase,
+            "available_deposits": available_deposits,
+        }
