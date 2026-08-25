@@ -12,6 +12,7 @@ from src.ui.widgets.product_widget import ProductWidget
 from src.ui.widgets.customer_widget import CustomerWidget
 from src.ui.widgets.supplier_widget import SupplierWidget
 from src.ui.widgets.purchase_widget import PurchaseWidget
+from src.ui.widgets.finance_widget import FinanceWidget
 from src.ui.widgets.sales_widget import SalesWidget
 from src.ui.widgets.settings_widget import SettingsWidget
 
@@ -77,6 +78,7 @@ class MainWindow(QMainWindow):
             "CRM",
             "Suppliers",
             "Purchasing",
+            "Finance",
             "Sales",
             "Settings"
         ]
@@ -91,6 +93,7 @@ class MainWindow(QMainWindow):
         self.customer_widget = CustomerWidget()
         self.supplier_widget = SupplierWidget()
         self.purchase_widget = PurchaseWidget()
+        self.finance_widget = FinanceWidget()
         self.sales_widget = SalesWidget()
         self.settings_widget = SettingsWidget()
 
@@ -99,6 +102,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.customer_widget)
         self.stack.addWidget(self.supplier_widget)
         self.stack.addWidget(self.purchase_widget)
+        self.stack.addWidget(self.finance_widget)
         self.stack.addWidget(self.sales_widget)
         self.stack.addWidget(self.settings_widget)
 

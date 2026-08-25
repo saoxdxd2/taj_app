@@ -1,0 +1,233 @@
+from datetime import datetime, timezone
+
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                               QTableWidget, QTableWidgetItem, QPushButton,
+                               QHeaderView, QMessageBox, QGroupBox, QGridLayout)
+
+from src.core.session import CurrentSession
+from src.modules.finance.services import FinanceService
+from src.modules.finance.models import CheckStatus
+from src.ui.dialogs.finance_dialogs import NewCheckDialog
+
+
+class FinanceWidget(QWidget):
+    """
+    Finance page: cash-flow summary for the current month, client debtors,
+    and full check lifecycle management (deposit / clear / bounce / cancel).
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.context = CurrentSession.get_context()
+        self.setup_ui()
+        self.refresh()
+
+    def setup_ui(self):
+        layout = QVBoxLayout(self)
+
+        title = QLabel("<h2>Finance</h2>")
+        layout.addWidget(title)
+
+        # --- Cash flow summary ---
+        cash_box = QGroupBox("Cash Flow - current month")
+        grid = QGridLayout(cash_box)
+        self.inflow_label = QLabel("-")
+        self.outflow_label = QLabel("-")
+        self.net_label = QLabel("-")
+        for row, (name, widget) in enumerate((
+            ("Money in:", self.inflow_label),
+            ("Money out:", self.outflow_label),
+            ("Net:", self.net_label),
+        )):
+            grid.addWidget(QLabel(name), row, 0)
+            grid.addWidget(widget, row, 1)
+        grid.setColumnStretch(2, 1)
+        layout.addWidget(cash_box)
+
+        # --- Debtors ---
+        layout.addWidget(QLabel("<b>Client Debtors (outstanding balances)</b>"))
+        self.debtors_table = QTableWidget(0, 4)
+        self.debtors_table.setHorizontalHeaderLabels(
+            ["Client", "Invoiced", "Paid", "Outstanding"]
+        )
+        self.debtors_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.debtors_table.verticalHeader().setVisible(False)
+        self.debtors_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.debtors_table.setMaximumHeight(160)
+        layout.addWidget(self.debtors_table)
+
+        # --- Checks management ---
+        checks_header = QHBoxLayout()
+        checks_header.addWidget(QLabel("<b>Checks</b>"))
+        self.btn_new_check = QPushButton("New Check")
+        self.btn_deposit = QPushButton("Deposit")
+        self.btn_clear = QPushButton("Cleared")
+        self.btn_bounce = QPushButton("Bounced")
+        self.btn_cancel = QPushButton("Cancel")
+        self.btn_refresh = QPushButton("Refresh")
+        for b in (self.btn_new_check, self.btn_deposit, self.btn_clear,
+                  self.btn_bounce, self.btn_cancel, self.btn_refresh):
+            checks_header.addWidget(b)
+        checks_header.addStretch()
+        layout.addLayout(checks_header)
+
+        self.checks_table = QTableWidget(0, 7)
+        self.checks_table.setHorizontalHeaderLabels(
+            ["Check #", "Direction", "Status", "Amount (DH)", "Due Date", "Party", "Bank"]
+        )
+        self.checks_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.checks_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.checks_table.setSelectionMode(QTableWidget.SingleSelection)
+        self.checks_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.checks_table.selectionModel().selectionChanged.connect(self._on_check_selected)
+        layout.addWidget(self.checks_table)
+
+        # Connections
+        self.btn_new_check.clicked.connect(self.on_new_check)
+        self.btn_deposit.clicked.connect(lambda: self._transition("Deposited"))
+        self.btn_clear.clicked.connect(lambda: self._transition("Cleared"))
+        self.btn_bounce.clicked.connect(lambda: self._transition("Bounced"))
+        self.btn_cancel.clicked.connect(lambda: self._transition("Cancelled"))
+        self.btn_refresh.clicked.connect(self.refresh)
+
+        self._update_transition_buttons(None)
+
+    def refresh(self):
+        self._load_cash_flow()
+        self._load_debtors()
+        self._load_checks()
+
+    # ------------------------------------------------------------------
+
+    def _load_cash_flow(self):
+        try:
+            flow = FinanceService.get_cash_flow(self.context)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load cash flow: {e}")
+            return
+        self.inflow_label.setText(f"{flow['inflow']:,.2f} DH")
+        self.inflow_label.setStyleSheet("color: #27ae60; font-weight: bold;")
+        self.outflow_label.setText(f"{flow['outflow']:,.2f} DH")
+        self.outflow_label.setStyleSheet("color: #c0392b; font-weight: bold;")
+        net_color = "#27ae60" if flow["net"] >= 0 else "#c0392b"
+        self.net_label.setText(f"{flow['net']:,.2f} DH")
+        self.net_label.setStyleSheet(f"color: {net_color}; font-weight: bold;")
+
+    def _load_debtors(self):
+        try:
+            debtors = FinanceService.get_debtors(self.context)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load debtors: {e}")
+            return
+
+        self.debtors_table.setRowCount(len(debtors))
+        for row, d in enumerate(debtors):
+            values = [
+                d["company_name"],
+                f"{d['total_invoiced']:,.2f}",
+                f"{d['total_paid']:,.2f}",
+                f"{d['outstanding']:,.2f}",
+            ]
+            for col, value in enumerate(values):
+                cell = QTableWidgetItem(str(value))
+                if col == 3:
+                    cell.setForeground(Qt_red())
+                self.debtors_table.setItem(row, col, cell)
+
+    def _load_checks(self):
+        from src.modules.finance.models import Check
+        try:
+            session = CurrentSession.get_session()
+            checks = session.query(Check).order_by(Check.due_date.asc()).limit(200).all()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load checks: {e}")
+            return
+
+        today = datetime.now(timezone.utc).date()
+        self.checks_table.setRowCount(len(checks))
+        for row, check in enumerate(checks):
+            due = check.due_date.date() if check.due_date else None
+            overdue = bool(due and due < today and check.status == CheckStatus.PENDING)
+            direction = check.direction.value if hasattr(check.direction, "value") else str(check.direction)
+            status = check.status.value if hasattr(check.status, "value") else str(check.status)
+            values = [
+                check.check_number,
+                direction,
+                status,
+                f"{check.amount:,.2f}",
+                due.isoformat() if due else "-",
+                check.party_name,
+                check.bank or "",
+            ]
+            for col, value in enumerate(values):
+                cell = QTableWidgetItem(str(value))
+                if overdue:
+                    cell.setForeground(Qt_red())
+                    cell.setToolTip("OVERDUE")
+                self.checks_table.setItem(row, col, cell)
+            self.checks_table.item(row, 0).setData(1000, check.id)  # stash id
+
+    def _selected_check_id(self):
+        selection = self.checks_table.selectionModel()
+        if not selection or not selection.hasSelection():
+            return None
+        row = selection.selectedRows()[0].row()
+        item = self.checks_table.item(row, 0)
+        return item.data(1000) if item else None
+
+    def _selected_check_status(self):
+        selection = self.checks_table.selectionModel()
+        if not selection or not selection.hasSelection():
+            return None
+        row = selection.selectedRows()[0].row()
+        return self.checks_table.item(row, 2).text()
+
+    def _on_check_selected(self):
+        self._update_transition_buttons(self._selected_check_status())
+
+    def _update_transition_buttons(self, status):
+        """Enable only the legal transitions for the selected check's state."""
+        allowed = {
+            "Pending": {"Deposited", "Cleared", "Cancelled"},
+            "Deposited": {"Cleared", "Bounced"},
+            "Bounced": {"Deposited", "Cancelled"},
+        }.get(status, set())
+        self.btn_deposit.setEnabled("Deposited" in allowed)
+        self.btn_clear.setEnabled("Cleared" in allowed)
+        self.btn_bounce.setEnabled("Bounced" in allowed)
+        self.btn_cancel.setEnabled("Cancelled" in allowed)
+
+    def on_new_check(self):
+        dialog = NewCheckDialog(self.context, parent=self)
+        if dialog.exec():
+            data = dialog.get_data()
+            try:
+                FinanceService.create_check(self.context, **data)
+                self._load_checks()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to create check: {e}")
+
+    def _transition(self, new_status: str):
+        check_id = self._selected_check_id()
+        if not check_id:
+            QMessageBox.warning(self, "Selection Required", "Please select a check.")
+            return
+        reply = QMessageBox.question(
+            self, "Confirm",
+            f"Move this check to '{new_status}'?"
+            + (" Money will be recorded in the journal." if new_status == "Cleared" else ""),
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if reply != QMessageBox.Yes:
+            return
+        try:
+            FinanceService.update_check_status(self.context, check_id=check_id, new_status=new_status)
+            self.refresh()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to update check: {e}")
+
+
+def Qt_red():
+    """Local helper to avoid importing Qt at module top twice."""
+    from PySide6.QtGui import QColor
+    return QColor("#c0392b")

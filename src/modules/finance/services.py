@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import List, Optional
 from src.modules.finance.models import (
@@ -217,3 +217,187 @@ class FinanceService:
         else:
             query = query.filter(Check.due_date >= now, Check.due_date <= horizon)
         return query.order_by(Check.due_date.asc()).all()
+
+    # ------------------------------------------------------------------
+    # Analytics (cash flow, debtors, monthly profit)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _normalize_dt(value: datetime) -> datetime:
+        """Make naive datetimes UTC-aware to match timezone-aware columns."""
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value
+
+    @staticmethod
+    @transactional
+    def get_cash_flow(context: RequestContext, session,
+                      start: Optional[datetime] = None,
+                      end: Optional[datetime] = None) -> dict:
+        """
+        Money in / money out / net for a period, straight from the immutable
+        journal (reversed entries excluded). Defaults to the current month.
+        One SQL GROUP BY regardless of volume.
+        """
+        PermissionManager.verify_permission(context, "Finance.Reports.View")
+        session.flush()  # make pending writes visible to the aggregation
+
+        from sqlalchemy import func
+
+        now = datetime.now(timezone.utc)
+        if start is None:
+            start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if end is None:
+            end = now
+        if start >= end:
+            raise ValueError("Period start must be before end.")
+        start, end = FinanceService._normalize_dt(start), FinanceService._normalize_dt(end)
+
+        rows = (
+            session.query(
+                FinancialJournalEntry.transaction_type,
+                func.coalesce(func.sum(FinancialJournalEntry.amount), 0),
+            )
+            .filter(
+                FinancialJournalEntry.is_reversed == False,  # noqa: E712
+                FinancialJournalEntry.created_at >= start,
+                FinancialJournalEntry.created_at < end,
+            )
+            .group_by(FinancialJournalEntry.transaction_type)
+            .all()
+        )
+
+        breakdown = {}
+        inflow = outflow = Decimal("0.00")
+        for t_type, total in rows:
+            amount = Decimal(str(total))
+            breakdown[t_type.value] = amount
+            if amount >= 0:
+                inflow += amount
+            else:
+                outflow += abs(amount)
+
+        return {
+            "start": start,
+            "end": end,
+            "inflow": inflow,
+            "outflow": outflow,
+            "net": inflow - outflow,
+            "breakdown": breakdown,
+        }
+
+    @staticmethod
+    @transactional
+    def get_debtors(context: RequestContext, session) -> List[dict]:
+        """
+        Clients who still owe money: outstanding balance per customer,
+        computed with two SQL aggregations (invoiced vs paid), merged in
+        Python. Only customers with a positive balance are returned.
+        """
+        PermissionManager.verify_permission(context, "Finance.Reports.View")
+        session.flush()  # make pending writes visible to the aggregation
+
+        from sqlalchemy import func
+        from src.modules.sales.models import Invoice, Payment, InvoiceState
+
+        states = [InvoiceState.VALIDATED, InvoiceState.ISSUED, InvoiceState.PAID]
+
+        invoiced_rows = (
+            session.query(
+                Invoice.customer_id,
+                func.coalesce(func.sum(Invoice.total_amount), 0),
+            )
+            .filter(Invoice.state.in_(states))
+            .group_by(Invoice.customer_id)
+            .all()
+        )
+        paid_rows = (
+            session.query(
+                Invoice.customer_id,
+                func.coalesce(func.sum(Payment.amount), 0),
+            )
+            .join(Payment, Payment.invoice_id == Invoice.id)
+            .filter(Invoice.state.in_(states))
+            .group_by(Invoice.customer_id)
+            .all()
+        )
+
+        from src.modules.crm.models import Customer
+        totals: dict = {}
+        for customer_id, total in invoiced_rows:
+            totals[customer_id] = {"invoiced": Decimal(str(total)), "paid": Decimal("0.00")}
+        for customer_id, total in paid_rows:
+            entry = totals.setdefault(customer_id, {"invoiced": Decimal("0.00"), "paid": Decimal("0.00")})
+            entry["paid"] = Decimal(str(total))
+
+        customer_ids = list(totals.keys())
+        names = {}
+        if customer_ids:
+            for c in session.query(Customer).filter(Customer.id.in_(customer_ids)).all():
+                names[c.id] = c.company_name
+
+        debtors = []
+        for customer_id, entry in totals.items():
+            outstanding = entry["invoiced"] - entry["paid"]
+            if outstanding > 0:
+                debtors.append({
+                    "customer_id": customer_id,
+                    "company_name": names.get(customer_id, f"Client #{customer_id}"),
+                    "total_invoiced": entry["invoiced"],
+                    "total_paid": entry["paid"],
+                    "outstanding": outstanding,
+                })
+        debtors.sort(key=lambda d: d["outstanding"], reverse=True)
+        return debtors
+
+    @staticmethod
+    @transactional
+    def get_monthly_profit_series(context: RequestContext, session, year: int) -> List[dict]:
+        """
+        Revenue / cost / gross margin per month for a given year, from the
+        captured real costs. One grouped query over invoice items, bucketed
+        by month in Python (portable across databases).
+        """
+        PermissionManager.verify_permission(context, "Finance.Reports.View")
+        session.flush()  # make pending writes visible to the aggregation
+
+        if not 2000 <= year <= 2100:
+            raise ValueError(f"Invalid year: {year}")
+
+        from sqlalchemy import func
+        from src.modules.sales.models import Invoice, InvoiceItem, InvoiceState
+
+        start = datetime(year, 1, 1, tzinfo=timezone.utc)
+        end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+
+        rows = (
+            session.query(
+                Invoice.created_at,
+                func.coalesce(func.sum(InvoiceItem.quantity * InvoiceItem.unit_price), 0),
+                func.coalesce(func.sum(InvoiceItem.quantity * InvoiceItem.unit_cost), 0),
+            )
+            .join(InvoiceItem, InvoiceItem.invoice_id == Invoice.id)
+            .filter(
+                Invoice.state.in_([InvoiceState.VALIDATED, InvoiceState.ISSUED, InvoiceState.PAID]),
+                Invoice.created_at >= start,
+                Invoice.created_at < end,
+            )
+            .group_by(Invoice.id)
+            .all()
+        )
+
+        months = [
+            {"month": m, "revenue_excl_vat": Decimal("0.00"), "total_cost": Decimal("0.00"),
+             "gross_margin": Decimal("0.00")}
+            for m in range(1, 13)
+        ]
+        for created_at, revenue, cost in rows:
+            if created_at is None:
+                continue
+            bucket = months[created_at.month - 1]
+            bucket["revenue_excl_vat"] += Decimal(str(revenue))
+            bucket["total_cost"] += Decimal(str(cost))
+
+        for bucket in months:
+            bucket["gross_margin"] = bucket["revenue_excl_vat"] - bucket["total_cost"]
+        return months
