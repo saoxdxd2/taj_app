@@ -185,6 +185,52 @@ class InventoryService:
 
     @staticmethod
     @transactional
+    def delete_product(context: RequestContext, session, product_id: int) -> bool:
+        """
+        Permanently deletes a product — only allowed when it has NO
+        transactional history (no stock movements, invoice items or
+        purchase items). Products with history must be archived instead,
+        so accounting records stay intact.
+        """
+        PermissionManager.verify_permission(context, "Inventory.Products.Archive")
+        product = session.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            return False
+
+        from src.modules.inventory.models import StockMovement, StockLevel, ProductAttribute
+        from src.modules.sales.models import InvoiceItem
+        from src.modules.purchasing.models import PurchaseItem
+
+        has_history = (
+            session.query(StockMovement).filter(StockMovement.product_id == product_id).first()
+            or session.query(InvoiceItem).filter(InvoiceItem.product_id == product_id).first()
+            or session.query(PurchaseItem).filter(PurchaseItem.product_id == product_id).first()
+        )
+        if has_history:
+            raise ValueError(
+                f"Product '{product.sku}' has sales/purchase/stock history and cannot be "
+                "deleted. Archive it instead to keep the accounting records intact."
+            )
+
+        # Clean up child records that have no accounting value
+        session.query(ProductAttribute).filter(ProductAttribute.product_id == product_id).delete()
+        session.query(StockLevel).filter(StockLevel.product_id == product_id).delete()
+
+        sku = product.sku
+        session.delete(product)
+        logger.info(f"Deleted product: {sku} by {context.username}")
+        AuditService.record_event(
+            session=session,
+            action="PRODUCT_DELETED",
+            entity_name="Product",
+            entity_id=str(product_id),
+            before_values={"sku": sku},
+            user_id=context.user_id,
+        )
+        return True
+
+    @staticmethod
+    @transactional
     def adjust_stock(context: RequestContext, session, product_id: int, quantity_change: int, 
                      movement_type: str, reference: str, enforce_non_negative: bool = True) -> int:
         """

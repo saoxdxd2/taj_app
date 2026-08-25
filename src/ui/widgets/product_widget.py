@@ -23,6 +23,7 @@ class ProductWidget(QWidget):
         self.btn_edit = QPushButton("Edit")
         self.btn_activate = QPushButton("Activate")
         self.btn_archive = QPushButton("Archive")
+        self.btn_delete = QPushButton("Delete")
         self.btn_export_csv = QPushButton("Export CSV")
         
         toolbar.addWidget(self.btn_refresh)
@@ -30,6 +31,7 @@ class ProductWidget(QWidget):
         toolbar.addWidget(self.btn_edit)
         toolbar.addWidget(self.btn_activate)
         toolbar.addWidget(self.btn_archive)
+        toolbar.addWidget(self.btn_delete)
         toolbar.addWidget(self.btn_export_csv)
         toolbar.addStretch()
         layout.addLayout(toolbar)
@@ -55,6 +57,7 @@ class ProductWidget(QWidget):
         self.btn_edit.clicked.connect(self.on_edit_product)
         self.btn_activate.clicked.connect(self.on_activate_product)
         self.btn_archive.clicked.connect(self.on_archive_product)
+        self.btn_delete.clicked.connect(self.on_delete_product)
         self.btn_export_csv.clicked.connect(self.export_csv)
 
     def export_csv(self):
@@ -126,6 +129,30 @@ class ProductWidget(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
             
+        self.refresh_table()
+
+    def on_delete_product(self):
+        from src.core.session import CurrentSession
+        product_id = self.get_selected_product_id()
+        if not product_id:
+            QMessageBox.warning(self, "Warning", "Please select a product to delete.")
+            return
+
+        reply = QMessageBox.question(
+            self, "Confirm Delete",
+            "Permanently delete this product?\n\n"
+            "Products with sales, purchases or stock history cannot be "
+            "deleted — archive those instead.",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            try:
+                InventoryService.delete_product(CurrentSession.get_context(), product_id=product_id)
+            except ValueError as e:
+                QMessageBox.warning(self, "Cannot Delete", str(e))
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+
         self.refresh_table()
 
     def on_activate_product(self):
