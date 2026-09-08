@@ -22,3 +22,9 @@ class AuditEvent(BaseModel):
     # Context
     user_id: Mapped[Optional[int]] = mapped_column(nullable=True, index=True)
     correlation_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+    
+    # Timestamp is inherited from BaseModel (created_at)
+    @property
+    def timestamp(self):
+        """Alias for created_at to match test expectations."""
+        return self.created_at

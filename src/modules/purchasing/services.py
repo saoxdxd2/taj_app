@@ -90,8 +90,15 @@ class PurchasingService:
         )
         session.add(item)
         
-        # Update total
+        # Flush to persist the item first (needed for relationship consistency)
+        session.flush()
+        
+        # Update total amount on the parent purchase
         purchase.total_amount += (Decimal(quantity) * unit_cost)
+        
+        # Flush again to ensure the parent's total_amount is persisted to DB
+        session.flush()
+        
         logger.info(f"Added item (Product ID {product_id}, Qty {quantity}) to Purchase ID {purchase_id} by {context.username}.")
         return item
 

@@ -1,62 +1,51 @@
-# --- Python ---
+```
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
+*.pyc.*
+*.pyo.*
 .Python
-build/
-dist/
 *.egg-info/
 .eggs/
-*.manifest
-*.spec
+dist/
+build/
+develop-eggs/
+.installed.cfg
+.tox/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
 
-# --- Virtual environments ---
-.venv/
+# Virtual environments
 venv/
+.venv/
 env/
 ENV/
+.ENV/
 
-# --- Databases / runtime data ---
-data/
-*.db
-*.db-journal
-*.db-wal
-*.db-shm
-*.sqlite3
-
-# --- Logs & debug artifacts ---
-logs/
-*.log
-error.txt
-trace.txt
-
-# --- Secrets & credentials ---
+# Environment variables
 .env
-.env.*
-*.key
-secrets/
+.env.local
+*.env.*
 
-# --- IDE / OS ---
+# IDE
 .vscode/
 .idea/
 *.swp
+*.swo
+
+# OS
+.DS_Store
 Thumbs.db
-Desktop.ini
 
-# --- Testing / coverage ---
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
+# Logs
+*.log
 
-# --- PyInstaller ---
-*.spec.bak
-
-# --- AI/engineering scratch ---
-text
+# Temporary files
 *.tmp
-# --- Local research / scratch (not part of the product) ---
-crypto-research/
-error.txt
-trace.txt
+*.temp
+```

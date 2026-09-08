@@ -1,9 +1,23 @@
 import logging
 from typing import Optional, Dict, Any
+from decimal import Decimal
+from datetime import datetime, date
 from src.modules.audit.models import AuditEvent
 from src.database.transaction import transactional
 
 logger = logging.getLogger(__name__)
+
+def _serialize_for_json(obj: Any) -> Any:
+    """Convert non-JSON-serializable types to serializable formats."""
+    if isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {k: _serialize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_serialize_for_json(item) for item in obj]
+    return obj
 
 class AuditService:
     """
@@ -24,15 +38,20 @@ class AuditService:
         if not action or not entity_name:
             raise ValueError("Action and entity_name are mandatory for an audit event.")
             
+        # Serialize data to ensure JSON compatibility
+        before_serialized = _serialize_for_json(before_values) if before_values else None
+        after_serialized = _serialize_for_json(after_values) if after_values else None
+            
         event = AuditEvent(
             action=action,
             entity_name=entity_name,
             entity_id=entity_id,
-            before_values=before_values,
-            after_values=after_values,
+            before_values=before_serialized,
+            after_values=after_serialized,
             user_id=user_id,
             correlation_id=correlation_id
         )
         session.add(event)
+        session.flush()  # Ensure created_at is populated
         logger.info(f"AUDIT [{action}] on {entity_name} ({entity_id}) | User: {user_id}")
         return event

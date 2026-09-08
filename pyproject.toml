@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taj_froid"
+version = "1.0.0"
+description = "ERP System for Taj Froid - Inventory, Sales, and Financial Management"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "PySide6>=6.9.2",
+    "sqlalchemy>=2.0.52",
+    "alembic>=1.17.2",
+    "aiosqlite>=0.21.0",
+    "pydantic>=2.12.4",
+    "pydantic-settings>=2.11.0",
+    "argon2-cffi>=25.1.0",
+    "python-jose[cryptography]>=3.5.0",
+    "passlib>=1.7.4",
+    "cryptography>=46.0.3",
+    "httpx>=0.28.1",
+    "reportlab>=4.4.6",
+    "loguru>=0.7.3",
+    "structlog>=25.5.0",
+    "python-dateutil>=2.9.0.post0",
+    "tenacity>=9.1.2",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+    "websockets>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=6.3.0",
+    "pytest-benchmark>=5.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"

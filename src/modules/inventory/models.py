@@ -39,6 +39,7 @@ class Category(BaseModel):
 class Product(BaseModel):
     """
     Represents a product, service, or consumable in the Inventory domain.
+    Supports dual pricing: fixed website price and variable store price.
     """
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     sku: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
@@ -50,7 +51,14 @@ class Product(BaseModel):
     # Financial fields must use Decimal for precision (No floating point money allowed)
     purchase_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"), nullable=False)
     sale_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"), nullable=False)
+    sale_price_website: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"), nullable=False)
     vat_rate: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("20.00"), nullable=False)
+    
+    # Analytics tracking
+    total_sold_website: Mapped[int] = mapped_column(default=0, nullable=False)
+    total_sold_store: Mapped[int] = mapped_column(default=0, nullable=False)
+    revenue_website: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=Decimal("0.00"), nullable=False)
+    revenue_store: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=Decimal("0.00"), nullable=False)
     
     # Relationships
     brand_id: Mapped[Optional[int]] = mapped_column(ForeignKey("brand.id"), nullable=True)
