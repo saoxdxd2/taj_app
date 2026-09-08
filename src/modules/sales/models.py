@@ -7,6 +7,12 @@ from sqlalchemy import String, ForeignKey, Numeric, Integer, Date, DateTime, Enu
 
 from src.database.base import BaseModel
 
+class SaleChannel(str, Enum):
+    """Sales channel to distinguish between website and store sales."""
+    WEBSITE = "website"
+    STORE = "store"
+    MOBILE_APP = "mobile_app"
+
 class InvoiceState(str, Enum):
     """Lifecycle states for an Invoice."""
     DRAFT = "Draft"
@@ -26,12 +32,14 @@ class QuotationState(str, Enum):
 class Invoice(BaseModel):
     """
     Represents a legal financial document (Invoice).
+    Supports multi-channel sales tracking (website, store, mobile app).
     """
     invoice_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     customer_id: Mapped[int] = mapped_column(ForeignKey("customer.id"), nullable=False, index=True)
     state: Mapped[InvoiceState] = mapped_column(SQLAlchemyEnum(InvoiceState), default=InvoiceState.DRAFT, nullable=False)
     
     total_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"), nullable=False)
+    channel: Mapped[SaleChannel] = mapped_column(SQLAlchemyEnum(SaleChannel), default=SaleChannel.STORE, nullable=False)
     
     # Payment terms (facture à terme): when payment is expected. Null = immediate.
     due_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)

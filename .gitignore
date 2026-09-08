@@ -1,62 +1,58 @@
-# --- Python ---
+```gitignore
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
 build/
+develop-eggs/
 dist/
-*.egg-info/
+downloads/
+eggs/
 .eggs/
-*.manifest
-*.spec
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# --- Virtual environments ---
-.venv/
-venv/
-env/
-ENV/
-
-# --- Databases / runtime data ---
-data/
+# Database
 *.db
 *.db-journal
-*.db-wal
-*.db-shm
-*.sqlite3
 
-# --- Logs & debug artifacts ---
-logs/
-*.log
-error.txt
-trace.txt
-
-# --- Secrets & credentials ---
+# Environment
 .env
+.env.local
 .env.*
-*.key
-secrets/
+.venv/
+venv/
+ENV/
 
-# --- IDE / OS ---
-.vscode/
-.idea/
-*.swp
-Thumbs.db
-Desktop.ini
-
-# --- Testing / coverage ---
+# Tests
 .pytest_cache/
 .coverage
 htmlcov/
+.nox/
 .tox/
 
-# --- PyInstaller ---
-*.spec.bak
+# Logs
+*.log
+*.out
 
-# --- AI/engineering scratch ---
-text
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 *.tmp
-# --- Local research / scratch (not part of the product) ---
-crypto-research/
-error.txt
-trace.txt
+
+# OS
+.DS_Store
+Thumbs.db
+```

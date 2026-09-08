@@ -44,6 +44,7 @@ class SupplierService:
                         ice_number: Optional[str] = None) -> Optional[Supplier]:
         """
         Updates an existing supplier.
+        Only updates fields that are explicitly provided (not None).
         """
         PermissionManager.verify_permission(context, "Suppliers.Suppliers.Update")
         supplier = session.query(Supplier).filter(Supplier.id == supplier_id).first()
@@ -54,10 +55,14 @@ class SupplierService:
             raise ValueError("Company name is required.")
             
         supplier.company_name = company_name
-        supplier.contact_name = contact_name
-        supplier.email = email
-        supplier.phone = phone
-        supplier.ice_number = ice_number
+        if contact_name is not None:
+            supplier.contact_name = contact_name
+        if email is not None:
+            supplier.email = email
+        if phone is not None:
+            supplier.phone = phone
+        if ice_number is not None:
+            supplier.ice_number = ice_number
         
         logger.info(f"Updated supplier: {company_name} by {context.username}")
         return supplier
@@ -79,9 +84,11 @@ class SupplierService:
             contact_name=contact_name,
             email=email,
             phone=phone,
-            ice_number=ice_number
+            ice_number=ice_number,
+            is_archived=False
         )
         session.add(supplier)
+        session.flush()  # Flush to get ID and persist default values
         logger.info(f"Created new supplier: {company_name} by {context.username}")
         return supplier
 
@@ -98,5 +105,6 @@ class SupplierService:
             return False
             
         supplier.is_archived = True
+        session.flush()  # Ensure the change is persisted
         logger.info(f"Archived supplier ID {supplier_id}: {supplier.company_name} by {context.username}")
         return True
