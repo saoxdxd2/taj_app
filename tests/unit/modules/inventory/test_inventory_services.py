@@ -9,14 +9,6 @@ from src.security.permissions import AccessDenied
 
 # --- Fixtures ---
 
-@pytest.fixture
-def admin_context():
-    return RequestContext(user_id="1", username="admin", role="Administrator", permissions={"Everything"})
-
-@pytest.fixture
-def unauthorized_context():
-    return RequestContext(user_id="2", username="guest", role="Guest", permissions=set())
-
 # --- Authorization Tests ---
 
 def test_authorization_success(session, admin_context):

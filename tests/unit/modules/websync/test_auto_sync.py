@@ -7,12 +7,6 @@ from decimal import Decimal
 from src.modules.websync.services import WebsiteSyncService
 from src.modules.websync import sync_config
 from src.modules.inventory.services import InventoryService
-from src.core.context import RequestContext
-
-
-@pytest.fixture
-def admin_context():
-    return RequestContext(user_id="1", username="admin", role="Administrator", permissions={"Everything"})
 
 
 @pytest.fixture

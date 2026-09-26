@@ -9,12 +9,6 @@ from src.modules.reports.services import ReportsService
 from src.modules.inventory.services import InventoryService
 from src.modules.crm.models import Customer
 from src.modules.suppliers.models import Supplier
-from src.core.context import RequestContext
-
-
-@pytest.fixture
-def admin_context():
-    return RequestContext(user_id="1", username="admin", role="Administrator", permissions={"Everything"})
 
 
 @pytest.fixture

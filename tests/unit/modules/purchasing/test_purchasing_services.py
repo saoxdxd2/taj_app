@@ -12,6 +12,9 @@ from src.core.context import RequestContext
 class TestPurchasingService:
     """Test suite for PurchasingService business logic."""
 
+    # Deliberately local, not the shared conftest `admin_context`: this context
+    # carries only the permissions this module exercises, so a test that
+    # accidentally required an unrelated permission would fail here.
     @pytest.fixture
     def admin_context(self):
         """Create an admin user context with purchasing permissions."""

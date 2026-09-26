@@ -6,12 +6,6 @@ from decimal import Decimal
 
 from src.modules.websync.services import WebsiteSyncService
 from src.modules.inventory.services import InventoryService
-from src.core.context import RequestContext
-
-
-@pytest.fixture
-def admin_context():
-    return RequestContext(user_id="1", username="admin", role="Administrator", permissions={"Everything"})
 
 
 def _product(session, admin_context, sku=None, price="1999.99", activate=True):

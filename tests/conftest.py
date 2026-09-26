@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from src.database.base import BaseModel
+from src.core.context import RequestContext
 
 @pytest.fixture(scope="function")
 def db_engine():
@@ -32,7 +33,6 @@ def db_engine():
     from src.modules.audit.models import AuditEvent
     import src.database.audit_listener
     from src.core.session import CurrentSession
-    from src.core.context import RequestContext
     
     # Initialize CurrentSession so audit listeners don't fail
     CurrentSession.initialize(RequestContext(user_id="1", username="admin", role="Administrator", permissions=set()))
@@ -65,3 +65,35 @@ def session(db_engine):
 
     session.rollback()
     session.close()
+
+
+# ----------------------------------------------------------------------
+# Shared request contexts
+# ----------------------------------------------------------------------
+# These were previously redefined in every test module. They are
+# identical everywhere, so they live here to be defined exactly once.
+
+@pytest.fixture
+def admin_context():
+    """A context with full access, for the common 'allowed' case."""
+    return RequestContext(
+        user_id="1", username="admin", role="Administrator",
+        permissions={"Everything"},
+    )
+
+
+@pytest.fixture
+def unauthorized_context():
+    """A context with no permissions, for asserting AccessDenied."""
+    return RequestContext(
+        user_id="2", username="guest", role="Guest", permissions=set(),
+    )
+
+
+@pytest.fixture
+def cashier_context():
+    """A context limited to sales, for permission-scope tests."""
+    return RequestContext(
+        user_id="3", username="cashier", role="Cashier",
+        permissions={"Sales.*"},
+    )

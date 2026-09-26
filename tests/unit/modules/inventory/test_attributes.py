@@ -3,18 +3,7 @@ from decimal import Decimal
 
 from src.modules.inventory.services import InventoryService
 from src.modules.inventory.models import AttributeDef, AttributeDataType, ProductAttribute, StockLevel
-from src.core.context import RequestContext
 from src.security.permissions import AccessDenied
-
-
-@pytest.fixture
-def admin_context():
-    return RequestContext(user_id="1", username="admin", role="Administrator", permissions={"Everything"})
-
-
-@pytest.fixture
-def unauthorized_context():
-    return RequestContext(user_id="2", username="guest", role="Guest", permissions=set())
 
 
 @pytest.fixture
