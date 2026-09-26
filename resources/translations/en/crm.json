@@ -1,0 +1,15 @@
+{
+  "crm.action.add_customer": "New Customer",
+  "crm.entity.customer": "Customer",
+  "crm.entity.customers": "Customers",
+  "crm.field.address": "Address",
+  "crm.field.balance": "Balance",
+  "crm.field.city": "City",
+  "crm.field.company_name": "Company Name",
+  "crm.field.email": "Email",
+  "crm.field.ice_number": "ICE Number",
+  "crm.field.if_number": "IF",
+  "crm.field.phone": "Phone",
+  "crm.field.rc_number": "RC",
+  "crm.group.customers": "Customers"
+}

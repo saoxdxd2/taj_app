@@ -1,0 +1,14 @@
+{
+  "purchasing.action.add_purchase": "New Purchase Order",
+  "purchasing.action.validate": "Validate Order",
+  "purchasing.confirm.delete": "Delete this purchase order?",
+  "purchasing.entity.purchase": "Purchase Order",
+  "purchasing.entity.purchases": "Purchase Orders",
+  "purchasing.field.quantity": "Quantity",
+  "purchasing.field.reference": "Reference",
+  "purchasing.field.state": "Status",
+  "purchasing.field.supplier": "Supplier",
+  "purchasing.field.total": "Total",
+  "purchasing.field.unit_cost": "Unit Cost",
+  "purchasing.group.purchases": "Purchase Orders"
+}

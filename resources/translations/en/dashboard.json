@@ -1,0 +1,10 @@
+{
+  "dashboard.kpi.low_stock_count": "Low Stock",
+  "dashboard.kpi.month_sales": "This Month",
+  "dashboard.kpi.outstanding": "Outstanding",
+  "dashboard.kpi.stock_value": "Stock Value",
+  "dashboard.kpi.today_sales": "Today's Sales",
+  "dashboard.table.recent_invoices": "Recent Invoices",
+  "dashboard.title": "Dashboard",
+  "dashboard.welcome": "Welcome, {name}"
+}

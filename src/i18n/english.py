@@ -1,0 +1,248 @@
+"""
+English source strings for the UI.
+
+This is the single reviewed source of the English text. `python
+scripts/build_catalog.py` generates resources/translations/en/*.json from
+it plus the type-safe catalog, so a key can never exist in the UI without
+also existing in the shipped catalog.
+
+French is intentionally NOT machine-generated. 12_LOCALIZATION_STANDARD
+requires every translation to be reviewed by a human, so fr/*.json is
+maintained as a real translation file.
+"""
+
+ENGLISH = {
+    # --- Common actions ---
+    "common.action.save": "Save",
+    "common.action.cancel": "Cancel",
+    "common.action.close": "Close",
+    "common.action.delete": "Delete",
+    "common.action.edit": "Edit",
+    "common.action.add": "Add",
+    "common.action.search": "Search",
+    "common.action.refresh": "Refresh",
+    "common.action.retry": "Retry",
+    "common.action.export": "Export",
+    "common.action.import": "Import",
+    "common.action.yes": "Yes",
+    "common.action.no": "No",
+    "common.action.ok": "OK",
+    "common.filter.all": "All",
+    "common.status.loading": "Loading...",
+    "common.value.none": "None",
+    "common.value.unknown": "Unknown",
+    "common.currency.dh": "DH",
+    "common.format.date": "dd/MM/yyyy",
+    "common.format.datetime": "dd/MM/yyyy HH:mm",
+    "common.format.percent": "{value}%",
+
+    # --- Authentication ---
+    "auth.window.title": "Taj ERP - Login",
+    "auth.login.subtitle": "Sign in to continue",
+    "auth.field.username": "Username",
+    "auth.field.password": "Password",
+    "auth.action.sign_in": "Sign In",
+    "auth.error.failed": "Invalid username or password.",
+    "auth.error.generic": "An error occurred: {error}",
+    "auth.error.locked": "Too many failed attempts. This account is temporarily locked.",
+    "auth.action.change_password": "Change Password",
+    "auth.action.create_user": "Add User",
+    "auth.group.user_management": "User Management",
+    "auth.group.account_security": "Account Security",
+    "auth.error.username_taken": "This username already exists.",
+    "auth.error.weak_password": "The password does not meet the security rules.",
+
+    # --- Navigation ---
+    "nav.dashboard": "Dashboard",
+    "nav.calendar": "Calendar",
+    "nav.inventory": "Inventory",
+    "nav.crm": "Customers",
+    "nav.suppliers": "Suppliers",
+    "nav.purchasing": "Purchasing",
+    "nav.finance": "Finance",
+    "nav.sales": "Sales",
+    "nav.analytics": "Analytics",
+    "nav.settings": "Settings",
+    "nav.sign_out": "Sign Out",
+
+    # --- Inventory ---
+    "inventory.group.products": "Products",
+    "inventory.entity.product": "Product",
+    "inventory.entity.products": "Products",
+    "inventory.action.add_product": "New Product",
+    "inventory.field.sku": "SKU",
+    "inventory.field.name": "Name",
+    "inventory.field.category": "Category",
+    "inventory.field.brand": "Brand",
+    "inventory.field.purchase_price": "Purchase Price",
+    "inventory.field.sale_price": "Sale Price",
+    "inventory.field.website_price": "Website Price",
+    "inventory.field.vat_rate": "VAT %",
+    "inventory.field.stock": "Stock",
+    "inventory.field.min_quantity": "Min Stock",
+    "inventory.field.type": "Type",
+    "inventory.field.state": "Status",
+    "inventory.status.low_stock": "Low Stock",
+    "inventory.group.attributes": "Product Attributes",
+    "inventory.action.add_attribute": "Add Attribute",
+    "inventory.action.delete_attribute": "Delete Attribute",
+    "inventory.confirm.delete_product": "Delete this product?",
+    "inventory.hint.select_product": "Select a product",
+
+    # --- CRM ---
+    "crm.group.customers": "Customers",
+    "crm.entity.customer": "Customer",
+    "crm.entity.customers": "Customers",
+    "crm.action.add_customer": "New Customer",
+    "crm.field.company_name": "Company Name",
+    "crm.field.ice_number": "ICE Number",
+    "crm.field.rc_number": "RC",
+    "crm.field.if_number": "IF",
+    "crm.field.phone": "Phone",
+    "crm.field.email": "Email",
+    "crm.field.address": "Address",
+    "crm.field.city": "City",
+    "crm.field.balance": "Balance",
+    "crm.field.balance": "Balance",
+
+    # --- Suppliers ---
+    "suppliers.group.suppliers": "Suppliers",
+    "suppliers.entity.supplier": "Supplier",
+    "suppliers.entity.suppliers": "Suppliers",
+    "suppliers.action.add_supplier": "New Supplier",
+    "suppliers.field.contact_name": "Contact",
+    "suppliers.field.tax_id": "Tax ID",
+    "suppliers.field.payment_terms": "Payment Terms (days)",
+    "suppliers.confirm.delete": "Delete this supplier?",
+
+    # --- Purchasing ---
+    "purchasing.group.purchases": "Purchase Orders",
+    "purchasing.entity.purchase": "Purchase Order",
+    "purchasing.entity.purchases": "Purchase Orders",
+    "purchasing.action.add_purchase": "New Purchase Order",
+    "purchasing.field.reference": "Reference",
+    "purchasing.field.supplier": "Supplier",
+    "purchasing.field.unit_cost": "Unit Cost",
+    "purchasing.field.quantity": "Quantity",
+    "purchasing.field.total": "Total",
+    "purchasing.field.state": "Status",
+    "purchasing.action.validate": "Validate Order",
+    "purchasing.confirm.delete": "Delete this purchase order?",
+
+    # --- Sales ---
+    "sales.group.invoices": "Invoices",
+    "sales.entity.invoice": "Invoice",
+    "sales.entity.invoices": "Invoices",
+    "sales.entity.quotation": "Quotation",
+    "sales.action.add_invoice": "New Invoice",
+    "sales.field.invoice_number": "Invoice No.",
+    "sales.field.customer": "Customer",
+    "sales.field.due_date": "Due Date",
+    "sales.entity.line_item": "Line",
+    "sales.field.unit_price": "Unit Price",
+    "sales.field.warranty_months": "Warranty (months)",
+    "sales.field.subtotal": "Subtotal",
+    "sales.field.vat": "VAT",
+    "sales.field.total": "Total",
+    "sales.field.balance": "Balance",
+    "sales.field.state": "Status",
+    "sales.field.channel": "Channel",
+    "sales.action.validate_invoice": "Validate Invoice",
+    "sales.action.record_payment": "Record Payment",
+    "sales.action.print_invoice": "Print Invoice",
+    "sales.confirm.delete_invoice": "Delete this invoice?",
+    "sales.field.payment_method": "Method",
+    "sales.field.payment_amount": "Amount",
+
+    # --- Finance ---
+    "finance.group.journal": "Journal",
+    "finance.entity.journal_entry": "Journal Entry",
+    "finance.group.expenses": "Expenses",
+    "finance.group.checks": "Checks",
+    "finance.action.add_expense": "Add Expense",
+    "finance.action.add_check": "New Check",
+    "finance.field.amount": "Amount",
+    "finance.field.category": "Category",
+    "finance.field.direction": "Direction",
+    "finance.field.status": "Status",
+    "finance.field.revenue": "Revenue (excl. VAT)",
+    "finance.field.cost": "Cost",
+    "finance.field.margin": "Gross Margin",
+    "finance.field.profit": "Net Profit",
+    "finance.confirm.delete": "Delete this record?",
+
+    # --- Analytics ---
+    "analytics.group.reports": "Reports",
+    "analytics.title": "Analytics",
+    "analytics.field.period": "Period",
+    "analytics.chart.sales_trend": "Sales Trend",
+    "analytics.chart.top_products": "Top Products",
+    "analytics.chart.revenue_by_channel": "Revenue by Channel",
+    "analytics.chart.forecast": "Demand Forecast",
+    "analytics.empty.no_data": "No data for this period.",
+
+    # --- Settings ---
+    "settings.group.general": "General",
+    "settings.group.backup": "Backup & Recovery",
+    "settings.group.support": "Support & Diagnostics",
+    "settings.group.preferences": "System Preferences",
+    "settings.group.company": "Company Information",
+    "settings.field.language": "Language",
+    "settings.action.create_backup": "Create Manual Backup",
+    "settings.action.restore_backup": "Restore Selected Backup",
+    "settings.action.restore_external": "Restore from File...",
+    "settings.label.available_backups": "Available Backups (newest first):",
+    "settings.action.export_diagnostics": "Export Diagnostic Bundle to Desktop",
+    "settings.action.optimize_database": "Optimize Database",
+    "settings.action.run_health_checks": "Run Health Checks",
+    "settings.action.change_sync_folder": "Change Website Sync Folder",
+    "settings.action.export_catalog": "Export Catalog to Website",
+    "settings.action.import_prices": "Import Price Updates",
+    "settings.table.username": "Username",
+    "settings.table.role": "Role",
+    "settings.table.status": "Status",
+    "settings.action.enable_selected": "Enable / Disable Selected",
+    "settings.table.setting": "Setting",
+    "settings.table.value": "Value",
+    "settings.table.description": "Description",
+    "settings.pref.backup_retention": "Number of backups to keep",
+    "settings.pref.min_disk_space": "Minimum free disk space (MB) for a backup",
+    "settings.pref.log_rotation": "Rotate log file at (MB)",
+    "settings.pref.log_retention": "Keep logs for (days)",
+    "settings.pref.default_warranty": "Default warranty (months)",
+    "settings.pref.invoice_prefix": "Invoice number prefix",
+    "settings.msg.saved": "System preferences updated.",
+    "settings.error.save_failed": "Could not save settings:\n{error}",
+
+    # --- Migration ---
+    "migration.error.title": "Database Upgrade Failed",
+    "migration.error.body": "No further changes will be applied.",
+    "migration.error.with_backup": (
+        "A backup was taken before the upgrade started, so your data can be "
+        "restored to its previous state."
+    ),
+    "migration.error.without_backup": (
+        "No pre-upgrade backup is available, so the previous state cannot be "
+        "restored automatically."
+    ),
+    "migration.action.retry": "Retry Upgrade",
+    "migration.action.restore": "Restore Pre-Upgrade Backup and Restart",
+    "migration.action.exit": "Close",
+    "migration.error.restore_failed": "The backup could not be restored automatically.",
+    "migration.error.retry_failed": "The upgrade failed again after a retry.",
+
+    # --- Dashboard ---
+    "dashboard.title": "Dashboard",
+    "dashboard.kpi.today_sales": "Today's Sales",
+    "dashboard.kpi.month_sales": "This Month",
+    "dashboard.kpi.outstanding": "Outstanding",
+    "dashboard.kpi.stock_value": "Stock Value",
+    "dashboard.kpi.low_stock_count": "Low Stock",
+    "dashboard.table.recent_invoices": "Recent Invoices",
+    "dashboard.welcome": "Welcome, {name}",
+
+    # --- Pagination ---
+    "pagination.previous": "< Previous",
+    "pagination.next": "Next >",
+    "pagination.status": "Showing {start}-{end} of {total}",
+}

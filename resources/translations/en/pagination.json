@@ -1,0 +1,5 @@
+{
+  "pagination.next": "Next >",
+  "pagination.previous": "< Previous",
+  "pagination.status": "Showing {start}-{end} of {total}"
+}

@@ -1,0 +1,11 @@
+{
+  "migration.action.exit": "Fermer",
+  "migration.action.restore": "Restaurer la sauvegarde et redémarrer",
+  "migration.action.retry": "Réessayer la mise à jour",
+  "migration.error.body": "Aucune autre modification ne sera appliquée.",
+  "migration.error.restore_failed": "La sauvegarde n'a pas pu être restaurée automatiquement.",
+  "migration.error.retry_failed": "La mise à jour a échoué une nouvelle fois.",
+  "migration.error.title": "Échec de la mise à jour de la base de données",
+  "migration.error.with_backup": "Une sauvegarde a été créée avant la mise à jour : vos données peuvent être restaurées dans leur état précédent.",
+  "migration.error.without_backup": "Aucune sauvegarde préalable n'est disponible : l'état précédent ne peut pas être restauré automatiquement."
+}

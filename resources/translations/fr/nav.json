@@ -1,0 +1,13 @@
+{
+  "nav.analytics": "Statistiques",
+  "nav.calendar": "Calendrier",
+  "nav.crm": "Clients",
+  "nav.dashboard": "Tableau de bord",
+  "nav.finance": "Finance",
+  "nav.inventory": "Stock",
+  "nav.purchasing": "Achats",
+  "nav.sales": "Ventes",
+  "nav.settings": "Paramètres",
+  "nav.sign_out": "Déconnexion",
+  "nav.suppliers": "Fournisseurs"
+}

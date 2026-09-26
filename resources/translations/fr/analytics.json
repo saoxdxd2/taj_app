@@ -1,0 +1,10 @@
+{
+  "analytics.chart.forecast": "Prévision de la demande",
+  "analytics.chart.revenue_by_channel": "Chiffre d'affaires par canal",
+  "analytics.chart.sales_trend": "Évolution des ventes",
+  "analytics.chart.top_products": "Meilleures ventes",
+  "analytics.empty.no_data": "Aucune donnée pour cette période.",
+  "analytics.field.period": "Période",
+  "analytics.group.reports": "Rapports",
+  "analytics.title": "Statistiques"
+}

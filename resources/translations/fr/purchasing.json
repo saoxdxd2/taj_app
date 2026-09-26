@@ -1,0 +1,14 @@
+{
+  "purchasing.action.add_purchase": "Nouveau bon de commande",
+  "purchasing.action.validate": "Valider la commande",
+  "purchasing.confirm.delete": "Supprimer ce bon de commande ?",
+  "purchasing.entity.purchase": "Bon de commande",
+  "purchasing.entity.purchases": "Bons de commande",
+  "purchasing.field.quantity": "Quantité",
+  "purchasing.field.reference": "Référence",
+  "purchasing.field.state": "État",
+  "purchasing.field.supplier": "Fournisseur",
+  "purchasing.field.total": "Total",
+  "purchasing.field.unit_cost": "Coût unitaire",
+  "purchasing.group.purchases": "Bons de commande"
+}

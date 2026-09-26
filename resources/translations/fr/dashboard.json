@@ -1,0 +1,10 @@
+{
+  "dashboard.kpi.low_stock_count": "Stock faible",
+  "dashboard.kpi.month_sales": "Ce mois",
+  "dashboard.kpi.outstanding": "En attente",
+  "dashboard.kpi.stock_value": "Valeur du stock",
+  "dashboard.kpi.today_sales": "Ventes du jour",
+  "dashboard.table.recent_invoices": "Factures récentes",
+  "dashboard.title": "Tableau de bord",
+  "dashboard.welcome": "Bienvenue, {name}"
+}

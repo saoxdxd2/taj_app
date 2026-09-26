@@ -1,0 +1,17 @@
+{
+  "finance.action.add_check": "New Check",
+  "finance.action.add_expense": "Add Expense",
+  "finance.confirm.delete": "Delete this record?",
+  "finance.entity.journal_entry": "Journal Entry",
+  "finance.field.amount": "Amount",
+  "finance.field.category": "Category",
+  "finance.field.cost": "Cost",
+  "finance.field.direction": "Direction",
+  "finance.field.margin": "Gross Margin",
+  "finance.field.profit": "Net Profit",
+  "finance.field.revenue": "Revenue (excl. VAT)",
+  "finance.field.status": "Status",
+  "finance.group.checks": "Checks",
+  "finance.group.expenses": "Expenses",
+  "finance.group.journal": "Journal"
+}

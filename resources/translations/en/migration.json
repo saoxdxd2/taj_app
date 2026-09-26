@@ -1,0 +1,11 @@
+{
+  "migration.action.exit": "Close",
+  "migration.action.restore": "Restore Pre-Upgrade Backup and Restart",
+  "migration.action.retry": "Retry Upgrade",
+  "migration.error.body": "No further changes will be applied.",
+  "migration.error.restore_failed": "The backup could not be restored automatically.",
+  "migration.error.retry_failed": "The upgrade failed again after a retry.",
+  "migration.error.title": "Database Upgrade Failed",
+  "migration.error.with_backup": "A backup was taken before the upgrade started, so your data can be restored to its previous state.",
+  "migration.error.without_backup": "No pre-upgrade backup is available, so the previous state cannot be restored automatically."
+}

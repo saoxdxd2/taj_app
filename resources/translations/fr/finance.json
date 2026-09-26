@@ -1,0 +1,17 @@
+{
+  "finance.action.add_check": "Nouveau chèque",
+  "finance.action.add_expense": "Ajouter une dépense",
+  "finance.confirm.delete": "Supprimer cet enregistrement ?",
+  "finance.entity.journal_entry": "Écriture comptable",
+  "finance.field.amount": "Montant",
+  "finance.field.category": "Catégorie",
+  "finance.field.cost": "Coût",
+  "finance.field.direction": "Sens",
+  "finance.field.margin": "Marge brute",
+  "finance.field.profit": "Bénéfice net",
+  "finance.field.revenue": "Chiffre d'affaires (HT)",
+  "finance.field.status": "État",
+  "finance.group.checks": "Chèques",
+  "finance.group.expenses": "Dépenses",
+  "finance.group.journal": "Journal"
+}

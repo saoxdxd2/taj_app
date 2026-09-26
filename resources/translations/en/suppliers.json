@@ -1,0 +1,10 @@
+{
+  "suppliers.action.add_supplier": "New Supplier",
+  "suppliers.confirm.delete": "Delete this supplier?",
+  "suppliers.entity.supplier": "Supplier",
+  "suppliers.entity.suppliers": "Suppliers",
+  "suppliers.field.contact_name": "Contact",
+  "suppliers.field.payment_terms": "Payment Terms (days)",
+  "suppliers.field.tax_id": "Tax ID",
+  "suppliers.group.suppliers": "Suppliers"
+}

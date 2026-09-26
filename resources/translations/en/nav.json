@@ -1,0 +1,13 @@
+{
+  "nav.analytics": "Analytics",
+  "nav.calendar": "Calendar",
+  "nav.crm": "Customers",
+  "nav.dashboard": "Dashboard",
+  "nav.finance": "Finance",
+  "nav.inventory": "Inventory",
+  "nav.purchasing": "Purchasing",
+  "nav.sales": "Sales",
+  "nav.settings": "Settings",
+  "nav.sign_out": "Sign Out",
+  "nav.suppliers": "Suppliers"
+}

@@ -1,0 +1,10 @@
+{
+  "analytics.chart.forecast": "Demand Forecast",
+  "analytics.chart.revenue_by_channel": "Revenue by Channel",
+  "analytics.chart.sales_trend": "Sales Trend",
+  "analytics.chart.top_products": "Top Products",
+  "analytics.empty.no_data": "No data for this period.",
+  "analytics.field.period": "Period",
+  "analytics.group.reports": "Reports",
+  "analytics.title": "Analytics"
+}
