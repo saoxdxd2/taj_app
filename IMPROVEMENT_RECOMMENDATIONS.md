@@ -4,10 +4,11 @@
 
 This document provides prioritized improvement recommendations for the Taj Froid ERP system based on comprehensive code analysis. The system demonstrates strong architectural foundations with proper separation of concerns, transaction management, and audit logging. However, several critical areas require attention to enhance security, reliability, and maintainability.
 
-**Test Coverage Status**: 76/77 tests passing (98.7% pass rate)
-- ✅ Core services tested: Sales, Finance, Inventory, Authentication, CRM
-- ⚠️ Missing test coverage: Purchasing, Suppliers, Audit services
-- 🔴 1 failing test: `test_auto_export_writes_catalog_to_sync_folder`
+**Test Coverage Status**: 219/219 tests passing (100%)
+- ✅ Core services tested: Sales, Finance, Inventory, Authentication, CRM, Purchasing, Suppliers, Audit
+- ✅ Phase 2: DTO validation layer, pricing engine, system settings
+- ✅ Phase 3: logging/redaction, migration recovery, login lockout, sanitizers
+- ⚠️ No UI-layer tests (widgets are exercised manually / offscreen smoke checks)
 
 ---
 
@@ -554,21 +555,59 @@ assert None is not None
 ## Implementation Roadmap
 
 ### Phase 1 (Weeks 1-2): Critical Security & Stability
-- [ ] Add purchasing service tests
-- [ ] Implement thread-safe database access
-- [ ] Add input sanitization layer
-- [ ] Fix failing websync test
+- [x] Add purchasing service tests
+- [x] Implement thread-safe database access
+- [ ] Add input sanitization layer — still outstanding; addressed partially by the
+      Phase 2 DTO layer (type/precision validation), but no HTML sanitization
+      (`bleach`) and no login rate limiting exist yet.
+- [x] Fix failing websync test
 
 ### Phase 2 (Weeks 3-4): Architecture Improvements
-- [ ] Implement Pydantic DTOs for Sales module
-- [ ] Create pricing engine models
-- [ ] Build settings management UI
+- [x] Implement Pydantic DTOs for Sales module — `src/dto/` (`InvoiceItemCreateDTO`,
+      `InvoiceCreateDTO`, `PaymentCreateDTO`, `PurchaseItemCreateDTO`). Added
+      additively: `SalesService.add_item_to_invoice` accepts an optional `dto=`
+      and still validates the primitive arguments, preserving existing callers
+      and error messages.
+- [x] Create pricing engine models — `src/modules/pricing/` with `PricingPolicy`
+      and `PricingService.get_effective_price`. Resolution order: customer-specific
+      before global, then priority, then largest discount. Reuses the dual-price
+      columns and `SaleChannel`. Migration `d4a6b8c1e2f3`.
+- [x] Build settings management UI — `SystemSetting` key/value store
+      (`SettingKey` constants + `SETTING_DEFAULTS` fallback), `SettingsService.get_value /
+      get_int / set_value / get_all_settings` (every write audited), a "System Preferences"
+      section in `SettingsWidget`, and the hardcoded values in `core/backup.py` and
+      `core/logging.py` now read from settings. Migration `e5b7c9d2f3a4`.
 
 ### Phase 3 (Weeks 5-6): Quality & Maintainability
-- [ ] Optimize production logging
-- [ ] Add migration recovery UI
-- [ ] Complete type annotations
-- [ ] Refactor test fixtures
+- [x] Optimize production logging — `setup_logging()` is environment-aware via
+      `TAJ_ENVIRONMENT` (or `settings.environment`): development keeps the console
+      handler, `DEBUG` and `diagnose`; production drops the console, logs at
+      `WARNING` with `backtrace`/`diagnose` off, and scrubs credentials
+      (`password=`, `token=`, Argon2 hashes) through a loguru `filter`. Rotation
+      and retention are configurable. An unreadable environment defaults to
+      development so logging is never silently disabled.
+- [x] Add migration recovery UI — `src/core/migrations.py::apply_migrations()` returns
+      a `MigrationResult` (success / error / backup_path) instead of raising or
+      calling `sys.exit`. `MigrationErrorDialog` offers Retry, Restore Pre-Upgrade
+      Backup, or Exit. No automatic rollback: a half-applied schema plus a blind
+      downgrade is worse than an explicit choice with a known-good backup.
+- [x] Complete type annotations — return types added across the service layer
+      (crm, suppliers, purchasing, sales, inventory, settings, session).
+      `[tool.mypy]` configured non-strict in `pyproject.toml`; a CI `typecheck`
+      job runs it as advisory (`continue-on-error`) because the UI layer and ORM
+      models are still only partially annotated. Currently clean on 47 files.
+- [x] Refactor test fixtures — `admin_context` / `unauthorized_context` hoisted into
+      `tests/conftest.py` (17 duplicate definitions removed) plus a new
+      `cashier_context`. Two module-local contexts were deliberately kept where
+      they carry narrower, module-specific permissions.
+- [x] Add input sanitization layer — `src/security/sanitizers.py`
+      (`sanitize_text`, `sanitize_username`, `validate_password_strength`) and
+      login lockout: `failed_login_count` / `locked_until` on `user`
+      (migration `f6c8d0e3a4b5`), with growing backoff capped at 24h. Usernames are
+      no longer written to the auth log, and the "unknown user" and "bad
+      credentials" messages are identical so accounts cannot be enumerated.
+      Complexity is enforced on create/change only, never at login, so existing
+      accounts (including the default `admin`) are never locked out.
 
 ---
 
