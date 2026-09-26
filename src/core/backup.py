@@ -2,8 +2,39 @@ import os
 import shutil
 import zipfile
 from datetime import datetime
+from typing import Optional
 from loguru import logger
 from src.core.paths import DB_PATH, BACKUP_DIR
+
+
+def _configured_int(key: str, fallback: int) -> int:
+    """
+    Reads a numeric system setting, falling back to a literal when the
+    database is unavailable (e.g. before the first migration, or while the
+    database is locked or corrupt).
+
+    Backups must keep working even when the settings table cannot be read,
+    so a failure here is logged and ignored rather than raised.
+    """
+    try:
+        from src.modules.settings.services import SettingsService
+        from src.core.context import RequestContext
+        from src.database.session import SessionLocal
+
+        context = RequestContext(
+            user_id="0", username="system", role="System", permissions={"Everything"}
+        )
+        session = SessionLocal()
+        try:
+            return SettingsService.get_int(context=context, session=session, key=key)
+        finally:
+            session.close()
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning(
+            f"Could not read setting '{key}' ({exc}); using default {fallback}."
+        )
+        return fallback
+
 
 class BackupManager:
     @staticmethod
@@ -69,10 +100,17 @@ class BackupManager:
             raise
 
     @staticmethod
-    def _apply_retention_policy(max_backups: int = 15):
+    def _apply_retention_policy(max_backups: Optional[int] = None) -> None:
         """
         Keeps only the most recent `max_backups` zip files.
+
+        When no explicit count is given, the value is read from the
+        `backup.retention.count` system setting (default 15).
         """
+        if max_backups is None:
+            from src.modules.settings.models import SettingKey
+            max_backups = _configured_int(SettingKey.BACKUP_RETENTION_COUNT, 15)
+
         backups = BackupManager.list_backups()
         if len(backups) > max_backups:
             for old_backup in backups[max_backups:]:

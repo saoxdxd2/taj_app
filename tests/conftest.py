@@ -32,6 +32,7 @@ def db_engine():
     from src.modules.inventory.models import AttributeDef, ProductAttribute
     from src.modules.audit.models import AuditEvent
     from src.modules.pricing.models import PricingPolicy
+    from src.modules.settings.models import CompanySettings, SystemSetting
     import src.database.audit_listener
     from src.core.session import CurrentSession
     

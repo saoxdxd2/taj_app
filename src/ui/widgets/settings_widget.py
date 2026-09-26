@@ -18,6 +18,7 @@ class SettingsWidget(QWidget):
         self.setup_ui()
         self.refresh_backups()
         self.refresh_users()
+        self.refresh_preferences()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -183,7 +184,99 @@ class SettingsWidget(QWidget):
         security_group.setLayout(security_layout)
         layout.addWidget(security_group)
 
+        # System Preferences Section (configurable operational values)
+        prefs_group = QGroupBox("System Preferences")
+        prefs_layout = QVBoxLayout()
+
+        prefs_layout.addWidget(QLabel(
+            "Operational values used by backups, logging and sales. "
+            "Changes are recorded in the audit trail."
+        ))
+        self.prefs_table = QTableWidget(0, 3)
+        self.prefs_table.setHorizontalHeaderLabels(["Setting", "Value", "Description"])
+        self.prefs_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.prefs_table.verticalHeader().setVisible(False)
+        self.prefs_table.setMaximumHeight(200)
+        prefs_layout.addWidget(self.prefs_table)
+
+        prefs_btn_row = QHBoxLayout()
+        self.btn_save_prefs = QPushButton("Save Preferences")
+        self.btn_save_prefs.clicked.connect(self.save_preferences)
+        self.btn_reload_prefs = QPushButton("Reload")
+        self.btn_reload_prefs.clicked.connect(self.refresh_preferences)
+        prefs_btn_row.addWidget(self.btn_save_prefs)
+        prefs_btn_row.addWidget(self.btn_reload_prefs)
+        prefs_btn_row.addStretch()
+        prefs_layout.addLayout(prefs_btn_row)
+
+        prefs_group.setLayout(prefs_layout)
+        layout.addWidget(prefs_group)
+
         layout.addStretch()
+
+    def refresh_preferences(self):
+        """Loads every known system setting into the editable table."""
+        from src.database.session import SessionLocal
+        from src.core.session import CurrentSession
+        from src.modules.settings.services import SettingsService
+        from src.modules.settings.models import SETTING_DESCRIPTIONS
+
+        try:
+            context = CurrentSession.get_context()
+            with SessionLocal() as session:
+                values = SettingsService.get_all_settings(
+                    context=context, session=session
+                )
+        except Exception as e:
+            logger.error(f"Failed to load system settings: {e}")
+            return
+
+        keys = list(values.keys())
+        self.prefs_table.setRowCount(len(keys))
+        for row, key in enumerate(keys):
+            # The key is stored in the first column's data so saving knows
+            # exactly which setting each row represents.
+            name_item = QTableWidgetItem(key)
+            name_item.setData(Qt.UserRole, key)
+            name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+            self.prefs_table.setItem(row, 0, name_item)
+            self.prefs_table.setItem(row, 1, QTableWidgetItem(str(values[key])))
+            self.prefs_table.setItem(
+                row, 2, QTableWidgetItem(SETTING_DESCRIPTIONS.get(key, ""))
+            )
+
+    def save_preferences(self):
+        """Persists every edited row through SettingsService (audited)."""
+        from src.database.session import SessionLocal
+        from src.core.session import CurrentSession
+        from src.modules.settings.services import SettingsService
+
+        try:
+            context = CurrentSession.get_context()
+        except RuntimeError:
+            QMessageBox.warning(self, "Not Signed In",
+                                "You must be signed in to change system settings.")
+            return
+
+        try:
+            with SessionLocal() as session:
+                for row in range(self.prefs_table.rowCount()):
+                    key_item = self.prefs_table.item(row, 0)
+                    value_item = self.prefs_table.item(row, 1)
+                    if not key_item or not value_item:
+                        continue
+                    SettingsService.set_value(
+                        context=context, session=session,
+                        key=key_item.data(Qt.UserRole),
+                        value=value_item.text(),
+                    )
+                session.commit()
+            QMessageBox.information(self, "Preferences Saved",
+                                    "System preferences updated.")
+            self.refresh_preferences()
+        except Exception as e:
+            logger.error(f"Failed to save system settings: {e}")
+            QMessageBox.critical(self, "Save Failed", f"Could not save settings:\n{e}")
 
     def _on_backup_selection(self):
         self.restore_btn.setEnabled(bool(self.backup_list.selectedItems()))
