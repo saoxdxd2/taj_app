@@ -28,9 +28,6 @@ def init_db():
     import shutil
     from datetime import datetime
     from PySide6.QtWidgets import QMessageBox
-    from src.core.paths import DB_PATH, BACKUP_DIR
-    from alembic import command
-    from alembic.config import Config
 
     from loguru import logger
     from src.core.logging import setup_logging
@@ -69,44 +66,49 @@ def init_db():
         msg.exec()
     # --- END HEALTH CHECK ---
 
-    from src.core.backup import BackupManager
+    from src.core.migrations import apply_migrations
+    from src.ui.dialogs.migration_dialog import MigrationErrorDialog
 
-    # Pre-migration backup logic
-    if os.path.exists(DB_PATH):
-        try:
-            backup_path = BackupManager.create_backup(prefix="pre_migration")
-        except Exception as e:
-            logger.error(f"Backup failed: {str(e)}")
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Critical)
-            msg.setText("Startup aborted: Pre-migration backup failed.")
-            msg.setInformativeText(f"Could not secure database backup.\nError: {str(e)}")
-            msg.setWindowTitle("Fatal Error")
-            msg.exec()
+    # Programmatic Alembic upgrade, with recovery on failure.
+    result = apply_migrations()
+    if not result.success:
+        dialog = MigrationErrorDialog(
+            error=result.error or "Unknown migration error.",
+            backup_path=result.backup_path,
+        )
+        dialog.exec()
+
+        if dialog.choice == MigrationErrorDialog.RESTORE and result.backup_path:
+            try:
+                from src.core.backup import BackupManager
+                BackupManager.restore_backup(result.backup_path)
+            except Exception as restore_error:
+                logger.error(f"Restore failed: {restore_error}")
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setWindowTitle("Restore Failed")
+                msg.setText("The backup could not be restored automatically.")
+                msg.setInformativeText(str(restore_error))
+                msg.exec()
+                sys.exit(1)
+            # The restored database is back at its original revision; the
+            # app can start as it did before.
+            logger.info("Database restored from pre-migration backup.")
+        elif dialog.choice == MigrationErrorDialog.RETRY:
+            second = apply_migrations()
+            if not second.success:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setWindowTitle("Database Upgrade Failed")
+                msg.setText("The database could not be upgraded safely.")
+                msg.setInformativeText(
+                    "Please contact support and restore a backup.\n\n"
+                    + (second.error or "")
+                )
+                msg.exec()
+                sys.exit(1)
+        else:
             sys.exit(1)
-
-    # Programmatic Alembic upgrade
-    try:
-        logger.info("Executing database migrations...")
-        # Get path to alembic.ini relative to this file
-        project_root = os.path.dirname(os.path.abspath(__file__))
-        alembic_ini_path = os.path.join(project_root, "alembic.ini")
-        alembic_cfg = Config(alembic_ini_path)
-        # Override the sqlalchemy.url dynamically
-        alembic_cfg.set_main_option("sqlalchemy.url", f"sqlite:///{DB_PATH}")
-        
-        # Run the upgrade
-        command.upgrade(alembic_cfg, "head")
-        logger.info("Database migrations completed successfully.")
-    except Exception as e:
-        logger.error(f"Migration failed: {str(e)}")
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
-        msg.setText("The database could not be upgraded safely.")
-        msg.setInformativeText("No changes have been applied. Please contact support.\n\n" + str(e))
-        msg.setWindowTitle("Fatal Error")
-        msg.exec()
-        sys.exit(1)
         
     session_maker = SessionLocal
     
