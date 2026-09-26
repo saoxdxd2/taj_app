@@ -17,7 +17,7 @@ class PurchasingService:
 
     @staticmethod
     @transactional
-    def get_all_purchases(context: RequestContext, session, limit: int = 100, offset: int = 0):
+    def get_all_purchases(context: RequestContext, session, limit: int = 100, offset: int = 0) -> List[Purchase]:
         """
         Retrieves purchases with pagination.
         """
@@ -32,7 +32,7 @@ class PurchasingService:
 
     @staticmethod
     @transactional
-    def get_purchase_with_items(context: RequestContext, purchase_id: int, session=None):
+    def get_purchase_with_items(context: RequestContext, purchase_id: int, session=None) -> Optional[Purchase]:
         """
         Retrieves a single purchase by ID, eagerly loading its items.
         """

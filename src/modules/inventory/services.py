@@ -4,6 +4,7 @@ from typing import List, Optional
 from src.modules.inventory.models import (
     Product, ProductState, ProductType,
     AttributeDef, AttributeDataType, ProductAttribute, StockLevel,
+    Brand, Category,
 )
 from src.core.context import RequestContext
 from src.security.permissions import PermissionManager
@@ -19,21 +20,21 @@ class InventoryService:
 
     @staticmethod
     @transactional
-    def get_all_brands(context: RequestContext, session=None):
+    def get_all_brands(context: RequestContext, session=None) -> List[Brand]:
         PermissionManager.verify_permission(context, "Inventory.Brands.View")
         from src.modules.inventory.models import Brand
         return session.query(Brand).all()
 
     @staticmethod
     @transactional
-    def get_all_categories(context: RequestContext, session):
+    def get_all_categories(context: RequestContext, session) -> List[Category]:
         PermissionManager.verify_permission(context, "Inventory.Categories.View")
         from src.modules.inventory.models import Category
         return session.query(Category).all()
 
     @staticmethod
     @transactional
-    def get_all_products(context: RequestContext, session, limit: int = 100, offset: int = 0):
+    def get_all_products(context: RequestContext, session, limit: int = 100, offset: int = 0) -> List[Product]:
         """
         Retrieves products with pagination.
         Brand/category are eager-loaded: the list views display them and
@@ -58,7 +59,7 @@ class InventoryService:
 
     @staticmethod
     @transactional
-    def get_product_by_id(context: RequestContext, product_id: int, session=None):
+    def get_product_by_id(context: RequestContext, product_id: int, session=None) -> Optional[Product]:
         """
         Retrieves a single product by ID.
         """

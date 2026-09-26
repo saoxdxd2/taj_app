@@ -9,13 +9,13 @@ class CurrentSession:
     _instance = None
     _context: Optional[RequestContext] = None
 
-    def __new__(cls):
+    def __new__(cls) -> "CurrentSession":
         if cls._instance is None:
             cls._instance = super(CurrentSession, cls).__new__(cls)
         return cls._instance
 
     @classmethod
-    def initialize(cls, context: RequestContext):
+    def initialize(cls, context: RequestContext) -> None:
         """Initializes the session upon successful login."""
         cls._context = context
 
@@ -27,6 +27,6 @@ class CurrentSession:
         return cls._context
 
     @classmethod
-    def clear(cls):
+    def clear(cls) -> None:
         """Clears the session on logout."""
         cls._context = None

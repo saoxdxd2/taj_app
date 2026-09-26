@@ -25,11 +25,15 @@ def _get_model_dict(obj, is_deleted=False) -> Dict[str, Any]:
             data[c.key] = getattr(obj, c.key, None)
             
         # Convert non-serializable types to string (e.g. datetimes, UUIDs, Enums)
-        if data[c.key] is not None:
-            if hasattr(data[c.key], 'value'): # For Enums
-                data[c.key] = data[c.key].value
-            elif not isinstance(data[c.key], (int, float, str, bool, list, dict)):
-                data[c.key] = str(data[c.key])
+        value = data[c.key]
+        if value is not None:
+            # getattr is used so the type checker can narrow on the bound
+            # method call; `hasattr` alone does not narrow the type.
+            enum_value = getattr(value, "value", None)
+            if enum_value is not None and not isinstance(value, type):  # For Enums
+                data[c.key] = enum_value
+            elif not isinstance(value, (int, float, str, bool, list, dict)):
+                data[c.key] = str(value)
     return data
 
 @event.listens_for(Session, "before_flush")

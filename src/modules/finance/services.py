@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from src.modules.finance.models import (
     FinancialJournalEntry, TransactionType, Expense, ExpenseCategory,
     Check, CheckDirection, CheckStatus,
@@ -389,7 +389,9 @@ class FinanceService:
             .all()
         )
 
-        months = [
+        # Typed so the numeric columns are known to be Decimal, which keeps
+        # the gross-margin arithmetic below type-safe.
+        months: List[Dict[str, Any]] = [
             {"month": m, "revenue_excl_vat": Decimal("0.00"), "total_cost": Decimal("0.00"),
              "gross_margin": Decimal("0.00")}
             for m in range(1, 13)

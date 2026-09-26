@@ -34,3 +34,29 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: pytest -v --tb=short
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+          pip install mypy
+
+      # Advisory for now: mypy is configured non-strict while the UI layer
+      # and ORM models are only partially annotated. Flip `continue-on-error`
+      # to false once the remaining annotations land.
+      - name: Type check (advisory)
+        continue-on-error: true
+        run: mypy

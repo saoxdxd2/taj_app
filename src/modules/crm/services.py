@@ -16,7 +16,7 @@ class CRMService:
 
     @staticmethod
     @transactional
-    def get_all_customers(context: RequestContext, session, limit: int = 100, offset: int = 0):
+    def get_all_customers(context: RequestContext, session, limit: int = 100, offset: int = 0) -> List[Customer]:
         """
         Retrieves customers with pagination.
         """
@@ -31,7 +31,7 @@ class CRMService:
 
     @staticmethod
     @transactional
-    def get_customer_by_id(context: RequestContext, customer_id: int, session=None):
+    def get_customer_by_id(context: RequestContext, customer_id: int, session=None) -> Optional[Customer]:
         """
         Retrieves a single customer by ID.
         """

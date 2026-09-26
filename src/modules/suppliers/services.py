@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 from src.modules.suppliers.models import Supplier
 from src.core.context import RequestContext
 from src.security.permissions import PermissionManager
@@ -15,7 +15,7 @@ class SupplierService:
 
     @staticmethod
     @transactional
-    def get_all_suppliers(context: RequestContext, session, limit: int = 100, offset: int = 0):
+    def get_all_suppliers(context: RequestContext, session, limit: int = 100, offset: int = 0) -> List[Supplier]:
         """
         Retrieves suppliers with pagination.
         """
@@ -30,7 +30,7 @@ class SupplierService:
 
     @staticmethod
     @transactional
-    def get_supplier_by_id(context: RequestContext, supplier_id: int, session=None):
+    def get_supplier_by_id(context: RequestContext, supplier_id: int, session=None) -> Optional[Supplier]:
         """
         Retrieves a single supplier by ID.
         """

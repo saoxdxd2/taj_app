@@ -36,6 +36,7 @@ dev = [
     "pytest-asyncio>=1.0.0",
     "pytest-cov>=6.3.0",
     "pytest-benchmark>=5.2",
+    "mypy>=1.13.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -44,5 +45,34 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-asyncio_mode = "auto"
 addopts = "-v --tb=short"
+
+# Type checking is advisory, not a gate: the UI layer and the SQLAlchemy
+# models are only partially annotated, and making them strict would be a
+# large refactor. The business/service layer is the part we hold to.
+[tool.mypy]
+python_version = "3.12"
+files = [
+    "src/modules",
+    "src/core",
+    "src/database",
+    "src/security",
+    "src/dto",
+]
+# The module packages deliberately have no __init__.py (namespace packages),
+# so mypy needs this to resolve `services` files to their real module paths.
+explicit_package_bases = true
+namespace_packages = true
+ignore_missing_imports = true
+warn_unused_ignores = false
+check_untyped_defs = true
+# Reports findings without failing the build; tighten over time.
+warn_return_any = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+exclude = ["^src/ui/"]
+
+[[tool.mypy.overrides]]
+module = ["src.modules.*.models", "src.database.base"]
+# SQLAlchemy declarative models generate their own annotations.
+ignore_errors = true
