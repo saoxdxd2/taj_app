@@ -31,6 +31,7 @@ def db_engine():
     from src.modules.finance.models import FinancialJournalEntry, Expense, Check
     from src.modules.inventory.models import AttributeDef, ProductAttribute
     from src.modules.audit.models import AuditEvent
+    from src.modules.pricing.models import PricingPolicy
     import src.database.audit_listener
     from src.core.session import CurrentSession
     
