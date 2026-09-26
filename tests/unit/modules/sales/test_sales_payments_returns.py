@@ -11,18 +11,9 @@ from src.modules.inventory.services import InventoryService
 from src.modules.finance.services import FinanceService
 from src.modules.finance.models import FinancialJournalEntry, TransactionType
 from src.modules.crm.models import Customer
-from src.core.context import RequestContext
 from src.security.permissions import AccessDenied
-
-
-@pytest.fixture
-def admin_context():
-    return RequestContext(user_id="1", username="admin", role="Administrator", permissions={"Everything"})
-
-
-@pytest.fixture
-def unauthorized_context():
-    return RequestContext(user_id="2", username="guest", role="Guest", permissions=set())
+from src.dto.sales_dto import InvoiceItemCreateDTO
+from pydantic import ValidationError
 
 
 def _make_customer(session, name="Test Client SARL"):
@@ -78,6 +69,64 @@ def test_invoice_captures_unit_cost_and_warranty(session, admin_context):
     # 24 months ~ 720 days
     delta = item.warranty_end_date - datetime.now(timezone.utc)
     assert timedelta(days=715) < delta < timedelta(days=725)
+
+
+# --- DTO validation layer ---
+
+def test_add_item_accepts_a_validated_dto(session, admin_context):
+    """The DTO path is equivalent to passing primitives."""
+    customer = _make_customer(session)
+    product = _make_stocked_product(session, admin_context, "DTO-01")
+    invoice = SalesService.create_invoice_draft(
+        context=admin_context, session=session, customer_id=customer.id,
+    )
+    item = SalesService.add_item_to_invoice(
+        context=admin_context, session=session,
+        dto=InvoiceItemCreateDTO(
+            invoice_id=invoice.id,
+            product_id=product.id,
+            quantity=2,
+            unit_price=Decimal("150.00"),
+            vat_rate=Decimal("20.00"),
+        ),
+    )
+    assert item.quantity == 2
+    assert item.warranty_months == 12
+    # 2 x 150.00 incl. 20% VAT = 360.00
+    assert invoice.total_amount == Decimal("360.00")
+
+
+def test_add_item_dto_validates_before_querying_the_database(session, admin_context):
+    """Invalid DTO input fails on validation, not on a missing invoice row."""
+    with pytest.raises(ValidationError):
+        SalesService.add_item_to_invoice(
+            context=admin_context, session=session,
+            dto=InvoiceItemCreateDTO(
+                invoice_id=999, product_id=1,
+                quantity=0, unit_price=Decimal("150.00"), vat_rate=Decimal("20.00"),
+            ),
+        )
+
+
+def test_add_item_primitive_path_keeps_legacy_error_messages(session, admin_context):
+    """The primitive path still raises the ValueError messages it always did."""
+    customer = _make_customer(session)
+    invoice = SalesService.create_invoice_draft(
+        context=admin_context, session=session, customer_id=customer.id,
+    )
+    with pytest.raises(ValueError, match="Quantity must be positive"):
+        SalesService.add_item_to_invoice(
+            context=admin_context, session=session, invoice_id=invoice.id,
+            product_id=1, quantity=0,
+            unit_price=Decimal("150.00"), vat_rate=Decimal("20.00"),
+        )
+    with pytest.raises(ValueError, match="Unit cost cannot be negative"):
+        SalesService.add_item_to_invoice(
+            context=admin_context, session=session, invoice_id=invoice.id,
+            product_id=1, quantity=1,
+            unit_price=Decimal("150.00"), vat_rate=Decimal("20.00"),
+            unit_cost=Decimal("-1.00"),
+        )
 
 
 # --- Payments ---

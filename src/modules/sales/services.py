@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import List, Optional
+from typing import Dict, List, Optional
 from src.modules.sales.models import (
     Invoice, InvoiceItem, InvoiceState, Quotation, QuotationState,
     Payment, PaymentMethod, CustomerDeposit, DepositState,
@@ -11,8 +11,29 @@ from src.core.context import RequestContext
 from src.security.permissions import PermissionManager
 from src.modules.audit.services import AuditService
 from src.database.transaction import transactional
+from src.dto.sales_dto import InvoiceItemCreateDTO
+from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
+
+def _legacy_invoice_item_error(exc: ValidationError) -> ValueError:
+    """
+    Translates a DTO ValidationError into the ValueError messages this
+    service has always raised, so existing callers, the UI and the test
+    suite keep their documented behaviour after DTO validation was added.
+    """
+    fields = {str(error["loc"][0]) for error in exc.errors()}
+
+    if {"quantity", "unit_price", "vat_rate"} & fields:
+        return ValueError("Quantity must be positive, prices and VAT cannot be negative.")
+    if "unit_cost" in fields:
+        return ValueError("Unit cost cannot be negative.")
+    if "warranty_months" in fields:
+        return ValueError("Warranty months cannot be negative.")
+    if "description_override" in fields:
+        return ValueError("Description override is too long (max 255 characters).")
+    # Anything else (e.g. a bad precision) is a genuine new constraint.
+    return ValueError(str(exc))
 
 class SalesService:
     """
@@ -21,7 +42,7 @@ class SalesService:
 
     @staticmethod
     @transactional
-    def get_all_invoices(context: RequestContext, session, limit: int = 100, offset: int = 0):
+    def get_all_invoices(context: RequestContext, session, limit: int = 100, offset: int = 0) -> List[Invoice]:
         """
         Retrieves invoices with pagination.
         """
@@ -44,7 +65,7 @@ class SalesService:
 
     @staticmethod
     @transactional
-    def get_invoice_with_items(context: RequestContext, invoice_id: int, session=None):
+    def get_invoice_with_items(context: RequestContext, invoice_id: int, session=None) -> Optional[Invoice]:
         """
         Retrieves a single invoice by ID, eagerly loading its items.
         """
@@ -114,30 +135,82 @@ class SalesService:
 
     @staticmethod
     @transactional
-    def add_item_to_invoice(context: RequestContext, session, invoice_id: int, product_id: int, 
-                            quantity: int, unit_price: Decimal, vat_rate: Decimal,
+    def add_item_to_invoice(context: RequestContext, session, invoice_id: Optional[int] = None,
+                            product_id: Optional[int] = None, 
+                            quantity: Optional[int] = None, unit_price: Optional[Decimal] = None,
+                            vat_rate: Optional[Decimal] = None,
                             unit_cost: Decimal = Decimal("0.00"),
                             description_override: Optional[str] = None,
-                            warranty_months: int = 12) -> InvoiceItem:
+                            warranty_months: int = 12,
+                            dto: Optional["InvoiceItemCreateDTO"] = None) -> InvoiceItem:
         """
         Adds an item to a Draft invoice and updates the total amount.
         `unit_cost` captures the REAL cost at sale time for exact margin analysis.
         `warranty_months` defaults to 12 (1 year); motors may use up to 120.
+
+        Supply either a validated InvoiceItemCreateDTO via `dto` (boundary
+        validation before any database access) or the primitive arguments,
+        which are validated into a DTO here so both paths are identical.
+        Existing positional/keyword callers are unaffected.
         """
         PermissionManager.verify_permission(context, "Sales.Invoices.Update")
+
+        if dto is not None:
+            line = dto
+        else:
+            missing = [
+                name for name, value in (
+                    ("invoice_id", invoice_id), ("product_id", product_id),
+                    ("quantity", quantity), ("unit_price", unit_price),
+                    ("vat_rate", vat_rate),
+                ) if value is None
+            ]
+            if missing:
+                raise ValueError(
+                    "Missing required argument(s): " + ", ".join(missing)
+                    + ". Provide either these arguments or a dto."
+                )
+            # `missing` being empty guarantees these are not None; the
+            # asserts make that guarantee visible to the type checker.
+            assert invoice_id is not None
+            assert product_id is not None
+            assert quantity is not None
+            assert unit_price is not None
+            assert vat_rate is not None
+            # Validate the primitive arguments through the DTO, but translate
+            # failures into the ValueError messages this service has always
+            # raised, so existing callers and tests keep their behaviour.
+            try:
+                line = InvoiceItemCreateDTO(
+                    invoice_id=invoice_id,
+                    product_id=product_id,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    vat_rate=vat_rate,
+                    unit_cost=unit_cost,
+                    description_override=description_override,
+                    warranty_months=warranty_months,
+                )
+            except ValidationError as exc:
+                raise _legacy_invoice_item_error(exc) from exc
+
+        # Adopt the validated values before any query runs, so the DTO-only
+        # path does not fall through to the (absent) primitive arguments.
+        invoice_id = line.invoice_id
+        product_id = line.product_id
+        quantity = line.quantity
+        unit_price = line.unit_price
+        vat_rate = line.vat_rate
+        unit_cost = line.unit_cost
+        description_override = line.description_override
+        warranty_months = line.warranty_months
+
         invoice = session.query(Invoice).filter(Invoice.id == invoice_id).first()
         if not invoice:
             raise ValueError(f"Invoice ID {invoice_id} not found.")
             
         if invoice.state != InvoiceState.DRAFT:
             raise ValueError("Forbidden: Cannot modify an invoice after it has left Draft state.")
-            
-        if quantity <= 0 or unit_price < 0 or vat_rate < 0:
-            raise ValueError("Quantity must be positive, prices and VAT cannot be negative.")
-        if unit_cost < 0:
-            raise ValueError("Unit cost cannot be negative.")
-        if warranty_months < 0:
-            raise ValueError("Warranty months cannot be negative.")
 
         item = InvoiceItem(
             invoice_id=invoice_id,
@@ -434,7 +507,7 @@ class SalesService:
             raise ValueError(f"Invalid return type: {return_type}")
         
         # Validate against the original invoice quantities
-        sold_quantities = {}
+        sold_quantities: Dict[int, int] = {}
         if invoice_id is not None:
             invoice = session.query(Invoice).filter(Invoice.id == invoice_id).first()
             if not invoice:
