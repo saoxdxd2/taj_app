@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 
 from src.core.session import CurrentSession
 from src.modules.finance.services import FinanceService
+from src.ui.layout import add_elided_columns, size_table_height
 
 
 class CalendarWidget(QWidget):
@@ -55,9 +56,10 @@ class CalendarWidget(QWidget):
         self.checks_table.setHorizontalHeaderLabels(
             ["Check #", "Direction", "Amount (DH)", "Party"]
         )
-        self.checks_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.checks_table.verticalHeader().setVisible(False)
         self.checks_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        add_elided_columns(self.checks_table, stretch_column=2)
+        size_table_height(self.checks_table, visible_rows=6)
         right.addWidget(self.checks_table)
 
         layout.addLayout(right, stretch=4)

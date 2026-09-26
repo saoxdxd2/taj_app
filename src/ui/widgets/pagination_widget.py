@@ -1,6 +1,9 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QPushButton, QLabel
 from PySide6.QtCore import Signal, Qt
 
+from src.i18n import _, tr
+from src.ui.layout import autosize_button, autosize_label
+
 class PaginationWidget(QWidget):
     page_changed = Signal(int, int) # emits (limit, offset)
 
@@ -15,18 +18,25 @@ class PaginationWidget(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self.btn_prev = QPushButton("< Previous")
+        self.btn_prev = QPushButton(_(tr.pagination.previous))
         self.btn_prev.clicked.connect(self.prev_page)
-        
-        self.lbl_status = QLabel("Showing 0-0 of 0")
+
+        self.lbl_status = QLabel(_(tr.pagination.status, start=0, end=0, total=0))
         self.lbl_status.setAlignment(Qt.AlignCenter)
-        
-        self.btn_next = QPushButton("Next >")
+        # Wraps instead of clipping when the translated string is longer.
+        autosize_label(self.lbl_status)
+
+        self.btn_next = QPushButton(_(tr.pagination.next))
         self.btn_next.clicked.connect(self.next_page)
+
+        # Sized from the real text: "< Previous" and "< Précédent" have
+        # different widths, and a translated label can be far longer.
+        autosize_button(self.btn_prev)
+        autosize_button(self.btn_next)
 
         layout.addStretch()
         layout.addWidget(self.btn_prev)
-        layout.addWidget(self.lbl_status)
+        layout.addWidget(self.lbl_status, 1)
         layout.addWidget(self.btn_next)
         layout.addStretch()
 
@@ -37,10 +47,14 @@ class PaginationWidget(QWidget):
         # Prevent offset from exceeding bounds if data was deleted
         if self.offset >= self.total_count and self.total_count > 0:
             self.offset = max(0, self.total_count - self.limit)
-            
+
         start = self.offset + 1 if self.total_count > 0 else 0
         end = min(self.offset + self.limit, self.total_count)
-        self.lbl_status.setText(f"Showing {start}-{end} of {self.total_count}")
+        self.lbl_status.setText(
+            _(tr.pagination.status, start=start, end=end, total=self.total_count)
+        )
+        # Re-measure: the numbers change the required width.
+        autosize_label(self.lbl_status)
         self.update_buttons()
 
     def update_buttons(self):

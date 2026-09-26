@@ -8,6 +8,7 @@ from src.core.session import CurrentSession
 from src.modules.finance.services import FinanceService
 from src.modules.finance.models import CheckStatus
 from src.ui.dialogs.finance_dialogs import NewCheckDialog
+from src.ui.layout import add_elided_columns, size_table_height
 
 
 class FinanceWidget(QWidget):
@@ -50,10 +51,10 @@ class FinanceWidget(QWidget):
         self.debtors_table.setHorizontalHeaderLabels(
             ["Client", "Invoiced", "Paid", "Outstanding"]
         )
-        self.debtors_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.debtors_table.verticalHeader().setVisible(False)
         self.debtors_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.debtors_table.setMaximumHeight(160)
+        add_elided_columns(self.debtors_table, stretch_column=0)
+        size_table_height(self.debtors_table, visible_rows=5)
         layout.addWidget(self.debtors_table)
 
         # --- Checks management ---
@@ -75,11 +76,11 @@ class FinanceWidget(QWidget):
         self.checks_table.setHorizontalHeaderLabels(
             ["Check #", "Direction", "Status", "Amount (DH)", "Due Date", "Party", "Bank"]
         )
-        self.checks_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.checks_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.checks_table.setSelectionMode(QTableWidget.SingleSelection)
         self.checks_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.checks_table.selectionModel().selectionChanged.connect(self._on_check_selected)
+        add_elided_columns(self.checks_table, stretch_column=1)
         layout.addWidget(self.checks_table)
 
         # Connections

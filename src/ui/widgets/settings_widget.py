@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                                QTableWidget, QTableWidgetItem, QHeaderView)
 from PySide6.QtCore import Qt
 from src.core.backup import BackupManager
+from src.ui.layout import add_elided_columns, size_table_height
 from loguru import logger
 
 def Qt_red():
@@ -103,10 +104,10 @@ class SettingsWidget(QWidget):
 
         self.health_table = QTableWidget(0, 3)
         self.health_table.setHorizontalHeaderLabels(["Check", "Status", "Detail"])
-        self.health_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.health_table.verticalHeader().setVisible(False)
         self.health_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.health_table.setMaximumHeight(140)
+        add_elided_columns(self.health_table, stretch_column=2)
+        size_table_height(self.health_table, visible_rows=5)
         health_layout.addWidget(self.health_table)
 
         self.btn_run_health = QPushButton("Run Health Checks")
@@ -154,10 +155,10 @@ class SettingsWidget(QWidget):
 
         self.users_table = QTableWidget(0, 3)
         self.users_table.setHorizontalHeaderLabels(["Username", "Role", "Status"])
-        self.users_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.users_table.verticalHeader().setVisible(False)
         self.users_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.users_table.setMaximumHeight(160)
+        add_elided_columns(self.users_table, stretch_column=0)
+        size_table_height(self.users_table, visible_rows=6)
         users_layout.addWidget(self.users_table)
 
         users_btn_row = QHBoxLayout()
@@ -194,9 +195,9 @@ class SettingsWidget(QWidget):
         ))
         self.prefs_table = QTableWidget(0, 3)
         self.prefs_table.setHorizontalHeaderLabels(["Setting", "Value", "Description"])
-        self.prefs_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.prefs_table.verticalHeader().setVisible(False)
-        self.prefs_table.setMaximumHeight(200)
+        add_elided_columns(self.prefs_table, stretch_column=2)
+        size_table_height(self.prefs_table, visible_rows=6)
         prefs_layout.addWidget(self.prefs_table)
 
         prefs_btn_row = QHBoxLayout()

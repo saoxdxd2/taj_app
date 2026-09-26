@@ -19,6 +19,7 @@ from PySide6.QtCharts import (QChartView, QChart, QBarSeries, QBarSet,
 
 from src.core.session import CurrentSession
 from src.modules.finance.services import FinanceService
+from src.ui.layout import add_elided_columns, size_table_height
 
 MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -84,9 +85,10 @@ class AnalyticsWidget(QWidget):
         self.debtors_table.setHorizontalHeaderLabels(
             ["Client", "Invoiced (DH)", "Paid (DH)", "Outstanding (DH)"]
         )
-        self.debtors_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.debtors_table.verticalHeader().setVisible(False)
         self.debtors_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        add_elided_columns(self.debtors_table, stretch_column=1)
+        size_table_height(self.debtors_table, visible_rows=5)
         layout.addWidget(self.debtors_table, stretch=2)
 
     def showEvent(self, event):

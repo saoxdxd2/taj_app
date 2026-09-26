@@ -2,11 +2,13 @@ import sys
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                                QHBoxLayout, QListWidget, QStackedWidget, QMessageBox,
                                QDialog, QFormLayout, QLineEdit, QDialogButtonBox,
-                               QLabel)
+                               QLabel, QSizePolicy)
 from PySide6.QtCore import Qt
 
 from src.core.session import CurrentSession
 from src.modules.authentication.services import AuthenticationService
+from src.i18n import _, tr
+from src.ui.layout import autosize_dialog, scaled, text_width
 
 from src.ui.widgets.dashboard_widget import DashboardWidget
 from src.ui.widgets.product_widget import ProductWidget
@@ -21,8 +23,11 @@ from src.ui.widgets.calendar_widget import CalendarWidget
 class LoginDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Taj ERP - Login")
-        self.setFixedWidth(380)
+        self.setWindowTitle(_(tr.auth.title))
+        # A minimum width that grows with the DPI instead of a fixed one:
+        # a hardcoded 380px is correct only on a 96 DPI screen with English
+        # text, and clips the label once either of those changes.
+        autosize_dialog(self, min_width=380)
         self.setup_ui()
 
     def setup_ui(self):
@@ -30,25 +35,30 @@ class LoginDialog(QDialog):
         layout.setSpacing(14)
         layout.setContentsMargins(28, 28, 28, 20)
 
-        title = QLabel("<h2 style='color:#1f3a5f;'>Taj ERP</h2>"
-                       "<p style='color:#718096;'>Sign in to continue</p>")
+        title = QLabel(
+            "<h2 style='color:#1f3a5f;'>Taj ERP</h2>"
+            f"<p style='color:#718096;'>{_(tr.auth.subtitle)}</p>"
+        )
         title.setTextFormat(Qt.RichText)
+        title.setWordWrap(True)
         layout.addWidget(title)
 
         form_layout = QFormLayout()
         form_layout.setSpacing(10)
 
         self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText("Username")
+        self.username_input.setPlaceholderText(_(tr.auth.username))
         self.password_input = QLineEdit()
-        self.password_input.setPlaceholderText("Password")
+        self.password_input.setPlaceholderText(_(tr.auth.password))
         self.password_input.setEchoMode(QLineEdit.Password)
 
-        form_layout.addRow("Username", self.username_input)
-        form_layout.addRow("Password", self.password_input)
+        form_layout.addRow(_(tr.auth.username), self.username_input)
+        form_layout.addRow(_(tr.auth.password), self.password_input)
         layout.addLayout(form_layout)
 
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box.button(QDialogButtonBox.Ok).setText(_(tr.auth.sign_in))
+        self.button_box.button(QDialogButtonBox.Cancel).setText(_(tr.common.cancel))
         self.button_box.accepted.connect(self.attempt_login)
         self.button_box.rejected.connect(self.reject)
         layout.addWidget(self.button_box)
@@ -62,17 +72,21 @@ class LoginDialog(QDialog):
             if success:
                 self.accept()
             else:
-                QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
+                QMessageBox.warning(self, _(tr.auth.title), _(tr.auth.failed))
         except Exception as e:
-            QMessageBox.critical(self, "Login Error", f"An error occurred: {str(e)}")
+            QMessageBox.critical(
+                self, _(tr.auth.title), _(tr.auth.error, error=str(e))
+            )
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Taj ERP - Enterprise Dashboard")
+        self.setWindowTitle("Taj ERP")
+        # A starting size, not a constraint: setMinimumSize below keeps the
+        # window usable, and the layout handles the rest.
         self.resize(1280, 800)
-        self.setMinimumSize(1024, 680)
+        self.setMinimumSize(scaled(900), scaled(560))
 
         self.setup_ui()
 
@@ -87,21 +101,31 @@ class MainWindow(QMainWindow):
         # Sidebar navigation
         self.sidebar = QListWidget()
         self.sidebar.setObjectName("sidebar")
-        self.sidebar.setFixedWidth(220)
+        # The width follows the longest translated label. A fixed 220px
+        # truncates French labels such as "Approvisionnements" and is
+        # wrong again at a different font size.
+        self.sidebar.setSizePolicy(
+            QSizePolicy.Preferred, QSizePolicy.Expanding
+        )
 
         nav_items = [
-            "🏠  Dashboard",
-            "📅  Calendar",
-            "📦  Inventory",
-            "👥  CRM",
-            "🚚  Suppliers",
-            "🛒  Purchasing",
-            "💰  Finance",
-            "🧾  Sales",
-            "📊  Analytics",
-            "⚙️  Settings"
+            "🏠  " + _(tr.nav.dashboard),
+            "📅  " + _(tr.nav.calendar),
+            "📦  " + _(tr.nav.inventory),
+            "👥  " + _(tr.nav.crm),
+            "🚚  " + _(tr.nav.suppliers),
+            "🛒  " + _(tr.nav.purchasing),
+            "💰  " + _(tr.nav.finance),
+            "🧾  " + _(tr.nav.sales),
+            "📊  " + _(tr.nav.analytics),
+            "⚙️  " + _(tr.nav.settings),
         ]
         self.sidebar.addItems(nav_items)
+        # Derived from real font metrics, so the longest label always fits.
+        widest = max(
+            (text_width(item, self.sidebar) for item in nav_items), default=0
+        )
+        self.sidebar.setMinimumWidth(widest + scaled(48))
 
         # Main content area
         self.stack = QStackedWidget()

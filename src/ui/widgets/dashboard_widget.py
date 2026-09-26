@@ -9,6 +9,7 @@ from src.core.session import CurrentSession
 from src.modules.inventory.services import InventoryService
 from src.modules.finance.services import FinanceService
 from src.modules.analytics.services import ForecastService
+from src.ui.layout import add_elided_columns, size_table_height
 
 
 class DashboardWidget(QWidget):
@@ -57,9 +58,10 @@ class DashboardWidget(QWidget):
         self.stock_table.setHorizontalHeaderLabels(
             ["SKU", "Product", "In Stock", "Threshold", "To Order"]
         )
-        self.stock_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.stock_table.verticalHeader().setVisible(False)
         self.stock_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        add_elided_columns(self.stock_table, stretch_column=0)
+        size_table_height(self.stock_table, visible_rows=5)
         layout.addWidget(self.stock_table)
 
         # --- Checks due section ---
@@ -77,9 +79,10 @@ class DashboardWidget(QWidget):
         self.checks_table.setHorizontalHeaderLabels(
             ["Check #", "Direction", "Status", "Amount (DH)", "Due Date", "Party"]
         )
-        self.checks_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.checks_table.verticalHeader().setVisible(False)
         self.checks_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        add_elided_columns(self.checks_table, stretch_column=2)
+        size_table_height(self.checks_table, visible_rows=5)
         layout.addWidget(self.checks_table)
 
         # --- Reorder forecast section ---
@@ -96,9 +99,10 @@ class DashboardWidget(QWidget):
         self.forecast_table.setHorizontalHeaderLabels(
             ["SKU", "Product", "In Stock", "Sold (90d)", "Need (30d)", "Suggested Order"]
         )
-        self.forecast_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.forecast_table.verticalHeader().setVisible(False)
         self.forecast_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        add_elided_columns(self.forecast_table, stretch_column=0)
+        size_table_height(self.forecast_table, visible_rows=5)
         layout.addWidget(self.forecast_table)
 
     def _make_kpi_card(self, label_text, value_text, color):

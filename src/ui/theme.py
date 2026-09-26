@@ -4,8 +4,12 @@ Application-wide visual theme.
 A clean, professional light theme with a deep-blue sidebar, an amber
 accent (froid/clim brand feel), generous padding and clear hover/focus
 states. Applied once at startup via apply_theme(app).
+
+Sizes are expressed as DPI-scaled padding rather than fixed heights, so
+the interface keeps its proportions on a high-DPI screen and stays
+readable once the labels are translated.
 """
-from pathlib import Path
+from src.ui.layout import scaled
 
 ACCENT = "#e67e22"          # warm orange accent
 SIDEBAR_BG = "#1f3a5f"      # deep blue
@@ -17,6 +21,9 @@ MUTED = "#718096"
 BORDER = "#d7dee8"
 OK_GREEN = "#27ae60"
 DANGER_RED = "#c0392b"
+
+# Spacing scale, so padding stays visually consistent.
+UNIT = scaled(4)
 
 QSS = f"""
 * {{
@@ -36,11 +43,12 @@ QListWidget#sidebar {{
     border: none;
     outline: none;
     font-size: 14px;
-    padding-top: 12px;
+    padding-top: {scaled(12)}px;
 }}
 QListWidget#sidebar::item {{
-    height: 44px;
-    padding-left: 18px;
+    /* Vertical padding instead of a fixed height: the row grows with the
+       font and never clips a long translated label. */
+    padding: {scaled(11)}px {scaled(18)}px;
     border: none;
 }}
 QListWidget#sidebar::item:hover {{
@@ -153,16 +161,31 @@ QTabBar::tab:selected {{
 }}
 QScrollBar:vertical {{
     background: transparent;
-    width: 10px;
+    width: {scaled(10)}px;
 }}
 QScrollBar::handle:vertical {{
     background: #b9c4d4;
     border-radius: 5px;
-    min-height: 30px;
+    min-height: {scaled(30)}px;
 }}
 """
 
 
+def build_qss() -> str:
+    """
+    Builds the stylesheet for the current display.
+
+    Called at startup rather than at import time, so DPI-scaled values
+    match the screen the window is actually opened on.
+    """
+    return QSS
+
+
 def apply_theme(app) -> None:
-    """Apply the global stylesheet to the application."""
-    app.setStyleSheet(QSS)
+    """
+    Applies the global stylesheet to the application.
+
+    Built at call time (not import time) so the DPI scaling reflects the
+    screen the application actually opened on.
+    """
+    app.setStyleSheet(build_qss())
