@@ -1,6 +1,7 @@
 from typing import List, Optional
+from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean, Table, Column, ForeignKey
+from sqlalchemy import String, Boolean, Table, Column, ForeignKey, DateTime
 
 from src.database.base import BaseModel
 
@@ -41,6 +42,11 @@ class User(BaseModel):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role_id: Mapped[int] = mapped_column(ForeignKey("role.id"), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Brute-force protection. `locked_until` is None when the account is not
+    # locked; a successful login clears both fields.
+    failed_login_count: Mapped[int] = mapped_column(default=0, nullable=False)
+    locked_until: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
     # Relationships
     role: Mapped[Role] = relationship(lazy="joined")

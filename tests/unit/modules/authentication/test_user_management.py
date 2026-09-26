@@ -15,20 +15,21 @@ def seed_roles(session):
 
 def test_create_user_persists_in_db(session):
     """Users are saved in the database and survive a fresh session."""
-    AuthenticationService.create_user(session, "yassine", "secret123", "Manager")
+    # Passwords must satisfy the complexity rule (upper, lower, digit, 8+).
+    AuthenticationService.create_user(session, "yassine", "Secret123", "Manager")
     session.commit()
 
     # Fresh query in the same DB proves persistence
     user = session.query(User).filter(User.username == "yassine").first()
     assert user is not None
     assert user.role.name == "Manager"
-    assert user.password_hash != "secret123"  # stored hashed, never plaintext
+    assert user.password_hash != "Secret123"  # stored hashed, never plaintext
 
 
 def test_create_user_rejects_duplicates(session):
-    AuthenticationService.create_user(session, "dup", "password1", "Employee")
+    AuthenticationService.create_user(session, "dup", "Password1", "Employee")
     with pytest.raises(ValueError, match="already exists"):
-        AuthenticationService.create_user(session, "dup", "password2", "Employee")
+        AuthenticationService.create_user(session, "dup", "Password2", "Employee")
 
 
 def test_create_user_validates_password(session):
@@ -36,8 +37,14 @@ def test_create_user_validates_password(session):
         AuthenticationService.create_user(session, "shortpw", "abc", "Employee")
 
 
+def test_create_user_enforces_password_complexity(session):
+    """A long but weak password (no uppercase/digit) is still rejected."""
+    with pytest.raises(ValueError, match="uppercase"):
+        AuthenticationService.create_user(session, "weakpw", "alllowercase", "Employee")
+
+
 def test_list_users_returns_roles(session):
-    AuthenticationService.create_user(session, "alice", "password1", "Administrator")
+    AuthenticationService.create_user(session, "alice", "Password1", "Administrator")
     users = AuthenticationService.list_users(session)
     alice = [u for u in users if u["username"] == "alice"]
     assert len(alice) == 1
@@ -48,16 +55,16 @@ def test_list_users_returns_roles(session):
 def test_set_user_active_disables_login(session):
     from src.core.context import RequestContext
 
-    AuthenticationService.create_user(session, "bob", "password1", "Employee")
+    AuthenticationService.create_user(session, "bob", "Password1", "Employee")
     session.commit()
 
     AuthenticationService.set_user_active(session, "bob", False)
     session.commit()
 
-    result = AuthenticationService.authenticate_user(session, "bob", "password1")
+    result = AuthenticationService.authenticate_user(session, "bob", "Password1")
     assert result is None  # disabled users cannot log in
 
     AuthenticationService.set_user_active(session, "bob", True)
     session.commit()
-    result = AuthenticationService.authenticate_user(session, "bob", "password1")
+    result = AuthenticationService.authenticate_user(session, "bob", "Password1")
     assert result is not None

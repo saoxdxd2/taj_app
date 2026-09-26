@@ -1,7 +1,9 @@
 import logging
+import datetime
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from src.modules.authentication.models import User, Role
+from src.security.sanitizers import validate_password_strength, sanitize_username
 
 from src.database.transaction import transactional
 
@@ -17,6 +19,53 @@ class AuthenticationService:
     Provides secure password hashing and verification.
     """
     
+    # --- Brute-force protection ---
+    # Consecutive failures before the account is temporarily locked, and the
+    # lock duration for each subsequent failure.
+    MAX_FAILED_LOGINS = 5
+    LOCKOUT_STEPS_SECONDS = (60, 300, 900, 3600)
+    MAX_LOCKOUT_SECONDS = 3600 * 24
+
+    @classmethod
+    def _register_failed_login(cls, user: User) -> None:
+        """
+        Records a failed attempt and locks the account once the threshold
+        is reached. The lockout grows with each further failure, capped so
+        a forgotten password cannot lock an account out indefinitely.
+        """
+        user.failed_login_count = (user.failed_login_count or 0) + 1
+        if user.failed_login_count < cls.MAX_FAILED_LOGINS:
+            return
+
+        step_index = user.failed_login_count - cls.MAX_FAILED_LOGINS
+        if step_index >= len(cls.LOCKOUT_STEPS_SECONDS):
+            seconds = cls.MAX_LOCKOUT_SECONDS
+        else:
+            seconds = cls.LOCKOUT_STEPS_SECONDS[step_index]
+
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+        user.locked_until = now + datetime.timedelta(seconds=seconds)
+        logger.warning(
+            f"Account locked for {seconds}s after {user.failed_login_count} "
+            "consecutive failed logins."
+        )
+
+    @staticmethod
+    def _is_locked_out(user: User) -> bool:
+        """
+        True when the account is currently locked. An expired lock is
+        cleared on the spot so the next attempt is evaluated normally.
+        """
+        if user.locked_until is None:
+            return False
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+        if user.locked_until > now:
+            return True
+        # The lock has expired: clear it and let this attempt through.
+        user.locked_until = None
+        user.failed_login_count = 0
+        return False
+
     @staticmethod
     def hash_password(password: str) -> str:
         """
@@ -40,23 +89,40 @@ class AuthenticationService:
     @transactional
     def authenticate_user(session, username: str, password: str) -> User | None:
         """
-        Authenticate a user by username and password.
+        Authenticates a user by username and password.
         Returns the User object if successful and active, otherwise None.
+
+        Repeated failures lock the account temporarily; a successful
+        attempt clears the counter. The username is never written to the
+        log, so the auth log cannot be used to enumerate accounts.
         """
         user = session.query(User).filter(User.username == username).first()
-        
+
         if not user:
-            logger.info("Authentication failed: User not found.")
+            # Deliberately identical to the "locked" message: revealing
+            # which accounts exist would let an attacker enumerate usernames.
+            logger.info("Authentication failed: unknown user or bad credentials.")
             return None
-            
+
         if not user.is_active:
-            logger.info(f"Authentication failed: User '{username}' is deactivated.")
+            logger.info("Authentication failed: account is deactivated.")
             return None
-            
+
+        if AuthenticationService._is_locked_out(user):
+            logger.warning(
+                "Authentication refused: account is temporarily locked out."
+            )
+            return None
+
         if not AuthenticationService.verify_password(password, user.password_hash):
-            logger.info(f"Authentication failed: Invalid password for user '{username}'.")
+            AuthenticationService._register_failed_login(user)
+            session.flush()
+            logger.info("Authentication failed: invalid credentials.")
             return None
-            
+
+        # Success: clear the lockout state.
+        user.failed_login_count = 0
+        user.locked_until = None
         logger.info(f"Authentication successful for user '{username}'.")
         return user
 
@@ -103,6 +169,7 @@ class AuthenticationService:
         """
         if not new_password or len(new_password) < 8:
             raise ValueError("Password must be at least 8 characters long.")
+        validate_password_strength(new_password)
         
         user = session.query(User).filter(User.username == username).first()
         if not user:
@@ -134,9 +201,10 @@ class AuthenticationService:
         """
         if not username or not username.strip():
             raise ValueError("Username is required.")
-        username = username.strip()
-        if len(password) < 8:
-            raise ValueError("Password must be at least 8 characters long.")
+        username = sanitize_username(username)
+        if not username:
+            raise ValueError("Username is required.")
+        validate_password_strength(password)
 
         if session.query(User).filter(User.username == username).first():
             raise ValueError(f"User '{username}' already exists.")
