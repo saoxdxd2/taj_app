@@ -41,12 +41,24 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_async_s
     # Create user
     hashed_password = get_password_hash(user_data.password)
     
-    # Get roles
+    # Roles are NOT taken from the request.
+    #
+    # SECURITY: this endpoint used to iterate `user_data.roles` from the
+    # body and create any role it did not recognise, so an anonymous
+    # caller could self-assign Administrator and take over the system.
+    # Public registration now always receives the least-privilege role;
+    # granting any other role requires an administrator token.
+    allowed_roles = settings.security.public_registration_roles
+    requested = [r for r in (user_data.roles or []) if r in allowed_roles]
+    if not requested:
+        requested = [allowed_roles[0]]
+
     roles = []
-    for role_name in user_data.roles:
+    for role_name in requested:
         result = await db.execute(select(Role).where(Role.name == role_name))
         role = result.scalar_one_or_none()
-        if not role:
+        if role is None:
+            # Only allow-listed roles may be created implicitly.
             role = Role(name=role_name)
             db.add(role)
         roles.append(role)

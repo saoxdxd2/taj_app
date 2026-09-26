@@ -1,12 +1,22 @@
-"""FastAPI routes for products, sales, inventory, and analytics."""
+"""FastAPI routes for products, sales, inventory, and analytics.
+
+SECURITY: every endpoint here requires a bearer token. This router was
+originally mounted without authentication, which allowed anyone who
+could reach the port to create and overwrite products and to read sales
+and analytics figures. get_current_user is now a dependency on every
+route, and role checks gate the writes.
+"""
 import asyncio
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
+from fastapi import (
+    APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, status,
+)
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 from decimal import Decimal
 
 from src.core.database import get_db
+from src.api.core.security import get_current_user, require_admin, decode_token
 from src.websocket.manager import manager
 from src.api.schemas import (
     ProductCreate, ProductUpdate, ProductResponse, ProductAnalytics,
@@ -28,7 +38,8 @@ def list_products(
     limit: int = 100,
     category: Optional[str] = None,
     in_stock_only: bool = False,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
 ):
     """Get all products with optional filters."""
     query = db.query(Product)
@@ -44,7 +55,9 @@ def list_products(
 
 
 @router.get("/products/{product_id}", response_model=ProductResponse)
-def get_product(product_id: int, db: Session = Depends(get_db)):
+def get_product(product_id: int, db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     """Get a specific product by ID."""
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
@@ -53,8 +66,10 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/products", response_model=ProductResponse)
-def create_product(product: ProductCreate, db: Session = Depends(get_db)):
-    """Create a new product."""
+def create_product(product: ProductCreate, db: Session = Depends(get_db),
+    _user=Depends(require_admin()),
+):
+    """Create a new product. Requires an administrator."""
     # Check for duplicate SKU
     existing = db.query(Product).filter(Product.sku == product.sku).first()
     if existing:
@@ -95,8 +110,10 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/products/{product_id}", response_model=ProductResponse)
-def update_product(product_id: int, product_update: ProductUpdate, db: Session = Depends(get_db)):
-    """Update a product."""
+def update_product(product_id: int, product_update: ProductUpdate, db: Session = Depends(get_db),
+    _user=Depends(require_admin()),
+):
+    """Update a product. Requires an administrator."""
     db_product = db.query(Product).filter(Product.id == product_id).first()
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -117,7 +134,9 @@ def update_product(product_id: int, product_update: ProductUpdate, db: Session =
 # ============== Sales Routes ==============
 
 @router.post("/sales", response_model=SaleResponse)
-async def create_sale(sale: SaleCreate, db: Session = Depends(get_db)):
+async def create_sale(sale: SaleCreate, db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     """
     Create a new sale (store or website).
     For store sales, allows variable sell price per item.
@@ -229,7 +248,8 @@ def list_sales(
     skip: int = 0,
     limit: int = 100,
     channel: Optional[SaleChannel] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
 ):
     """List all sales with optional channel filter."""
     query = db.query(Invoice).filter(Invoice.state == "Issued")
@@ -245,7 +265,9 @@ def list_sales(
 # ============== Analytics Routes ==============
 
 @router.get("/analytics/dashboard", response_model=DashboardAnalytics)
-def get_dashboard_analytics(db: Session = Depends(get_db)):
+def get_dashboard_analytics(db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     """Get comprehensive dashboard analytics for store owner."""
     # Total revenue and profit
     total_revenue = Decimal("0.00")
@@ -318,11 +340,22 @@ def get_dashboard_analytics(db: Session = Depends(get_db)):
 # ============== WebSocket Endpoint ==============
 
 @router.websocket("/ws/{client_type}")
-async def websocket_endpoint(websocket: WebSocket, client_type: str = "all"):
+async def websocket_endpoint(websocket: WebSocket, client_type: str = "all",
+                             token: Optional[str] = Query(default=None)):
     """
     WebSocket endpoint for real-time updates.
     client_type: 'all', 'inventory', 'sales', 'analytics', 'mobile_app'
+
+    SECURITY: the connection carries live inventory and sales broadcasts,
+    so a token is required. Browsers cannot set an Authorization header on
+    a WebSocket handshake, so the token is passed as a query parameter and
+    validated before the socket is accepted.
     """
+    if not token or decode_token(token) is None:
+        # Close before accept() so the handshake is rejected.
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await manager.connect(websocket, client_type)
     try:
         while True:

@@ -21,7 +21,28 @@ class SecuritySettings(BaseSettings):
     password_min_length: int = 8
     max_login_attempts: int = 5
     lockout_duration_minutes: int = 30
-    
+    # Roles an anonymous caller may grant themselves via /register.
+    #
+    # SECURITY: this list is the boundary that stops self-registration from
+    # becoming privilege escalation. Only least-privilege roles belong here;
+    # anything that can modify data must not be self-assignable. The
+    # register handler refuses to create or assign a role outside it.
+    public_registration_roles: list = ["user"]
+
+    @validator('public_registration_roles')
+    @classmethod
+    def validate_public_registration_roles(cls, v):
+        forbidden = {"admin", "administrator", "manager", "superuser", "root"}
+        offending = [r for r in v if str(r).strip().lower() in forbidden]
+        if offending:
+            raise ValueError(
+                "public_registration_roles must not contain privileged "
+                f"roles: {offending}"
+            )
+        if not v:
+            raise ValueError("public_registration_roles must not be empty")
+        return v
+
     @validator('secret_key')
     @classmethod
     def validate_secret_key(cls, v):

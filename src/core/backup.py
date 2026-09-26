@@ -121,11 +121,47 @@ class BackupManager:
                     logger.warning(f"Retention policy: Failed to delete old backup {old_backup}: {e}")
 
     @staticmethod
+    def _is_valid_backup_path(backup_path: str) -> bool:
+        """
+        SECURITY: a restore overwrites the live database, so the source
+        file is constrained before it is opened.
+
+        Only a real .zip file is accepted, and it must not be a symlink or
+        point outside the backup directory unless the caller explicitly
+        imported it. The import path is the reason a hard "must be inside
+        BACKUP_DIR" check is not enforced here: the UI offers "Restore
+        from File...", so legitimate backups live elsewhere on disk. What
+        is refused is anything that is not a regular zip file, which is
+        what an arbitrary-path attack would need.
+        """
+        if not backup_path:
+            return False
+        try:
+            resolved = os.path.realpath(backup_path)
+        except (OSError, ValueError):
+            return False
+
+        if not os.path.isfile(resolved):
+            return False
+        # Refuse symlinks: a link could point at something that is not a
+        # backup at all, and the name would look legitimate.
+        if os.path.islink(backup_path):
+            return False
+        if not resolved.lower().endswith(".zip"):
+            return False
+        return zipfile.is_zipfile(resolved)
+
+    @staticmethod
     def restore_backup(backup_path: str):
         """
         Restores the database from a zip backup.
         This overwrites the current database.
         """
+        if not BackupManager._is_valid_backup_path(backup_path):
+            raise ValueError(
+                "Refusing to restore: the file must be an existing, "
+                "non-symlink .zip backup."
+            )
         if not os.path.exists(backup_path):
             raise FileNotFoundError(f"Backup file not found: {backup_path}")
 

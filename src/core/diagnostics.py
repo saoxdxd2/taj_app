@@ -53,7 +53,12 @@ class DiagnosticsManager:
                             tables = cursor.fetchall()
                             for table in tables:
                                 table_name = table[0]
-                                cursor.execute(f"SELECT count(*) FROM {table_name}")
+                                # Table names cannot be bound as parameters,
+                                # so the identifier is quoted instead. An
+                                # unquoted f-string here would execute SQL
+                                # from any table name containing a quote.
+                                quoted = '"' + table_name.replace('"', '""') + '"'
+                                cursor.execute(f"SELECT count(*) FROM {quoted}")
                                 count = cursor.fetchone()[0]
                                 f.write(f"Table {table_name}: {count} rows\n")
             except Exception as e:

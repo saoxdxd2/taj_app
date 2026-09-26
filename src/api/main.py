@@ -54,13 +54,37 @@ app = FastAPI(
 )
 
 
-# CORS Middleware - Allow all origins for development (restrict in production)
+# CORS Middleware
+#
+# SECURITY: this was `allow_origins=["*"]` together with
+# `allow_credentials=True`, which lets any website a logged-in user visits
+# call this API with their session. Origins are now explicit, and the
+# wildcard is only honoured outside production - and never together with
+# credentials, which is the combination that actually matters.
+_is_production = settings.environment.lower() in ("production", "prod")
+_configured_origins = list(getattr(settings.api, "cors_origins", []) or [])
+
+if _is_production:
+    _origins = [o for o in _configured_origins if o != "*"]
+    if not _origins:
+        # Fail closed rather than exposing the API to every origin.
+        raise RuntimeError(
+            "CORS_ORIGINS must list explicit origins in production; "
+            "'*' is not permitted."
+        )
+else:
+    _origins = _configured_origins or ["*"]
+
+# Credentials are only allowed for explicit origins; a wildcard with
+# credentials is rejected by browsers and must not be relied upon.
+_allow_credentials = "*" not in _origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_origins,
+    allow_credentials=_allow_credentials,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
