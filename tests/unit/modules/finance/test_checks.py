@@ -101,6 +101,33 @@ def test_check_lifecycle_clear_creates_journal(session, admin_context, customer)
     assert entries[0].transaction_type == TransactionType.PAYMENT_RECEIVED
 
 
+def test_clearing_check_twice_posts_one_journal_entry(session, admin_context, customer):
+    due = datetime.now() + timedelta(days=10)
+    check = FinanceService.create_check(
+        context=admin_context, session=session,
+        check_number="IDEMP-1", direction="Incoming",
+        amount=Decimal("250.00"), due_date=due,
+        party_name=customer.company_name, customer_id=customer.id,
+    )
+    FinanceService.update_check_status(
+        context=admin_context, session=session,
+        check_id=check.id, new_status="Deposited",
+    )
+    FinanceService.update_check_status(
+        context=admin_context, session=session,
+        check_id=check.id, new_status="Cleared",
+    )
+    # A repeated "Cleared" call must be a no-op, not a second receipt.
+    FinanceService.update_check_status(
+        context=admin_context, session=session,
+        check_id=check.id, new_status="Cleared",
+    )
+    entries = session.query(FinancialJournalEntry).filter(
+        FinancialJournalEntry.reference_id == "CHECK-IDEMP-1"
+    ).all()
+    assert len(entries) == 1
+
+
 def test_check_invalid_transition_rejected(session, admin_context, customer):
     """Pending -> Bounced is not a legal transition."""
     due = datetime.now() + timedelta(days=10)
@@ -160,3 +187,82 @@ def test_get_checks_due_within(session, admin_context, customer):
     assert "D-LATE" not in numbers
     # Ordered by due date ascending (overdue first)
     assert numbers.index("D-OVER") < numbers.index("D-SOON")
+
+
+# --- Available checks for a payment/deposit ---
+
+def test_pending_incoming_checks_are_offered_once(session, admin_context, customer):
+    from src.modules.sales.services import SalesService
+
+    due = datetime.now() + timedelta(days=5)
+    check = FinanceService.create_check(
+        context=admin_context, session=session,
+        check_number="AVAIL-1", direction="Incoming",
+        amount=Decimal("100.00"), due_date=due,
+        party_name=customer.company_name, customer_id=customer.id,
+    )
+    available = FinanceService.get_pending_incoming_checks(
+        context=admin_context, session=session, customer_id=customer.id
+    )
+    assert [c.id for c in available] == [check.id]
+
+    # Once the check backs a deposit it is no longer offered for reuse.
+    SalesService.create_deposit(
+        context=admin_context, session=session,
+        deposit_number="BON-AVAIL-1", customer_id=customer.id,
+        amount=Decimal("100.00"), method="Check", check_id=check.id,
+    )
+    available = FinanceService.get_pending_incoming_checks(
+        context=admin_context, session=session, customer_id=customer.id
+    )
+    assert available == []
+
+
+def test_pending_incoming_checks_require_permission(
+    session, unauthorized_context, customer
+):
+    with pytest.raises(AccessDenied):
+        FinanceService.get_pending_incoming_checks(
+            context=unauthorized_context, session=session,
+            customer_id=customer.id,
+        )
+
+
+def test_get_all_checks_requires_permission(session, unauthorized_context):
+    """The check ledger is financial data; reading it needs its own grant."""
+    with pytest.raises(AccessDenied):
+        FinanceService.get_all_checks(
+            context=unauthorized_context, session=session
+        )
+
+
+def test_get_all_checks_filters_by_status(session, admin_context, customer):
+    """The finance screen and calendar can request only the statuses they need."""
+    now = datetime.now()
+    pending = FinanceService.create_check(
+        context=admin_context, session=session,
+        check_number="LIST-PENDING", direction="Incoming",
+        amount=Decimal("100.00"), due_date=now,
+        party_name=customer.company_name, customer_id=customer.id,
+    )
+    cleared = FinanceService.create_check(
+        context=admin_context, session=session,
+        check_number="LIST-CLEARED", direction="Incoming",
+        amount=Decimal("200.00"), due_date=now,
+        party_name=customer.company_name, customer_id=customer.id,
+    )
+    FinanceService.update_check_status(
+        context=admin_context, session=session,
+        check_id=cleared.id, new_status="Cleared",
+    )
+
+    all_checks = FinanceService.get_all_checks(
+        context=admin_context, session=session
+    )
+    assert {c.id for c in all_checks} == {pending.id, cleared.id}
+
+    only_pending = FinanceService.get_all_checks(
+        context=admin_context, session=session,
+        statuses=[CheckStatus.PENDING],
+    )
+    assert [c.id for c in only_pending] == [pending.id]

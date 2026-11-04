@@ -171,10 +171,12 @@ class InvoiceAddItemDialog(FormDialog):
 class PaymentDialog(FormDialog):
     """Register a payment (cash / check / virement) against an invoice."""
 
-    def __init__(self, context, invoice_number, balance, parent=None):
+    def __init__(self, context, invoice_number, balance, customer_id=None, parent=None):
         self.context = context
         self.invoice_number = invoice_number
         self.balance = balance
+        self.customer_id = customer_id
+        self._check_amounts = {}
         super().__init__(
             title="Register Payment",
             subtitle=f"Invoice {invoice_number} — remaining balance: {balance:,.2f} DH",
@@ -191,6 +193,13 @@ class PaymentDialog(FormDialog):
         self.method_combo.addItem("Cash", userData="Cash")
         self.method_combo.addItem("Check", userData="Check")
         self.method_combo.addItem("Transfer", userData="Transfer")
+        self.method_combo.currentIndexChanged.connect(self._on_method_changed)
+
+        self.check_label = QLabel("Check *")
+        self.check_combo = QComboBox()
+        self.check_hint = QLabel("")
+        self.check_hint.setStyleSheet("color: #718096; font-size: 11px;")
+        self.check_hint.setWordWrap(True)
 
         self.amount_input = QDoubleSpinBox()
         self.amount_input.setRange(0.01, float(self.balance))
@@ -203,6 +212,8 @@ class PaymentDialog(FormDialog):
         self.reference_input.setPlaceholderText("Check number or transfer ref (optional)")
 
         form.addRow("Method *", self.method_combo)
+        form.addRow(self.check_label, self.check_combo)
+        form.addRow("", self.check_hint)
         form.addRow("Amount *", self.amount_input)
         form.addRow("Reference", self.reference_input)
 
@@ -211,6 +222,50 @@ class PaymentDialog(FormDialog):
         )
         box.accepted.disconnect()
         box.accepted.connect(self.validate_and_accept)
+        self._on_method_changed()
+
+    def _on_method_changed(self, *_args):
+        is_check = self.method_combo.currentData() == "Check"
+        self.check_label.setVisible(is_check)
+        self.check_combo.setVisible(is_check)
+        self.check_hint.setVisible(is_check)
+        if is_check:
+            self._load_checks()
+
+    def _load_checks(self):
+        from src.modules.finance.services import FinanceService
+
+        self.check_combo.clear()
+        self._check_amounts.clear()
+        if self.customer_id is None:
+            self.check_combo.addItem("No customer on this invoice", userData=None)
+            self.check_hint.setText("Cannot list checks without a customer.")
+            return
+        try:
+            checks = FinanceService.get_pending_incoming_checks(
+                context=self.context, customer_id=self.customer_id
+            )
+        except Exception as e:
+            self.check_combo.addItem("Could not load checks", userData=None)
+            self.check_hint.setText(f"Failed to load checks: {e}")
+            return
+        if not checks:
+            self.check_combo.addItem("No unused check for this customer", userData=None)
+            self.check_hint.setText(
+                "Register the check in Finance → New Check, then come back here. "
+                "The check amount must match the payment amount."
+            )
+            return
+        for check in checks:
+            due = check.due_date.strftime("%Y-%m-%d") if check.due_date else "-"
+            self.check_combo.addItem(
+                f"#{check.check_number} — {check.amount:,.2f} DH (due {due})",
+                userData=check.id,
+            )
+            self._check_amounts[check.id] = check.amount
+        self.check_hint.setText(
+            "Only checks registered to this customer and not already used are listed."
+        )
 
     def validate_and_accept(self):
         from decimal import Decimal
@@ -218,14 +273,32 @@ class PaymentDialog(FormDialog):
         if amount <= 0 or amount > Decimal(str(self.balance)):
             QMessageBox.warning(self, "Validation Error", "Amount must be between 0 and the remaining balance.")
             return
+        if self.method_combo.currentData() == "Check":
+            check_id = self.check_combo.currentData()
+            if not check_id:
+                QMessageBox.warning(
+                    self, "Validation Error",
+                    "Please select an available check. If none is listed, register it in Finance first."
+                )
+                return
+            check_amount = self._check_amounts.get(check_id)
+            if check_amount is not None and check_amount != amount:
+                QMessageBox.warning(
+                    self, "Validation Error",
+                    f"This check is for {check_amount:,.2f} DH. "
+                    "The payment amount must match the check amount."
+                )
+                return
         self.accept()
 
     def get_data(self):
         from decimal import Decimal
+        is_check = self.method_combo.currentData() == "Check"
         return {
             "method": self.method_combo.currentData(),
             "amount": Decimal(str(self.amount_input.value())),
             "reference": self.reference_input.text().strip() or None,
+            "check_id": self.check_combo.currentData() if is_check else None,
         }
 
 
@@ -234,6 +307,7 @@ class DepositDialog(FormDialog):
 
     def __init__(self, context, parent=None):
         self.context = context
+        self._check_amounts = {}
         super().__init__(
             title="New Customer Deposit (Bon)",
             min_width=460,
@@ -253,6 +327,7 @@ class DepositDialog(FormDialog):
         for c in self.customers:
             if not c.is_archived:
                 self.customer_combo.addItem(c.company_name, userData=c.id)
+        self.customer_combo.currentIndexChanged.connect(self._on_customer_changed)
 
         self.amount_input = QDoubleSpinBox()
         self.amount_input.setRange(0.01, 9999999.99)
@@ -264,17 +339,75 @@ class DepositDialog(FormDialog):
         self.method_combo.addItem("Cash", userData="Cash")
         self.method_combo.addItem("Check", userData="Check")
         self.method_combo.addItem("Transfer", userData="Transfer")
+        self.method_combo.currentIndexChanged.connect(self._on_method_changed)
+
+        self.check_label = QLabel("Check *")
+        self.check_combo = QComboBox()
+        self.check_hint = QLabel("")
+        self.check_hint.setStyleSheet("color: #718096; font-size: 11px;")
+        self.check_hint.setWordWrap(True)
 
         form.addRow("Deposit Number *", self.deposit_number_input)
         form.addRow("Customer *", self.customer_combo)
         form.addRow("Amount *", self.amount_input)
         form.addRow("Method *", self.method_combo)
+        form.addRow(self.check_label, self.check_combo)
+        form.addRow("", self.check_hint)
 
         box = self.add_buttons(
             QDialogButtonBox.Save | QDialogButtonBox.Cancel, ok_text="Save Deposit"
         )
         box.accepted.disconnect()
         box.accepted.connect(self.validate_and_accept)
+        self._on_method_changed()
+
+    def _on_method_changed(self, *_args):
+        is_check = self.method_combo.currentData() == "Check"
+        self.check_label.setVisible(is_check)
+        self.check_combo.setVisible(is_check)
+        self.check_hint.setVisible(is_check)
+        if is_check:
+            self._load_checks()
+
+    def _on_customer_changed(self, *_args):
+        if self.method_combo.currentData() == "Check":
+            self._load_checks()
+
+    def _load_checks(self):
+        from src.modules.finance.services import FinanceService
+
+        self.check_combo.clear()
+        self._check_amounts.clear()
+        customer_id = self.customer_combo.currentData()
+        if customer_id is None:
+            self.check_combo.addItem("Please select a customer first", userData=None)
+            self.check_hint.setText("A check must belong to the deposit's customer.")
+            return
+        try:
+            checks = FinanceService.get_pending_incoming_checks(
+                context=self.context, customer_id=customer_id
+            )
+        except Exception as e:
+            self.check_combo.addItem("Could not load checks", userData=None)
+            self.check_hint.setText(f"Failed to load checks: {e}")
+            return
+        if not checks:
+            self.check_combo.addItem("No unused check for this customer", userData=None)
+            self.check_hint.setText(
+                "Register the check in Finance → New Check, then come back here. "
+                "The check amount must match the deposit amount."
+            )
+            return
+        for check in checks:
+            due = check.due_date.strftime("%Y-%m-%d") if check.due_date else "-"
+            self.check_combo.addItem(
+                f"#{check.check_number} — {check.amount:,.2f} DH (due {due})",
+                userData=check.id,
+            )
+            self._check_amounts[check.id] = check.amount
+        self.check_hint.setText(
+            "Only checks registered to this customer and not already used are listed."
+        )
 
     def validate_and_accept(self):
         if not self.deposit_number_input.text().strip():
@@ -286,13 +419,33 @@ class DepositDialog(FormDialog):
                 "Please select a customer. Add customers in CRM first."
             )
             return
+        if self.method_combo.currentData() == "Check":
+            from decimal import Decimal
+            check_id = self.check_combo.currentData()
+            if not check_id:
+                QMessageBox.warning(
+                    self, "Validation Error",
+                    "Please select an available check. If none is listed, register it in Finance first."
+                )
+                return
+            check_amount = self._check_amounts.get(check_id)
+            amount = Decimal(str(self.amount_input.value()))
+            if check_amount is not None and check_amount != amount:
+                QMessageBox.warning(
+                    self, "Validation Error",
+                    f"This check is for {check_amount:,.2f} DH. "
+                    "The deposit amount must match the check amount."
+                )
+                return
         self.accept()
 
     def get_data(self):
         from decimal import Decimal
+        is_check = self.method_combo.currentData() == "Check"
         return {
             "deposit_number": self.deposit_number_input.text().strip(),
             "customer_id": self.customer_combo.currentData(),
             "amount": Decimal(str(self.amount_input.value())),
             "method": self.method_combo.currentData(),
+            "check_id": self.check_combo.currentData() if is_check else None,
         }

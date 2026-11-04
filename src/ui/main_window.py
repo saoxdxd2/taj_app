@@ -1,3 +1,4 @@
+import logging
 import sys
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                                QHBoxLayout, QListWidget, QStackedWidget, QMessageBox,
@@ -19,6 +20,9 @@ from src.ui.widgets.finance_widget import FinanceWidget
 from src.ui.widgets.sales_widget import SalesWidget
 from src.ui.widgets.settings_widget import SettingsWidget
 from src.ui.widgets.calendar_widget import CalendarWidget
+
+logger = logging.getLogger(__name__)
+
 
 class LoginDialog(QDialog):
     def __init__(self, parent=None):
@@ -164,21 +168,30 @@ class MainWindow(QMainWindow):
         # Periodically pick up website price updates dropped in the
         # sync folder (every 5 minutes)
         from PySide6.QtCore import QTimer
-        from src.modules.websync.services import WebsiteSyncService
         self._sync_timer = QTimer(self)
         self._sync_timer.setInterval(5 * 60 * 1000)
-        self._sync_timer.timeout.connect(
-            lambda: WebsiteSyncService.process_pending_updates()
-        )
+        self._sync_timer.timeout.connect(self._process_pending_updates)
         self._sync_timer.start()
 
         # Context Label
         context = CurrentSession.get_context()
         self.statusBar().showMessage(f"Logged in as: {context.username} ({context.role})")
 
+    def _process_pending_updates(self):
+        """Applies website price updates without letting a malformed file
+        kill the Qt event loop."""
+        try:
+            from src.modules.websync.services import WebsiteSyncService
+            WebsiteSyncService.process_pending_updates()
+        except Exception as exc:
+            logger.error(f"Website price-update processing failed: {exc}")
+
     def _on_nav_changed(self, index: int):
         """Refresh the dashboard each time it is opened so reminders stay current."""
         widget = self.stack.widget(index)
         if widget is self.dashboard_widget:
-            self.dashboard_widget.refresh()
+            try:
+                self.dashboard_widget.refresh()
+            except Exception as exc:
+                logger.error(f"Dashboard refresh failed: {exc}")
         self.stack.setCurrentIndex(index)

@@ -9,6 +9,7 @@ from src.core.session import CurrentSession
 from src.modules.inventory.services import InventoryService
 from src.modules.finance.services import FinanceService
 from src.modules.analytics.services import ForecastService
+from src.security.permissions import AccessDenied
 from src.ui.layout import add_elided_columns, size_table_height
 
 
@@ -148,6 +149,10 @@ class DashboardWidget(QWidget):
     def _load_forecast(self):
         try:
             suggestions = ForecastService.get_reorder_suggestions(self.context)
+        except AccessDenied:
+            self.forecast_table.setRowCount(0)
+            self.forecast_count_label.setText("(not available for your role)")
+            return
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load reorder forecast: {e}")
             return
@@ -180,6 +185,11 @@ class DashboardWidget(QWidget):
     def _load_low_stock(self):
         try:
             items = InventoryService.get_low_stock_products(self.context)
+        except AccessDenied:
+            self.stock_table.setRowCount(0)
+            self.kpi_low_stock[1].setText("—")
+            self.low_stock_count_label.setText("(not available for your role)")
+            return
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load low stock: {e}")
             return
@@ -212,6 +222,9 @@ class DashboardWidget(QWidget):
     def _load_checks_due(self):
         try:
             checks = FinanceService.get_checks_due_within(self.context, days=7)
+        except AccessDenied:
+            self.checks_table.setRowCount(0)
+            return
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load checks: {e}")
             return

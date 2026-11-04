@@ -38,6 +38,11 @@ class User(BaseModel):
     Represents a system user.
     Passwords must be hashed using Argon2id before assignment.
     """
+    # Password hashes must never be written to the audit trail or included
+    # in an exported diagnostic bundle. Password changes are recorded as an
+    # explicit CHANGE_PASSWORD event instead.
+    __audit_exclude__ = {"password_hash"}
+
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role_id: Mapped[int] = mapped_column(ForeignKey("role.id"), nullable=False)

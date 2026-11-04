@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, List, Optional
 from decimal import Decimal, InvalidOperation
 
@@ -16,11 +17,37 @@ logger = logging.getLogger(__name__)
 class WebsiteSyncService:
     """
     Keeps the boss's website in step with the ERP:
-    - export_catalog: dump the sellable catalog (prices + stock) as JSON
-      for upload to the website.
+    - export_catalog: dump the sellable catalog (website prices + stock)
+      as JSON for upload to the website.
     - import_price_updates: apply price changes coming back from the
       website (JSON list of {sku, sale_price}).
+
+    The website has its own price column (`sale_price_website`). Store
+    prices are never touched by a website import, and a product that has
+    not been published with a website price yet falls back to its store
+    price instead of being sold at zero.
     """
+
+    @staticmethod
+    def _website_price(product) -> Decimal:
+        """The price the website should show for a product."""
+        price = product.sale_price_website
+        if price and price > 0:
+            return price
+        return product.sale_price or Decimal("0.00")
+
+    @staticmethod
+    def configure_sync_folder(context: RequestContext, path) -> Path:
+        """
+        Changes where website catalogs are written and price updates are read.
+
+        This is a privileged setting: a user who can redirect the export
+        folder controls where the catalog (including prices and stock) lands.
+        """
+        PermissionManager.verify_permission(context, "Settings.WebsiteSync.Export")
+        from src.modules.websync.sync_config import set_sync_folder
+
+        return set_sync_folder(path)
 
     @staticmethod
     def _build_catalog_payload(session) -> Dict:
@@ -39,7 +66,7 @@ class WebsiteSyncService:
             products.append({
                 "sku": product.sku,
                 "name": product.name,
-                "sale_price": float(product.sale_price or 0),
+                "sale_price": float(WebsiteSyncService._website_price(product)),
                 "vat_rate": float(product.vat_rate or 0),
                 "stock": int(stock.quantity) if stock else 0,
                 "active": product.state == ProductState.ACTIVE,
@@ -179,17 +206,17 @@ class WebsiteSyncService:
                 skipped_unknown.append(sku)
                 continue
 
-            old_price = product.sale_price
+            old_price = WebsiteSyncService._website_price(product)
             if old_price != price:
-                product.sale_price = price
+                product.sale_price_website = price
                 updated.append({"sku": sku, "old_price": float(old_price or 0), "new_price": float(price)})
                 AuditService.record_event(
                     session=session,
                     action="WEBSITE_PRICE_UPDATE",
                     entity_name="Product",
                     entity_id=str(product.id),
-                    before_values={"sale_price": float(old_price or 0)},
-                    after_values={"sale_price": float(price)},
+                    before_values={"sale_price_website": float(old_price or 0)},
+                    after_values={"sale_price_website": float(price)},
                     user_id=user_id,
                 )
 

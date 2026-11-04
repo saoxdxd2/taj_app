@@ -4,7 +4,7 @@ import zipfile
 from datetime import datetime
 from typing import Optional
 from loguru import logger
-from src.core.paths import DB_PATH, BACKUP_DIR
+from src.core.paths import DB_PATH, BACKUP_DIR, TEMP_DIR
 
 
 def _configured_int(key: str, fallback: int) -> int:
@@ -38,47 +38,69 @@ def _configured_int(key: str, fallback: int) -> int:
 
 class BackupManager:
     @staticmethod
-    def create_backup(prefix="manual") -> str:
+    def create_backup(prefix="manual", require_integrity: bool = True) -> str:
         """
         Creates a zip backup of the current database.
         Prefix can be 'manual', 'shutdown', or 'pre_migration'.
+
+        `require_integrity` is true for ordinary backups: never overwrite a
+        healthy backup with a corrupt source. A pre-restore safety copy sets
+        it to false, because the live database may be the reason the restore
+        was requested in the first place.
+
         Returns the path to the backup file.
         """
         if not os.path.exists(DB_PATH):
             logger.warning("No database found to backup.")
             return ""
 
+        backup_path = None
         try:
             # Disk space check before backup (requires at least 50MB free)
             from src.core.health_check import HealthCheckEngine, HealthStatus
             result = HealthCheckEngine.check_disk_space()
             if result.status == HealthStatus.FATAL:
                 raise Exception(f"Insufficient disk space for backup: {result.message}")
-                
-            # Database Integrity check before backup (Prevent backing up corruption)
-            integrity_result = HealthCheckEngine.check_database_integrity()
-            if integrity_result.status == HealthStatus.FATAL:
-                raise Exception(f"Database corruption detected. Backup aborted to prevent overwriting healthy backups. {integrity_result.message}")
 
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            if require_integrity:
+                # Prevent backing up corruption over healthy backups.
+                integrity_result = HealthCheckEngine.check_database_integrity()
+                if integrity_result.status == HealthStatus.FATAL:
+                    raise Exception(
+                        "Database corruption detected. Backup aborted to "
+                        "prevent overwriting healthy backups. "
+                        f"{integrity_result.message}"
+                    )
+
+            # Microseconds avoid two backups created in the same second
+            # overwriting each other (and a later cleanup deleting the
+            # wrong archive).
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
             backup_filename = f"taj_froid_{prefix}_{timestamp}.zip"
             backup_path = os.path.join(BACKUP_DIR, backup_filename)
 
             import sqlite3
             import tempfile
-            with tempfile.TemporaryDirectory() as temp_dir:
+            # Keep scratch files inside the application data tree. The
+            # shared Windows %TEMP% folder can be ACL-locked on shop PCs,
+            # which would make every backup fail before it starts.
+            with tempfile.TemporaryDirectory(dir=str(TEMP_DIR)) as temp_dir:
                 temp_db_path = os.path.join(temp_dir, "taj_froid.db")
                 
                 # Safely copy using sqlite3 backup API to avoid torn database.
                 # Explicitly close connections before the temp dir is zipped —
                 # sqlite3's context manager commits but does NOT close on Windows.
                 src = sqlite3.connect(str(DB_PATH))
-                dst = sqlite3.connect(temp_db_path)
+                dst = None
                 try:
+                    dst = sqlite3.connect(temp_db_path)
                     src.backup(dst)
                 finally:
-                    dst.close()
-                    src.close()
+                    try:
+                        if dst is not None:
+                            dst.close()
+                    finally:
+                        src.close()
                         
                 # Zip the safe snapshot
                 with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -91,11 +113,29 @@ class BackupManager:
 
             logger.info(f"Database backup created and verified: {backup_path}")
             
-            # Retention Policy: Prune old backups
-            BackupManager._apply_retention_policy()
+            # Retention is housekeeping, not part of the backup contract.
+            # A permission error or a file removed by another process must
+            # not turn a successful backup into a reported failure.
+            try:
+                BackupManager._apply_retention_policy()
+            except Exception as retention_error:
+                logger.warning(
+                    f"Backup retention policy failed (backup is still valid): "
+                    f"{retention_error}"
+                )
             
             return backup_path
         except Exception as e:
+            # Do not leave a partial archive behind: the next restore or
+            # retention pass must never pick up a corrupt backup.
+            if backup_path and os.path.exists(backup_path):
+                try:
+                    os.remove(backup_path)
+                except OSError as cleanup_error:
+                    logger.warning(
+                        f"Could not remove incomplete backup {backup_path}: "
+                        f"{cleanup_error}"
+                    )
             logger.error(f"Failed to create backup: {e}")
             raise
 
@@ -110,6 +150,8 @@ class BackupManager:
         if max_backups is None:
             from src.modules.settings.models import SettingKey
             max_backups = _configured_int(SettingKey.BACKUP_RETENTION_COUNT, 15)
+        # A corrupted setting must never delete every backup on disk.
+        max_backups = max(1, int(max_backups))
 
         backups = BackupManager.list_backups()
         if len(backups) > max_backups:
@@ -152,6 +194,63 @@ class BackupManager:
         return zipfile.is_zipfile(resolved)
 
     @staticmethod
+    def _validate_restore_archive(backup_path: str) -> None:
+        """Checks the archive shape before extracting anything.
+
+        A restore accepts a user-selected zip, so the archive must contain
+        the expected database member. This rejects a zip that only happens
+        to have a .zip extension, and only the known member name is ever
+        extracted.
+        """
+        with zipfile.ZipFile(backup_path, "r") as archive:
+            try:
+                member = archive.getinfo("taj_froid.db")
+            except KeyError as exc:
+                raise ValueError(
+                    "Refusing to restore: the archive does not contain "
+                    "taj_froid.db."
+                ) from exc
+            if member.is_dir():
+                raise ValueError(
+                    "Refusing to restore: taj_froid.db is a directory in "
+                    "the archive."
+                )
+
+    @staticmethod
+    def _validate_sqlite_database(database_path: str) -> None:
+        """Verifies that a restored file really is a healthy SQLite DB.
+
+        The UI accepts an externally supplied backup file. Checking only
+        the zip extension is not enough: a valid zip can still contain
+        arbitrary bytes, which would replace the live database with an
+        unreadable file. The header and integrity check happen before the
+        live database is touched.
+        """
+        import sqlite3
+
+        with open(database_path, "rb") as handle:
+            if handle.read(16) != b"SQLite format 3\x00":
+                raise ValueError(
+                    "Refusing to restore: the archive does not contain a "
+                    "SQLite database."
+                )
+
+        conn = sqlite3.connect(database_path)
+        try:
+            result = conn.execute("PRAGMA integrity_check;").fetchone()
+        except sqlite3.DatabaseError as exc:
+            raise ValueError(
+                "Refusing to restore: the backup database is unreadable."
+            ) from exc
+        finally:
+            conn.close()
+        if not result or str(result[0]).lower() != "ok":
+            raise ValueError(
+                "Refusing to restore: the backup database failed its "
+                "integrity check."
+            )
+
+    @staticmethod
     def restore_backup(backup_path: str):
         """
         Restores the database from a zip backup.
@@ -168,25 +267,56 @@ class BackupManager:
         try:
             import tempfile
             import sqlite3
-            
-            with tempfile.TemporaryDirectory() as temp_dir:
+
+            BackupManager._validate_restore_archive(backup_path)
+
+            with tempfile.TemporaryDirectory(dir=str(TEMP_DIR)) as temp_dir:
                 # 1. Extract the backup to a temp location
                 temp_db_path = os.path.join(temp_dir, "taj_froid.db")
                 with zipfile.ZipFile(backup_path, 'r') as zipf:
                     zipf.extract("taj_froid.db", path=temp_dir)
-                    
-                # 2. Create safety backup
-                safety_backup = BackupManager.create_backup(prefix="pre_restore_safety")
-                
-                # 3. Dispose SQLAlchemy connections to release locks
+
+                # 2. Validate the extracted database before touching the
+                #    live one.
+                BackupManager._validate_sqlite_database(temp_db_path)
+
+                # 3. Best-effort safety copy of the current state. The live
+                #    database may be corrupt (which is often why a restore is
+                #    requested), so this copy must not run the ordinary
+                #    integrity gate. A failure here is logged but does not
+                #    block recovery from the already-validated source.
+                try:
+                    safety_backup = BackupManager.create_backup(
+                        prefix="pre_restore_safety", require_integrity=False
+                    )
+                except Exception as safety_error:
+                    safety_backup = ""
+                    logger.warning(
+                        "Pre-restore safety backup failed; continuing with "
+                        f"the validated restore source: {safety_error}"
+                    )
+
+                # 4. Dispose SQLAlchemy connections to release locks
                 from src.database.session import engine
                 engine.dispose()
-                
-                # 4. Safely overwrite DB_PATH using sqlite3 backup API
-                with sqlite3.connect(temp_db_path) as src:
-                    with sqlite3.connect(DB_PATH) as dst:
-                        src.backup(dst)
-                        
+
+                # 5. Safely overwrite DB_PATH using sqlite3 backup API.
+                # The sqlite3 context manager commits but does not close on
+                # Windows, so both connections must be closed explicitly.
+                # Otherwise the live database (and the temp snapshot) stay
+                # locked after a restore.
+                src = sqlite3.connect(temp_db_path)
+                dst = None
+                try:
+                    dst = sqlite3.connect(DB_PATH)
+                    src.backup(dst)
+                finally:
+                    try:
+                        if dst is not None:
+                            dst.close()
+                    finally:
+                        src.close()
+
             logger.info(f"Database restored successfully from {backup_path}. Safety backup: {safety_backup}")
         except Exception as e:
             logger.error(f"Failed to restore backup: {e}")
@@ -195,11 +325,29 @@ class BackupManager:
     @staticmethod
     def list_backups() -> list:
         """
-        Returns a sorted list of available backups (newest first).
+        Returns the restorable backups, newest first.
+
+        Only .zip files are listed: restore_backup intentionally refuses a
+        bare .db file, so showing one in the UI would only produce a failed
+        restore. A file that disappears between listdir() and stat() is
+        skipped rather than failing the whole listing.
         """
-        if not os.path.exists(BACKUP_DIR):
+        if not os.path.isdir(BACKUP_DIR):
             return []
-            
-        backups = [os.path.join(BACKUP_DIR, f) for f in os.listdir(BACKUP_DIR) if f.endswith(".zip") or f.endswith(".db")]
-        backups.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-        return backups
+
+        try:
+            filenames = os.listdir(BACKUP_DIR)
+        except OSError:
+            return []
+
+        entries = []
+        for filename in filenames:
+            if not filename.lower().endswith(".zip"):
+                continue
+            path = os.path.join(BACKUP_DIR, filename)
+            try:
+                entries.append((os.path.getmtime(path), path))
+            except OSError:
+                continue
+        entries.sort(key=lambda item: item[0], reverse=True)
+        return [path for _, path in entries]

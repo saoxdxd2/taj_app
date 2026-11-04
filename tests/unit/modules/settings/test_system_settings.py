@@ -109,14 +109,53 @@ def test_empty_value_is_rejected(session, admin_context):
         )
 
 
+def test_non_numeric_numeric_setting_is_rejected(session, admin_context):
+    """A typo must be rejected instead of breaking the next startup."""
+    with pytest.raises(ValueError, match="whole number"):
+        SettingsService.set_value(
+            context=admin_context, session=session,
+            key=SettingKey.LOG_ROTATION_SIZE_MB, value="ten",
+        )
+
+
+def test_zero_or_negative_numeric_setting_is_rejected(session, admin_context):
+    with pytest.raises(ValueError, match="at least 1"):
+        SettingsService.set_value(
+            context=admin_context, session=session,
+            key=SettingKey.LOG_RETENTION_DAYS, value="0",
+        )
+    with pytest.raises(ValueError, match="at least 1"):
+        SettingsService.set_value(
+            context=admin_context, session=session,
+            key=SettingKey.BACKUP_RETENTION_COUNT, value="-5",
+        )
+
+
+def test_numeric_setting_is_normalized(session, admin_context):
+    SettingsService.set_value(
+        context=admin_context, session=session,
+        key=SettingKey.BACKUP_RETENTION_COUNT, value=" 025 ",
+    )
+    row = session.query(SystemSetting).filter(
+        SystemSetting.key == SettingKey.BACKUP_RETENTION_COUNT
+    ).one()
+    assert row.value == "25"
+
+
 # --- Corrupt values -----------------------------------------------------
 
 def test_corrupt_int_value_falls_back_to_default(session, admin_context):
     """A hand-edited non-numeric value must not crash the caller."""
-    SettingsService.set_value(
-        context=admin_context, session=session,
-        key=SettingKey.LOG_ROTATION_SIZE_MB, value="not-a-number",
-    )
+    # Simulate a row edited outside the service: set_value itself now
+    # rejects this input. The migration may already have seeded the key.
+    row = session.query(SystemSetting).filter(
+        SystemSetting.key == SettingKey.LOG_ROTATION_SIZE_MB
+    ).first()
+    if row is None:
+        row = SystemSetting(key=SettingKey.LOG_ROTATION_SIZE_MB)
+        session.add(row)
+    row.value = "not-a-number"
+    session.commit()
     assert SettingsService.get_int(
         context=admin_context, session=session, key=SettingKey.LOG_ROTATION_SIZE_MB
     ) == 10  # the default

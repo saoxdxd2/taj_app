@@ -87,6 +87,19 @@ def test_websocket_requires_a_token():
     )
 
 
+def test_experimental_api_requires_explicit_opt_in():
+    """The unwired prototype must fail closed if it is ever imported."""
+    text = MAIN.read_text(encoding="utf-8")
+    assert "TAJ_ENABLE_EXPERIMENTAL_API" in text
+    assert "raise RuntimeError" in text
+
+
+def test_experimental_api_is_excluded_from_packaging():
+    """FastAPI/WebSocket code must not be bundled with the desktop app."""
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'exclude = ["api", "api.*", "websocket", "websocket.*"]' in pyproject
+
+
 # --- 2. No self-assigned roles on public registration --------------------
 
 def test_register_does_not_trust_request_roles():

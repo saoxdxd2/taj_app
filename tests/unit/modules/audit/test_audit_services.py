@@ -228,3 +228,31 @@ class TestAuditService:
         # Verify no update method exists on the service
         assert not hasattr(AuditService, 'update_event')
         assert not hasattr(AuditService, 'delete_event')
+
+    def test_audit_event_cannot_be_updated(self, session):
+        """The ORM guard rejects an in-place edit of an audit row."""
+        event = AuditService.record_event(
+            session=session,
+            action="ORIGINAL",
+            entity_name="Test",
+            entity_id="IMMUTABLE-002",
+        )
+
+        event.action = "TAMPERED"
+        with pytest.raises(ValueError, match="immutable"):
+            session.flush()
+        session.rollback()
+
+    def test_audit_event_cannot_be_deleted(self, session):
+        """The ORM guard rejects deletion of an audit row."""
+        event = AuditService.record_event(
+            session=session,
+            action="ORIGINAL",
+            entity_name="Test",
+            entity_id="IMMUTABLE-003",
+        )
+
+        session.delete(event)
+        with pytest.raises(ValueError, match="immutable"):
+            session.flush()
+        session.rollback()

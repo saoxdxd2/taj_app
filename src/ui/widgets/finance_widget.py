@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
 from src.core.session import CurrentSession
 from src.modules.finance.services import FinanceService
 from src.modules.finance.models import CheckStatus
+from src.security.permissions import AccessDenied, PermissionManager
 from src.ui.dialogs.finance_dialogs import NewCheckDialog
 from src.ui.layout import add_elided_columns, size_table_height
 
@@ -20,8 +21,47 @@ class FinanceWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.context = CurrentSession.get_context()
+        self._can_view_reports = False
+        self._can_view_checks = False
+        self._can_update_checks = False
         self.setup_ui()
+        self._apply_permission_visibility()
         self.refresh()
+
+    def _has_permission(self, permission: str) -> bool:
+        try:
+            PermissionManager.verify_permission(self.context, permission)
+            return True
+        except AccessDenied:
+            return False
+
+    def _apply_permission_visibility(self):
+        """Hides finance sections the current role may not read.
+
+        The service layer still enforces every permission; this only avoids
+        showing empty/erroring panels to users who cannot use them.
+        """
+        self._can_view_reports = self._has_permission("Finance.Reports.View")
+        self.cash_box.setVisible(self._can_view_reports)
+        self.debtors_label.setVisible(self._can_view_reports)
+        self.debtors_table.setVisible(self._can_view_reports)
+
+        self._can_view_checks = self._has_permission("Finance.Checks.View")
+        self._can_update_checks = (
+            self._can_view_checks
+            and self._has_permission("Finance.Checks.Update")
+        )
+        for widget in (
+            self.checks_title, self.btn_new_check, self.btn_deposit,
+            self.btn_clear, self.btn_bounce, self.btn_cancel,
+            self.btn_refresh, self.checks_table,
+        ):
+            widget.setVisible(self._can_view_checks)
+        self.btn_new_check.setEnabled(
+            self._can_view_checks
+            and self._has_permission("Finance.Checks.Create")
+        )
+        self._update_transition_buttons(None)
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -31,6 +71,7 @@ class FinanceWidget(QWidget):
 
         # --- Cash flow summary ---
         cash_box = QGroupBox("Cash Flow - current month")
+        self.cash_box = cash_box
         grid = QGridLayout(cash_box)
         self.inflow_label = QLabel("-")
         self.outflow_label = QLabel("-")
@@ -46,7 +87,8 @@ class FinanceWidget(QWidget):
         layout.addWidget(cash_box)
 
         # --- Debtors ---
-        layout.addWidget(QLabel("<b>Client Debtors (outstanding balances)</b>"))
+        self.debtors_label = QLabel("<b>Client Debtors (outstanding balances)</b>")
+        layout.addWidget(self.debtors_label)
         self.debtors_table = QTableWidget(0, 4)
         self.debtors_table.setHorizontalHeaderLabels(
             ["Client", "Invoiced", "Paid", "Outstanding"]
@@ -59,7 +101,8 @@ class FinanceWidget(QWidget):
 
         # --- Checks management ---
         checks_header = QHBoxLayout()
-        checks_header.addWidget(QLabel("<b>Checks</b>"))
+        self.checks_title = QLabel("<b>Checks</b>")
+        checks_header.addWidget(self.checks_title)
         self.btn_new_check = QPushButton("New Check")
         self.btn_deposit = QPushButton("Deposit")
         self.btn_clear = QPushButton("Cleared")
@@ -94,9 +137,11 @@ class FinanceWidget(QWidget):
         self._update_transition_buttons(None)
 
     def refresh(self):
-        self._load_cash_flow()
-        self._load_debtors()
-        self._load_checks()
+        if self._can_view_reports:
+            self._load_cash_flow()
+            self._load_debtors()
+        if self._can_view_checks:
+            self._load_checks()
 
     # ------------------------------------------------------------------
 
@@ -108,6 +153,10 @@ class FinanceWidget(QWidget):
     def _load_cash_flow(self):
         try:
             flow = FinanceService.get_cash_flow(self.context)
+        except AccessDenied:
+            for label in (self.inflow_label, self.outflow_label, self.net_label):
+                label.setText("—")
+            return
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load cash flow: {e}")
             return
@@ -122,6 +171,9 @@ class FinanceWidget(QWidget):
     def _load_debtors(self):
         try:
             debtors = FinanceService.get_debtors(self.context)
+        except AccessDenied:
+            self.debtors_table.setRowCount(0)
+            return
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load debtors: {e}")
             return
@@ -141,16 +193,14 @@ class FinanceWidget(QWidget):
                 self.debtors_table.setItem(row, col, cell)
 
     def _load_checks(self):
-        from src.modules.finance.models import Check
-        from src.database.session import SessionLocal
-        session = SessionLocal()
         try:
-            checks = session.query(Check).order_by(Check.due_date.asc()).limit(200).all()
+            checks = FinanceService.get_all_checks(self.context)
+        except AccessDenied:
+            self.checks_table.setRowCount(0)
+            return
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load checks: {e}")
             return
-        finally:
-            session.close()
 
         today = datetime.now(timezone.utc).date()
         self.checks_table.setRowCount(len(checks))
@@ -201,6 +251,8 @@ class FinanceWidget(QWidget):
             "Deposited": {"Cleared", "Bounced"},
             "Bounced": {"Deposited", "Cancelled"},
         }.get(status, set())
+        if not self._can_update_checks:
+            allowed = set()
         self.btn_deposit.setEnabled("Deposited" in allowed)
         self.btn_clear.setEnabled("Cleared" in allowed)
         self.btn_bounce.setEnabled("Bounced" in allowed)

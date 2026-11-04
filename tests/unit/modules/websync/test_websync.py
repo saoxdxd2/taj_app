@@ -55,6 +55,24 @@ def test_export_catalog_excludes_archived(tmp_path, session, admin_context):
     assert all(p["sku"] != product.sku for p in data["products"])
 
 
+def test_export_uses_the_website_price_when_one_is_published(
+    tmp_path, session, admin_context
+):
+    """The catalog exports the website price, not the in-store price."""
+    product = _product(session, admin_context, price="1999.99")
+    product.sale_price_website = Decimal("1799.00")
+    session.commit()
+    out = tmp_path / "catalog.json"
+
+    WebsiteSyncService.export_catalog(
+        context=admin_context, session=session, output_path=str(out)
+    )
+    data = json.loads(out.read_text(encoding="utf-8"))
+    entry = next(p for p in data["products"] if p["sku"] == product.sku)
+    assert entry["sale_price"] == 1799.00
+    assert product.sale_price == Decimal("1999.99")
+
+
 # --- Import ---
 
 def test_import_updates_prices_and_reports_unknowns(tmp_path, session, admin_context):
@@ -80,10 +98,12 @@ def test_import_updates_prices_and_reports_unknowns(tmp_path, session, admin_con
     assert summary["unknown_skus"] == ["NOPE-404"]
     assert len(summary["errors"]) == 2
 
-    # Price actually persisted
+    # Price actually persisted: the website price is separate from the
+    # store price, which must remain untouched.
     from src.modules.inventory.models import Product
     fresh = session.query(Product).filter(Product.id == p1.id).first()
-    assert fresh.sale_price == Decimal("149.99")
+    assert fresh.sale_price_website == Decimal("149.99")
+    assert fresh.sale_price == Decimal("100.00")
 
 
 def test_import_accepts_products_wrapper(tmp_path, session, admin_context):
@@ -103,3 +123,19 @@ def test_import_rejects_bad_structure(tmp_path, session, admin_context):
     with pytest.raises(ValueError, match="Unsupported"):
         WebsiteSyncService.import_price_updates(context=admin_context, session=session,
                                                 input_path=str(path))
+def test_configuring_sync_folder_requires_permission(unauthorized_context, tmp_path):
+    from src.security.permissions import AccessDenied
+
+    with pytest.raises(AccessDenied):
+        WebsiteSyncService.configure_sync_folder(unauthorized_context, tmp_path)
+
+
+def test_admin_can_configure_sync_folder(monkeypatch, admin_context, tmp_path):
+    import src.modules.websync.sync_config as sync_config
+
+    calls = {}
+    monkeypatch.setattr(
+        sync_config, "set_sync_folder", lambda path: calls.setdefault("path", path)
+    )
+    WebsiteSyncService.configure_sync_folder(admin_context, tmp_path)
+    assert calls["path"] == tmp_path

@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 
 from src.core.session import CurrentSession
 from src.modules.finance.services import FinanceService
+from src.security.permissions import AccessDenied
 from src.ui.layout import add_elided_columns, size_table_height
 
 
@@ -70,35 +71,42 @@ class CalendarWidget(QWidget):
 
     def refresh(self):
         """Load all pending checks and mark their due dates on the calendar."""
+        from PySide6.QtGui import QTextCharFormat, QBrush, QColor
+        from PySide6.QtCore import QDate
+        from src.modules.finance.models import CheckStatus
+
         try:
-            from src.modules.finance.models import Check, CheckStatus
-            from src.database.session import SessionLocal
-            with SessionLocal() as session:
-                checks = (
-                    session.query(Check)
-                    .filter(Check.status.in_([CheckStatus.PENDING, CheckStatus.DEPOSITED]))
-                    .all()
-                )
-                # Detach data we need before the session closes
-                self._due_map = {}
-                for c in checks:
-                    if c.due_date is None:
-                        continue
-                    d = c.due_date.date()
-                    self._due_map.setdefault(d, []).append({
-                        "number": c.check_number,
-                        "direction": c.direction.value,
-                        "amount": float(c.amount),
-                        "party": c.party_name,
-                    })
+            checks = FinanceService.get_all_checks(
+                self.context,
+                statuses=[CheckStatus.PENDING, CheckStatus.DEPOSITED],
+            )
+        except AccessDenied:
+            self._due_map = {}
+            self.day_label.setText(
+                "<b>Checks are not available for your role.</b>"
+            )
+            self.checks_table.setRowCount(0)
+            # Clear any markings left by a previous session.
+            self.calendar.setDateTextFormat(QDate(), QTextCharFormat())
+            return
         except Exception as e:
             self.day_label.setText(f"<b>Could not load checks:</b> {e}")
             return
 
-        # Mark dates that have pending checks
-        from PySide6.QtGui import QTextCharFormat, QBrush, QColor
-        from PySide6.QtCore import QDate
-        # Reset all previous markings (null QDate clears every special format)
+        self._due_map = {}
+        for c in checks:
+            if c.due_date is None:
+                continue
+            d = c.due_date.date()
+            self._due_map.setdefault(d, []).append({
+                "number": c.check_number,
+                "direction": c.direction.value,
+                "amount": float(c.amount),
+                "party": c.party_name,
+            })
+
+        # Mark dates that have pending checks. A null QDate clears every
+        # special format, so removed checks disappear on refresh.
         self.calendar.setDateTextFormat(QDate(), QTextCharFormat())
         for d in self._due_map:
             f = QTextCharFormat()

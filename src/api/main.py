@@ -3,6 +3,18 @@ TAJ FROID ERP - Main FastAPI Application
 Enterprise-grade API with comprehensive error handling and middleware
 Supports REST API and WebSocket for real-time updates across desktop, web, and mobile
 """
+import os
+
+# Fail closed: this is an unwired prototype, not part of the desktop
+# product. Importing or launching it requires an explicit opt-in so an
+# accidental deployment cannot expose the old API surface.
+if os.environ.get("TAJ_ENABLE_EXPERIMENTAL_API") != "1":
+    raise RuntimeError(
+        "The TAJ FROID API prototype is disabled. Set "
+        "TAJ_ENABLE_EXPERIMENTAL_API=1 only in an isolated development "
+        "environment; it is not part of the production desktop release."
+    )
+
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -11,7 +23,7 @@ import logging
 from contextlib import asynccontextmanager
 import asyncio
 
-from src.core.config import settings
+from src.api.core.settings import settings
 from src.core.database import init_db
 from src.api.routes import router as api_router
 
@@ -26,7 +38,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting TAJ FROID ERP v1.0.0")
     logger.info(f"Environment: {settings.environment}")
-    logger.info(f"API Port: {settings.api_port}, WebSocket Port: {settings.ws_port}")
+    logger.info(f"API Port: {settings.api.port}")
     
     try:
         init_db()
@@ -156,7 +168,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "src.api.main:app",
-        host=settings.api_host,
-        port=settings.api_port,
+        host=settings.api.host,
+        port=settings.api.port,
         reload=(settings.environment == "development")
     )

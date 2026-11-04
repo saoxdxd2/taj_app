@@ -152,7 +152,7 @@ class SettingsService:
         value, so no configuration change is ever silent.
         """
         from src.modules.settings.models import (
-            SystemSetting, SETTING_DEFAULTS, SETTING_DESCRIPTIONS,
+            SettingKey, SystemSetting, SETTING_DEFAULTS, SETTING_DESCRIPTIONS,
         )
         PermissionManager.verify_permission(context, "Settings.System.Update")
 
@@ -164,6 +164,30 @@ class SettingsService:
         value = "" if value is None else str(value).strip()
         if not value:
             raise ValueError(f"Setting '{key}' cannot be empty.")
+
+        # Numeric settings drive backup retention and log rotation. Rejecting
+        # invalid values here prevents a bad edit from breaking the next
+        # startup (for example a negative rotation size makes loguru raise).
+        numeric_minimums = {
+            SettingKey.BACKUP_RETENTION_COUNT: 1,
+            SettingKey.BACKUP_MIN_DISK_SPACE_MB: 1,
+            SettingKey.LOG_ROTATION_SIZE_MB: 1,
+            SettingKey.LOG_RETENTION_DAYS: 1,
+            SettingKey.DEFAULT_WARRANTY_MONTHS: 0,
+        }
+        if key in numeric_minimums:
+            try:
+                numeric_value = int(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Setting '{key}' must be a whole number."
+                ) from exc
+            minimum = numeric_minimums[key]
+            if numeric_value < minimum:
+                raise ValueError(
+                    f"Setting '{key}' must be at least {minimum}."
+                )
+            value = str(numeric_value)
 
         setting = session.query(SystemSetting).filter(SystemSetting.key == key).first()
         before = setting.value if setting else SETTING_DEFAULTS.get(key)

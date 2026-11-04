@@ -37,12 +37,8 @@ class NewCheckDialog(FormDialog):
         self.party_combo = QComboBox()
         self.customers = CRMService.get_all_customers(context=self.context)
         self.suppliers = SupplierService.get_all_suppliers(context=self.context)
-        for c in self.customers:
-            if not c.is_archived:
-                self.party_combo.addItem(c.company_name, userData=("customer", c.id))
-        for s in self.suppliers:
-            if not s.is_archived:
-                self.party_combo.addItem(s.company_name, userData=("supplier", s.id))
+        self.direction_combo.currentIndexChanged.connect(self._populate_parties)
+        self._populate_parties()
 
         self.amount_input = QDoubleSpinBox()
         self.amount_input.setRange(0.01, 9999999.99)
@@ -69,6 +65,23 @@ class NewCheckDialog(FormDialog):
         )
         box.accepted.disconnect()
         box.accepted.connect(self.validate_and_accept)
+
+    def _populate_parties(self):
+        """Show only the party type that matches the selected direction."""
+        incoming = self.direction_combo.currentData() == "Incoming"
+        self.party_combo.clear()
+        if incoming:
+            for customer in self.customers:
+                if not customer.is_archived:
+                    self.party_combo.addItem(
+                        customer.company_name, userData=("customer", customer.id)
+                    )
+        else:
+            for supplier in self.suppliers:
+                if not supplier.is_archived:
+                    self.party_combo.addItem(
+                        supplier.company_name, userData=("supplier", supplier.id)
+                    )
 
     def validate_and_accept(self):
         if not self.number_input.text().strip():

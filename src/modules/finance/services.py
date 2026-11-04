@@ -159,6 +159,68 @@ class FinanceService:
         return check
 
     @staticmethod
+    def _reverse_check_allocations(session, check: Check) -> None:
+        """
+        Undo the provisional settlement of a check that will never clear.
+
+        A check can back either one direct payment or one customer deposit
+        (enforced when it is linked). Bouncing or cancelling it must delete
+        those payments, restore the deposit's available balance and reopen
+        the affected invoices; otherwise the invoice stays PAID although no
+        money was received. No journal entry exists yet for a check that
+        never cleared, so the accounting reversal is limited to the sales
+        ledger.
+        """
+        from src.modules.sales.models import (
+            CustomerDeposit, DepositState, Invoice, InvoiceState, Payment,
+        )
+
+        payments = session.query(Payment).filter(
+            Payment.check_id == check.id
+        ).all()
+        deposit = session.query(CustomerDeposit).filter(
+            CustomerDeposit.check_id == check.id
+        ).first()
+
+        reversed_total = sum((p.amount for p in payments), Decimal("0.00"))
+        invoice_ids = {p.invoice_id for p in payments}
+
+        for payment in payments:
+            session.delete(payment)
+
+        if deposit is not None:
+            deposit.amount_used = max(
+                Decimal("0.00"), deposit.amount_used - reversed_total
+            )
+            deposit.state = DepositState.CANCELLED
+            # Release the paper so a cured check (bounced then successfully
+            # deposited again) can back a fresh deposit. The cancelled
+            # deposit itself can no longer be used.
+            deposit.check_id = None
+
+        if payments:
+            # SessionLocal uses autoflush=False, so make the deletions
+            # visible before recomputing the invoice balances.
+            session.flush()
+            for invoice_id in invoice_ids:
+                invoice = session.query(Invoice).filter(
+                    Invoice.id == invoice_id
+                ).first()
+                if not invoice:
+                    continue
+                remaining = session.query(Payment).filter(
+                    Payment.invoice_id == invoice.id
+                ).all()
+                paid = sum((p.amount for p in remaining), Decimal("0.00"))
+                if invoice.state == InvoiceState.PAID and paid < invoice.total_amount:
+                    invoice.state = InvoiceState.VALIDATED
+
+        logger.info(
+            "Reversed %s payment(s) for check #%s (%s).",
+            len(payments), check.check_number, check.status.value,
+        )
+
+    @staticmethod
     @transactional
     def update_check_status(context: RequestContext, session, check_id: int, new_status: str) -> Check:
         """
@@ -177,15 +239,25 @@ class FinanceService:
         except ValueError:
             raise ValueError(f"Invalid check status: {new_status}")
 
+        # Idempotent: re-clearing an already-cleared check must not post a
+        # second journal entry, and re-bouncing must not reverse twice.
+        if status_enum == check.status:
+            return check
+
         allowed = {
             CheckStatus.PENDING: {CheckStatus.DEPOSITED, CheckStatus.CLEARED, CheckStatus.CANCELLED},
             CheckStatus.DEPOSITED: {CheckStatus.CLEARED, CheckStatus.BOUNCED},
             CheckStatus.BOUNCED: {CheckStatus.DEPOSITED, CheckStatus.CANCELLED},
         }
-        if status_enum != check.status and status_enum not in allowed.get(check.status, set()):
+        if status_enum not in allowed.get(check.status, set()):
             raise ValueError(f"Cannot move check from {check.status.value} to {status_enum.value}.")
-        
+
         check.status = status_enum
+
+        # A bounced or cancelled check never brings money in, so any
+        # invoice/deposit provisionally settled with it must be reopened.
+        if status_enum in (CheckStatus.BOUNCED, CheckStatus.CANCELLED):
+            FinanceService._reverse_check_allocations(session, check)
         
         # Money actually moved -> journal entry
         if status_enum == CheckStatus.CLEARED:
@@ -220,6 +292,68 @@ class FinanceService:
         else:
             query = query.filter(Check.due_date >= now, Check.due_date <= horizon)
         return query.order_by(Check.due_date.asc()).all()
+
+    @staticmethod
+    @transactional
+    def get_all_checks(context: RequestContext, session,
+                       limit: int = 200,
+                       statuses: Optional[List[CheckStatus]] = None) -> List[Check]:
+        """
+        Lists checks for the finance screen and the calendar.
+
+        The UI must not query the check ledger directly: check numbers,
+        amounts and parties are financial data, so reading them requires
+        the same ``Finance.Checks.View`` permission as the other check
+        operations.
+        """
+        PermissionManager.verify_permission(context, "Finance.Checks.View")
+
+        if limit <= 0:
+            raise ValueError("Limit must be positive.")
+
+        query = session.query(Check)
+        if statuses:
+            query = query.filter(Check.status.in_(statuses))
+        return query.order_by(Check.due_date.asc()).limit(limit).all()
+
+    @staticmethod
+    @transactional
+    def get_pending_incoming_checks(context: RequestContext, session,
+                                    customer_id: int) -> List[Check]:
+        """
+        Incoming checks that can back a new payment or customer deposit.
+
+        A check is only offered once: once it is linked to a payment or a
+        deposit, reusing it would credit the same paper twice. CLEARED
+        checks are included because their journal entry is already posted;
+        linking one only allocates that receipt to an invoice.
+        """
+        PermissionManager.verify_permission(context, "Finance.Checks.View")
+
+        from src.modules.sales.models import CustomerDeposit, Payment
+
+        used_by_payment = session.query(Payment.check_id).filter(
+            Payment.check_id.isnot(None)
+        )
+        used_by_deposit = session.query(CustomerDeposit.check_id).filter(
+            CustomerDeposit.check_id.isnot(None)
+        )
+        return (
+            session.query(Check)
+            .filter(
+                Check.direction == CheckDirection.INCOMING,
+                Check.status.in_((
+                    CheckStatus.PENDING,
+                    CheckStatus.DEPOSITED,
+                    CheckStatus.CLEARED,
+                )),
+                Check.customer_id == customer_id,
+                Check.id.notin_(used_by_payment),
+                Check.id.notin_(used_by_deposit),
+            )
+            .order_by(Check.due_date.asc())
+            .all()
+        )
 
     # ------------------------------------------------------------------
     # Analytics (cash flow, debtors, monthly profit)

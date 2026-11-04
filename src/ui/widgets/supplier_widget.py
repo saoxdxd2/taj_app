@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
                                QHeaderView, QMessageBox)
 from PySide6.QtCore import Qt
 from src.modules.suppliers.services import SupplierService
+from src.security.permissions import AccessDenied
 from src.ui.dialogs.supplier_dialog import SupplierDialog
 from src.ui.models.supplier_model import SupplierTableModel
 
@@ -63,6 +64,8 @@ class SupplierWidget(QWidget):
                 CurrentSession.get_context(), limit=limit, offset=offset
             )
             self.table_model.update_data(suppliers)
+        except AccessDenied:
+            self.table_model.update_data([])
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 

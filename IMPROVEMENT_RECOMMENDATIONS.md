@@ -1,10 +1,16 @@
 # ERP System Improvement Recommendations
 
+> **Historical audit snapshot.** This document records the recommendations
+> from an earlier review; it is not a live status page. The current suite
+> is **315+ tests** and the production-readiness work is tracked in
+> `README.md`, `SECURITY_AUDIT.md`, and the uncommitted release changes.
+> Treat the counts and module status below as historical context.
+
 ## Executive Summary
 
 This document provides prioritized improvement recommendations for the Taj Froid ERP system based on comprehensive code analysis. The system demonstrates strong architectural foundations with proper separation of concerns, transaction management, and audit logging. However, several critical areas require attention to enhance security, reliability, and maintainability.
 
-**Test Coverage Status**: 219/219 tests passing (100%)
+**Test Coverage Status at the time of this review**: 219/219 tests passing (100%)
 - ✅ Core services tested: Sales, Finance, Inventory, Authentication, CRM, Purchasing, Suppliers, Audit
 - ✅ Phase 2: DTO validation layer, pricing engine, system settings
 - ✅ Phase 3: logging/redaction, migration recovery, login lockout, sanitizers

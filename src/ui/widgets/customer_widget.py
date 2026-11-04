@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
                                QHeaderView, QMessageBox)
 from PySide6.QtCore import Qt
 from src.modules.crm.services import CRMService
+from src.security.permissions import AccessDenied
 from src.ui.dialogs.customer_dialog import CustomerDialog
 from src.ui.models.customer_model import CustomerTableModel
 
@@ -66,6 +67,8 @@ class CustomerWidget(QWidget):
                 CurrentSession.get_context(), limit=limit, offset=offset
             )
             self.table_model.update_data(customers)
+        except AccessDenied:
+            self.table_model.update_data([])
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 

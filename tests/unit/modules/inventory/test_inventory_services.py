@@ -111,6 +111,7 @@ def test_audit_event_generation(session, admin_context):
     events = session.query(AuditEvent).filter(AuditEvent.entity_name == "Product").all()
     assert len(events) == 1
     assert events[0].action == "CREATE"
+    assert events[0].entity_id == str(product.id)
     assert events[0].after_values["sku"] == "AUD-01"
     assert events[0].user_id == 1
 

@@ -5,16 +5,26 @@ import sys
 # it at the Windows system fonts (Qt no longer bundles fonts).
 os.environ.setdefault("QT_QPA_FONTDIR", r"C:\Windows\Fonts")
 
-from PySide6.QtWidgets import QApplication
+# A packaged build is a production build. Set the environment before any
+# settings module is imported so logging, redaction and health checks use
+# production defaults even when no .env file was shipped. An explicit
+# TAJ_ENVIRONMENT variable still wins, which keeps local debugging possible.
+if getattr(sys, "frozen", False):
+    os.environ.setdefault("TAJ_ENVIRONMENT", "production")
 
-from src.database.session import SessionLocal, engine
-from src.database.base import BaseModel
-from src.modules.authentication.models import User, Role
-from src.modules.authentication.services import AuthenticationService
+from loguru import logger
+from PySide6.QtWidgets import QApplication, QMessageBox
 
-from src.ui.main_window import MainWindow, LoginDialog
 
 def init_db():
+    from PySide6.QtWidgets import QMessageBox
+
+    from src.core.logging import setup_logging
+
+    # Initialize enterprise logging before importing the model graph, so an
+    # import failure is captured in the log and reported by main().
+    setup_logging()
+
     # Import all models to ensure they are registered with BaseModel.metadata
     import src.modules.inventory.models
     import src.modules.crm.models
@@ -23,17 +33,6 @@ def init_db():
     import src.modules.sales.models
     import src.modules.finance.models
     import src.modules.audit.models
-    import os
-    import sys
-    import shutil
-    from datetime import datetime
-    from PySide6.QtWidgets import QMessageBox
-
-    from loguru import logger
-    from src.core.logging import setup_logging
-    
-    # Initialize enterprise logging
-    setup_logging()
 
     # --- HEALTH CHECK ENGINE ---
     from src.core.health_check import HealthCheckEngine, HealthStatus
@@ -91,9 +90,19 @@ def init_db():
                 msg.setInformativeText(str(restore_error))
                 msg.exec()
                 sys.exit(1)
-            # The restored database is back at its original revision; the
-            # app can start as it did before.
+            # The restored database is back at its original revision, which
+            # may not match the schema this binary expects. Exit cleanly and
+            # let the user restart (or install the matching release) rather
+            # than running the new code against an old schema.
             logger.info("Database restored from pre-migration backup.")
+            QMessageBox.information(
+                None,
+                "Database Restored",
+                "The pre-upgrade backup was restored successfully.\n\n"
+                "The application will now close. Restart it, or install the "
+                "release that matches this database if the upgrade fails again.",
+            )
+            sys.exit(0)
         elif dialog.choice == MigrationErrorDialog.RETRY:
             second = apply_migrations()
             if not second.success:
@@ -110,80 +119,46 @@ def init_db():
         else:
             sys.exit(1)
         
+    from src.database.session import SessionLocal
+
     session_maker = SessionLocal
-    
+
     with session_maker() as session:
-        from src.modules.authentication.models import Role, Permission
-        
-        # 1. Seed Permissions
-        admin_perm = session.query(Permission).filter(Permission.name == ".*").first()
-        if not admin_perm:
-            admin_perm = Permission(name=".*", description="Superuser access")
-            session.add(admin_perm)
-            
-        manager_perms = ["Inventory.*", "CRM.*", "Suppliers.*", "Sales.*", "Purchasing.*"]
-        manager_perm_objs = []
-        for p_name in manager_perms:
-            p_obj = session.query(Permission).filter(Permission.name == p_name).first()
-            if not p_obj:
-                p_obj = Permission(name=p_name, description=f"Manager access for {p_name}")
-                session.add(p_obj)
-            manager_perm_objs.append(p_obj)
-            
-        employee_perms = ["Inventory.Products.View", "CRM.Customers.View", "Sales.Invoices.Create"]
-        employee_perm_objs = []
-        for p_name in employee_perms:
-            p_obj = session.query(Permission).filter(Permission.name == p_name).first()
-            if not p_obj:
-                p_obj = Permission(name=p_name, description=f"Employee access for {p_name}")
-                session.add(p_obj)
-            employee_perm_objs.append(p_obj)
-            
-        session.flush()
+        # Reconcile the full permission catalog and built-in role grants on
+        # every start, not only when the rows are missing. This is what
+        # makes a permission added in a later release visible to existing
+        # installations.
+        from src.modules.authentication.bootstrap import initialize_security
 
-        # 2. Seed Roles
-        role_admin = session.query(Role).filter(Role.name == "Administrator").first()
-        if not role_admin:
-            role_admin = Role(name="Administrator", description="System Administrator")
-            role_admin.permissions.append(admin_perm)
-            session.add(role_admin)
-            
-        role_manager = session.query(Role).filter(Role.name == "Manager").first()
-        if not role_manager:
-            role_manager = Role(name="Manager", description="Department Manager")
-            role_manager.permissions.extend(manager_perm_objs)
-            session.add(role_manager)
-            
-        role_employee = session.query(Role).filter(Role.name == "Employee").first()
-        if not role_employee:
-            role_employee = Role(name="Employee", description="Standard Employee")
-            role_employee.permissions.extend(employee_perm_objs)
-            session.add(role_employee)
-            
-        session.flush()
-
-        # 3. Create default admin if NO Administrator-role user exists yet.
-        # Check by role, not by username — the wizard may have renamed 'admin'.
-        existing_admin_user = session.query(User).filter(User.role_id == role_admin.id).first()
-        if not existing_admin_user:
-            admin = User(
-                username="admin",
-                password_hash=AuthenticationService.hash_password("admin"),
-                role_id=role_admin.id
-            )
-            session.add(admin)
-            
+        initialize_security(session)
         session.commit()
 
-def main():
-    app = QApplication(sys.argv)
+def _startup(app):
+    """Builds and shows the application, returning the main window.
 
-    # Apply the global visual theme before any window is created
+    The caller must keep the returned window alive for the lifetime of the
+    Qt event loop; otherwise its Python wrapper can be garbage-collected
+    while the window is still visible.
+    """
+    # The first-run setup and login dialogs are the only visible windows while
+    # they run. Closing the last one would normally make Qt quit before the
+    # main window is created. Keep the application alive until the main window
+    # is on screen, then restore the normal quit-on-last-window behaviour.
+    app.setQuitOnLastWindowClosed(False)
+
+    # Initialize DB and ensure default admin exists. Logging is configured
+    # inside init_db, so a later UI import failure has a traceback in the
+    # log and can be reported through the startup-failure dialog.
+    init_db()
+
+    # Apply the global visual theme before any window is created.
     from src.ui.theme import apply_theme
     apply_theme(app)
 
-    # Initialize DB and ensure default admin exists
-    init_db()
+    # Import the UI only after logging and the database are ready. If a
+    # widget module is broken, main() can still log the traceback and show
+    # the startup-failure dialog instead of dying during module import.
+    from src.ui.main_window import LoginDialog, MainWindow
 
     # Start automatic website synchronization (catalog auto-export +
     # pending price-update auto-import)
@@ -191,15 +166,17 @@ def main():
         from src.modules.websync.auto import setup_auto_sync
         setup_auto_sync()
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).error(f"Website auto-sync failed to start: {e}")
+        logger.error(f"Website auto-sync failed to start: {e}")
 
     # Add automatic backup on shutdown
     def shutdown_backup():
         from src.core.backup import BackupManager
-        from loguru import logger
         try:
             logger.info("Application shutting down. Initiating automatic backup...")
+            # Release pooled SQLite connections first: an open connection
+            # can keep the file locked and make the final snapshot fail.
+            from src.database.session import engine
+            engine.dispose()
             BackupManager.create_backup(prefix="shutdown")
         except Exception as e:
             logger.error(f"Shutdown backup failed: {e}")
@@ -208,33 +185,32 @@ def main():
 
     # --- FIRST-RUN SETUP ---
     # Check if ANY Administrator user still has the factory default password.
-    # We search by role so a renamed 'admin' account is still detected.
+    # The service searches by role so a renamed 'admin' account is still
+    # detected, and it re-checks the factory password before allowing setup.
     from src.modules.authentication.services import AuthenticationService
-    from src.modules.authentication.models import User as UserModel
     from src.ui.dialogs.auth_dialogs import FirstRunSetupDialog
-    from src.database.session import SessionLocal as _SL
-    _needs_setup = False
-    with _SL() as _s:
-        from src.modules.authentication.models import Role as RoleModel
-        _admin_role = _s.query(RoleModel).filter(RoleModel.name == "Administrator").first()
-        if _admin_role:
-            _admin_users = _s.query(UserModel).filter(UserModel.role_id == _admin_role.id).all()
-            for _u in _admin_users:
-                if AuthenticationService.verify_password("admin", _u.password_hash):
-                    _needs_setup = True
-                    break
+    _needs_setup = AuthenticationService.needs_first_run_setup()
     logged_in = False
     if _needs_setup:
         setup = FirstRunSetupDialog()
         if setup.exec() != FirstRunSetupDialog.Accepted:
             sys.exit(0)
         # Auto-login with the credentials just created — no need to
-        # type them again on the login screen.
-        AuthenticationService.login(
-            username=setup.username_input.text().strip(),
-            password=setup.password_input.text(),
-        )
-        logged_in = True
+        # type them again on the login screen. If it fails for any reason,
+        # fall through to the normal login dialog instead of opening the
+        # main window without a session.
+        try:
+            logged_in = AuthenticationService.login(
+                username=setup.username_input.text().strip(),
+                password=setup.password_input.text(),
+            )
+        except Exception:
+            logger.exception("Auto-login after first-run setup failed")
+            logged_in = False
+        if not logged_in:
+            logger.warning(
+                "Auto-login after first-run setup failed; showing the login dialog."
+            )
     # --- END FIRST-RUN SETUP ---
 
     # Show Login Gateway (skipped when auto-logged-in after setup)
@@ -245,7 +221,46 @@ def main():
 
     window = MainWindow()
     window.show()
-    sys.exit(app.exec())
+    app.setQuitOnLastWindowClosed(True)
+    return window
+
+
+def main():
+    app = QApplication(sys.argv)
+
+    main_window = None
+    try:
+        # Hold the main window for the lifetime of the event loop. Without
+        # this reference the Python wrapper can be garbage-collected right
+        # after show(), destroying the window while it is still in use.
+        main_window = _startup(app)
+    except SystemExit:
+        # Intentional exits from the setup/login/migration dialogs.
+        raise
+    except Exception as exc:
+        # A packaged GUI app has no console. Log the traceback and tell the
+        # user what happened instead of disappearing with no explanation.
+        logger.exception("Fatal error during application startup")
+        try:
+            QMessageBox.critical(
+                None,
+                "Startup Failed",
+                "TAJ FROID ERP could not start.\n\n"
+                f"{exc}\n\n"
+                "The details were written to the application log. "
+                "Do not delete the database; contact support or restore a backup.",
+            )
+        except Exception:
+            # The dialog itself must never mask the original failure.
+            pass
+        sys.exit(1)
+
+    try:
+        exit_code = app.exec()
+    except Exception:
+        logger.exception("Fatal error while running the application")
+        exit_code = 1
+    sys.exit(exit_code)
 
 if __name__ == "__main__":
     main()

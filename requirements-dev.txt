@@ -1,0 +1,10 @@
+# Development, test, type-check and packaging tools.
+# Keep this file aligned with [project.optional-dependencies] in pyproject.toml.
+-r requirements.txt
+
+pytest>=9.0
+pytest-cov>=6.3.0
+mypy>=1.13.0
+
+# Packaging (PyInstaller build pipeline)
+pyinstaller>=6.11.0

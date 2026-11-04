@@ -14,6 +14,7 @@ from src.api.core.security import (
     Token, UserCreate, UserLogin, TokenData,
     get_current_user
 )
+from src.api.core.settings import settings
 from src.modules.authentication.models import User, Role
 
 router = APIRouter()

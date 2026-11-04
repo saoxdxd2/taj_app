@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import sys
@@ -38,6 +39,35 @@ def _redact_record(record) -> bool:
     return True
 
 
+class _InterceptHandler(logging.Handler):
+    """Routes standard-library logging records into loguru.
+
+    The service layer and several UI modules use ``logging.getLogger``.
+    Without this bridge those errors never reach the rotating file, which
+    makes production diagnostics much harder. The handler is deliberately
+    defensive: a broken log record must never crash the application.
+    """
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            try:
+                level = logger.level(record.levelname).name
+            except ValueError:
+                level = record.levelno
+
+            frame, depth = logging.currentframe(), 2
+            while frame and frame.f_code.co_filename == logging.__file__:
+                frame = frame.f_back
+                depth += 1
+
+            logger.opt(
+                depth=depth, exception=record.exc_info
+            ).log(level, record.getMessage())
+        except Exception:
+            # Logging must never be the reason a business operation fails.
+            pass
+
+
 def _read_config_environment() -> str:
     """
     Reads `environment` from the application settings.
@@ -59,6 +89,12 @@ def _is_development() -> bool:
     """
     env = os.environ.get("TAJ_ENVIRONMENT", "").strip()
     if not env:
+        # A frozen (PyInstaller) build is a production build. Without this
+        # check a packaged app that ships no .env file would fall back to
+        # the development default, enabling console output and `diagnose`
+        # (local variable dumps) in a customer installation.
+        if getattr(sys, "frozen", False):
+            return False
         try:
             env = _read_config_environment()
         except Exception:
@@ -87,38 +123,83 @@ def setup_logging():
       `backtrace` and `diagnose` disabled, plus a redaction patch so a
       credential can never be written to disk.
     """
+    # Resolve imports before removing the default handler: if a module is
+    # broken, the default sink still gets the traceback instead of leaving
+    # the process with no logging at all.
+    from src.core.backup import _configured_int
+    from src.modules.settings.models import SettingKey
+
     # Remove default stderr handler to prevent console clutter if not needed
     # or keep it for debugging. We'll remove and add a clean one.
     logger.remove()
 
-    from src.core.backup import _configured_int
-    from src.modules.settings.models import SettingKey
-
     is_dev = _is_development()
 
-    rotation_mb = _configured_int(SettingKey.LOG_ROTATION_SIZE_MB, 10)
-    retention_days = _configured_int(SettingKey.LOG_RETENTION_DAYS, 30)
+    # A hand-edited or corrupted setting must not make the logger itself
+    # fail. The service already falls back on non-numeric values; clamp the
+    # range as well so zero/negative rotation or retention cannot raise.
+    rotation_mb = max(1, _configured_int(SettingKey.LOG_ROTATION_SIZE_MB, 10))
+    retention_days = max(1, _configured_int(SettingKey.LOG_RETENTION_DAYS, 30))
     
-    # Add console logger (helpful in dev; noisy and unnecessary in production)
-    if is_dev:
+    # Add console logger (helpful in dev; noisy and unnecessary in production).
+    # sys.stdout is None in a windowed PyInstaller build, so guard it even
+    # when someone explicitly requests development logging.
+    if is_dev and sys.stdout is not None:
         logger.add(sys.stdout, format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>")
     
-    # Add rotating file logger in the %LOCALAPPDATA% directory
+    # Add rotating file logger in the %LOCALAPPDATA% directory.
     # In production a filter scrubs credentials on their way to disk. The
     # filter runs per record before formatting, which is the documented
     # loguru API for inspecting a record (logger.patch is not sufficient
     # here because the message is already rendered by then).
-    logger.add(
-        str(LOG_FILE_PATH),
-        rotation=f"{rotation_mb} MB",       # Configurable: log.rotation.size_mb
-        retention=f"{retention_days} days",  # Configurable: log.retention.days
-        compression="zip",      # Compress rotated logs
-        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
-        level="DEBUG" if is_dev else "WARNING",
-        backtrace=is_dev,       # Extended traceback (dev only: verbose)
-        diagnose=is_dev,        # Local variable values (dev only: may leak data)
-        filter=None if is_dev else _redact_record,
-    )
+    #
+    # File logging must never be the reason the application fails to start:
+    # a locked-down profile or a full disk should degrade to stderr/devnull
+    # instead of raising out of startup.
+    try:
+        logger.add(
+            str(LOG_FILE_PATH),
+            rotation=f"{rotation_mb} MB",       # Configurable: log.rotation.size_mb
+            retention=f"{retention_days} days",  # Configurable: log.retention.days
+            compression="zip",      # Compress rotated logs
+            format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+            level="DEBUG" if is_dev else "WARNING",
+            backtrace=is_dev,       # Extended traceback (dev only: verbose)
+            diagnose=is_dev,        # Local variable values (dev only: may leak data)
+            filter=None if is_dev else _redact_record,
+        )
+    except Exception as exc:  # pragma: no cover - depends on OS permissions
+        fallback_sink = sys.stderr or sys.stdout or os.devnull
+        try:
+            logger.add(
+                fallback_sink,
+                level="DEBUG" if is_dev else "WARNING",
+                backtrace=is_dev,
+                diagnose=is_dev,
+                filter=None if is_dev else _redact_record,
+            )
+            logger.error(
+                "File logging is unavailable ({}); using the fallback sink.",
+                exc,
+            )
+        except Exception:
+            # Last resort: keep the application usable even when every sink
+            # is unavailable. Diagnostics will be limited, but startup and
+            # data operations are not blocked by logging.
+            logger.remove()
+
+    # Bridge stdlib logging (used by services and UI modules) into the
+    # same loguru sinks configured above. `force=True` replaces any handler
+    # installed by a library, so there is one predictable log destination.
+    try:
+        logging.basicConfig(
+            handlers=[_InterceptHandler()],
+            level=logging.NOTSET,
+            force=True,
+        )
+    except Exception:
+        # A logging configuration failure must not block startup.
+        pass
 
     # Global unhandled exception hook
     def handle_exception(exc_type, exc_value, exc_traceback):
@@ -126,7 +207,9 @@ def setup_logging():
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
 
-        logger.critical("Unhandled exception:", exc_info=(exc_type, exc_value, exc_traceback))
+        logger.opt(
+            exception=(exc_type, exc_value, exc_traceback)
+        ).critical("Unhandled exception:")
 
     sys.excepthook = handle_exception
     

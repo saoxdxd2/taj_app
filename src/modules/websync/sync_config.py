@@ -29,7 +29,12 @@ def get_sync_folder() -> Path:
             folder = Path(data.get("sync_folder", str(DEFAULT_SYNC_FOLDER)))
     except Exception as e:
         logger.warning(f"Could not read website sync config, using default: {e}")
-    folder.mkdir(parents=True, exist_ok=True)
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        # A disconnected network share must not prevent the application
+        # from starting. The sync operation itself will report the error.
+        logger.warning(f"Could not create website sync folder {folder}: {e}")
     return folder
 
 

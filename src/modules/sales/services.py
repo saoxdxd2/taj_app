@@ -223,6 +223,9 @@ class SalesService:
             warranty_months=warranty_months,
         )
         session.add(item)
+        # SessionLocal disables autoflush, so flush explicitly before any
+        # caller re-reads the invoice/items or needs the generated id.
+        session.flush()
         
         # Calculate line total including VAT
         line_total = (Decimal(quantity) * unit_price) * (Decimal("1") + (vat_rate / Decimal("100")))
@@ -310,6 +313,60 @@ class SalesService:
         return invoice.total_amount - sum((p.amount for p in paid), Decimal("0.00"))
 
     @staticmethod
+    def _validate_incoming_check(session, check_id: Optional[int], amount: Decimal,
+                                 customer_id: int):
+        """
+        Ensures a CHECK payment is backed by a real, usable incoming check.
+
+        Without this link the payment looks settled on the invoice but the
+        money never reaches the journal when the check clears, because
+        FinanceService has no check to clear. The one-check/one-payment
+        rule also prevents reusing the same paper for two invoices.
+        """
+        from src.modules.finance.models import Check, CheckDirection, CheckStatus
+
+        if check_id is None:
+            raise ValueError(
+                "A check payment must reference a check registered in Finance."
+            )
+
+        check = session.query(Check).filter(Check.id == check_id).first()
+        if not check:
+            raise ValueError(f"Check ID {check_id} not found.")
+        if check.direction != CheckDirection.INCOMING:
+            raise ValueError("Only incoming customer checks can pay a sales invoice.")
+        if check.customer_id != customer_id:
+            raise ValueError(
+                "The check does not belong to the customer on this document."
+            )
+        # A CLEARED check is allowed when it has not been linked yet: its
+        # journal entry already exists (generic receipt), and linking it to
+        # an invoice only allocates that money. No second journal entry is
+        # posted for a CHECK payment.
+        if check.status not in (
+            CheckStatus.PENDING, CheckStatus.DEPOSITED, CheckStatus.CLEARED
+        ):
+            raise ValueError(
+                f"Check #{check.check_number} is {check.status.value}; "
+                "it cannot be used for a new payment."
+            )
+        if check.amount != amount:
+            raise ValueError(
+                f"Check #{check.check_number} is for {check.amount} DH; "
+                f"the payment is {amount} DH. They must match."
+            )
+
+        from src.modules.sales.models import CustomerDeposit, Payment
+
+        if session.query(Payment.id).filter(Payment.check_id == check.id).first():
+            raise ValueError("This check is already linked to a payment.")
+        if session.query(CustomerDeposit.id).filter(
+            CustomerDeposit.check_id == check.id
+        ).first():
+            raise ValueError("This check is already linked to a customer deposit.")
+        return check
+
+    @staticmethod
     @transactional
     def register_payment(context: RequestContext, session, invoice_id: int, method: str,
                          amount: Decimal, check_id: Optional[int] = None,
@@ -339,7 +396,14 @@ class SalesService:
         balance = SalesService.get_invoice_balance(context, invoice_id, session=session)
         if amount > balance:
             raise ValueError(f"Payment {amount} exceeds remaining balance {balance}.")
-        
+
+        if method_enum == PaymentMethod.CHECK:
+            SalesService._validate_incoming_check(
+                session, check_id, amount, invoice.customer_id
+            )
+        elif check_id is not None:
+            raise ValueError("check_id is only valid for Check payments.")
+
         payment = Payment(
             invoice_id=invoice_id,
             method=method_enum,
@@ -349,6 +413,9 @@ class SalesService:
             notes=notes,
         )
         session.add(payment)
+        # SessionLocal disables autoflush. Flush so the balance query below
+        # sees this payment and the invoice can be marked Paid in production.
+        session.flush()
         
         from src.modules.finance.services import FinanceService
         from src.modules.finance.models import TransactionType
@@ -396,7 +463,14 @@ class SalesService:
             method_enum = PaymentMethod(method)
         except ValueError:
             raise ValueError(f"Invalid payment method: {method}")
-        
+
+        if method_enum == PaymentMethod.CHECK:
+            SalesService._validate_incoming_check(
+                session, check_id, amount, customer_id
+            )
+        elif check_id is not None:
+            raise ValueError("check_id is only valid for Check deposits.")
+
         deposit = CustomerDeposit(
             deposit_number=deposit_number,
             customer_id=customer_id,
@@ -408,6 +482,8 @@ class SalesService:
             notes=notes,
         )
         session.add(deposit)
+        # SessionLocal disables autoflush; callers need the generated id.
+        session.flush()
         
         from src.modules.finance.services import FinanceService
         from src.modules.finance.models import TransactionType
@@ -441,12 +517,31 @@ class SalesService:
             raise ValueError(f"Deposit ID {deposit_id} not found.")
         if deposit.state != DepositState.OPEN:
             raise ValueError("Deposit is not open.")
+
+        # A deposit backed by a check is only usable while that check is
+        # still good. A bounced or cancelled check has no funds behind it.
+        if deposit.check_id:
+            from src.modules.finance.models import Check, CheckStatus
+
+            check = session.query(Check).filter(Check.id == deposit.check_id).first()
+            usable = (CheckStatus.PENDING, CheckStatus.DEPOSITED, CheckStatus.CLEARED)
+            if check is None or check.status not in usable:
+                raise ValueError(
+                    "The check backing this deposit is no longer valid."
+                )
         
         invoice = session.query(Invoice).filter(Invoice.id == invoice_id).first()
         if not invoice:
             raise ValueError(f"Invoice ID {invoice_id} not found.")
         if invoice.state not in (InvoiceState.VALIDATED, InvoiceState.ISSUED):
             raise ValueError("Deposits can only be applied to validated/issued invoices.")
+
+        # A deposit is customer money. Applying it to another customer's
+        # invoice would pay that customer's debt with someone else's funds.
+        if deposit.customer_id != invoice.customer_id:
+            raise ValueError(
+                "The deposit belongs to a different customer than the invoice."
+            )
         
         if amount <= 0:
             raise ValueError("Applied amount must be strictly positive.")
@@ -472,6 +567,9 @@ class SalesService:
             notes=f"Paid with deposit (bon) {deposit.deposit_number}",
         )
         session.add(payment)
+        # SessionLocal disables autoflush. Flush so the balance query below
+        # includes this deposit application before deciding invoice state.
+        session.flush()
         
         if SalesService.get_invoice_balance(context, invoice_id, session=session) <= 0:
             invoice.state = InvoiceState.PAID
@@ -514,9 +612,39 @@ class SalesService:
                 raise ValueError(f"Invoice ID {invoice_id} not found.")
             if invoice.state not in (InvoiceState.VALIDATED, InvoiceState.ISSUED, InvoiceState.PAID):
                 raise ValueError("Returns can only reference validated/issued/paid invoices.")
+            if invoice.customer_id != customer_id:
+                raise ValueError(
+                    "The return customer does not match the invoice customer."
+                )
             for inv_item in invoice.items:
                 sold_quantities[inv_item.product_id] = sold_quantities.get(inv_item.product_id, 0) + inv_item.quantity
-        
+
+            # Draft and validated returns already consume the sold quantity.
+            # Without this, the same unit could be refunded repeatedly by
+            # creating several returns against one invoice.
+            from sqlalchemy import func
+            previous_returns = (
+                session.query(ReturnItem.product_id, func.sum(ReturnItem.quantity))
+                .join(SalesReturn, ReturnItem.return_id == SalesReturn.id)
+                .filter(
+                    SalesReturn.invoice_id == invoice_id,
+                    SalesReturn.state.in_(
+                        (ReturnState.DRAFT, ReturnState.VALIDATED)
+                    ),
+                )
+                .group_by(ReturnItem.product_id)
+                .all()
+            )
+            for product_id, returned_quantity in previous_returns:
+                if product_id in sold_quantities:
+                    sold_quantities[product_id] = max(
+                        0, sold_quantities[product_id] - int(returned_quantity or 0)
+                    )
+
+        # Track what is left within this return too, so two lines for the
+        # same product cannot exceed the returnable quantity together.
+        remaining_quantities = dict(sold_quantities)
+
         total = Decimal("0.00")
         sales_return = SalesReturn(
             return_number=return_number,
@@ -531,15 +659,26 @@ class SalesService:
         session.flush()
         
         for entry in items:
-            product_id = entry["product_id"]
-            quantity = entry["quantity"]
-            unit_price = entry["unit_price"]
+            try:
+                product_id = entry["product_id"]
+                quantity = entry["quantity"]
+                unit_price = entry["unit_price"]
+            except (KeyError, TypeError):
+                raise ValueError(
+                    "Each return item needs product_id, quantity and unit_price."
+                )
             if quantity <= 0 or unit_price < 0:
                 raise ValueError("Return quantity must be positive and price non-negative.")
             
             if invoice_id is not None:
-                if sold_quantities.get(product_id, 0) < quantity:
-                    raise ValueError(f"Cannot return {quantity} of product {product_id}: only {sold_quantities.get(product_id, 0)} sold on this invoice.")
+                available = remaining_quantities.get(product_id, 0)
+                if available < quantity:
+                    raise ValueError(
+                        f"Cannot return {quantity} of product {product_id}: "
+                        f"only {available} sold on this invoice "
+                        "(after previous returns)."
+                    )
+                remaining_quantities[product_id] = available - quantity
             
             item = ReturnItem(
                 return_id=sales_return.id,
@@ -554,6 +693,9 @@ class SalesService:
             total += Decimal(quantity) * unit_price
         
         sales_return.total_amount = total
+        # SessionLocal disables autoflush. Flush so a caller that validates
+        # this draft in the same session can see the new items.
+        session.flush()
         logger.info(f"Created return draft {return_number} ({type_enum.value}) worth {total}.")
         return sales_return
 
@@ -571,7 +713,76 @@ class SalesService:
             raise ValueError(f"Return ID {return_id} not found.")
         if sales_return.state != ReturnState.DRAFT:
             raise ValueError("Return is not in Draft state.")
-        
+        if not sales_return.items:
+            raise ValueError("Cannot validate a return with no items.")
+
+        # Re-check the invoice limits at validation time. create_return()
+        # already rejects over-returns, but two drafts could have been
+        # created before this rule existed (or in separate transactions),
+        # and both must not be validated into an over-refund.
+        if sales_return.invoice_id is not None:
+            invoice = session.query(Invoice).filter(
+                Invoice.id == sales_return.invoice_id
+            ).first()
+            if not invoice:
+                raise ValueError(
+                    f"Invoice ID {sales_return.invoice_id} not found."
+                )
+            if invoice.state not in (
+                InvoiceState.VALIDATED, InvoiceState.ISSUED, InvoiceState.PAID
+            ):
+                raise ValueError(
+                    "Returns can only reference validated/issued/paid invoices."
+                )
+            if invoice.customer_id != sales_return.customer_id:
+                raise ValueError(
+                    "The return customer does not match the invoice customer."
+                )
+
+            sold_quantities: Dict[int, int] = {}
+            for invoice_item in invoice.items:
+                sold_quantities[invoice_item.product_id] = (
+                    sold_quantities.get(invoice_item.product_id, 0)
+                    + invoice_item.quantity
+                )
+
+            from sqlalchemy import func
+            previous_returns = (
+                session.query(
+                    ReturnItem.product_id, func.sum(ReturnItem.quantity)
+                )
+                .join(SalesReturn, ReturnItem.return_id == SalesReturn.id)
+                .filter(
+                    SalesReturn.invoice_id == sales_return.invoice_id,
+                    SalesReturn.state == ReturnState.VALIDATED,
+                    SalesReturn.id != sales_return.id,
+                )
+                .group_by(ReturnItem.product_id)
+                .all()
+            )
+            for product_id, returned_quantity in previous_returns:
+                if product_id in sold_quantities:
+                    sold_quantities[product_id] = max(
+                        0,
+                        sold_quantities[product_id]
+                        - int(returned_quantity or 0),
+                    )
+
+            requested: Dict[int, int] = {}
+            for return_item in sales_return.items:
+                requested[return_item.product_id] = (
+                    requested.get(return_item.product_id, 0)
+                    + return_item.quantity
+                )
+            for product_id, quantity in requested.items():
+                available = sold_quantities.get(product_id, 0)
+                if quantity > available:
+                    raise ValueError(
+                        f"Cannot validate return {sales_return.return_number}: "
+                        f"only {available} of product {product_id} remain "
+                        "returnable on this invoice."
+                    )
+
         from src.modules.inventory.services import InventoryService
         from src.modules.finance.services import FinanceService
         from src.modules.finance.models import TransactionType

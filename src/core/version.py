@@ -21,9 +21,14 @@ def get_database_revision() -> str:
             return "No Database"
             
         engine = create_engine(f"sqlite:///{DB_PATH}")
-        with engine.connect() as connection:
-            context = MigrationContext.configure(connection)
-            current_rev = context.get_current_revision()
-            return current_rev or "None"
+        try:
+            with engine.connect() as connection:
+                context = MigrationContext.configure(connection)
+                current_rev = context.get_current_revision()
+                return current_rev or "None"
+        finally:
+            # A pooled connection left open can keep the SQLite file locked
+            # on Windows, which later blocks VACUUM or a restore.
+            engine.dispose()
     except Exception:
         return "Unknown"

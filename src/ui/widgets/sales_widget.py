@@ -5,6 +5,7 @@ from datetime import datetime
 
 from src.core.session import CurrentSession
 from src.modules.sales.services import SalesService
+from src.security.permissions import AccessDenied
 from src.ui.dialogs.sales_dialogs import NewInvoiceDialog, InvoiceAddItemDialog, PaymentDialog, DepositDialog
 from src.ui.models.sales_model import InvoiceTableModel, InvoiceItemTableModel
 
@@ -118,6 +119,10 @@ class SalesWidget(QWidget):
                 self.context, limit=limit, offset=offset
             )
             self.invoice_model.update_data(invoices)
+        except AccessDenied:
+            # The service is the security boundary; an unauthorized role
+            # simply sees an empty list instead of an error dialog on login.
+            self.invoice_model.update_data([])
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load invoices: {str(e)}")
 
@@ -141,6 +146,8 @@ class SalesWidget(QWidget):
             invoice = SalesService.get_invoice_with_items(self.context, invoice_id)
             if invoice and invoice.items:
                 self.item_model.update_data(invoice.items)
+        except AccessDenied:
+            self.item_model.update_data([])
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load items: {str(e)}")
 
@@ -236,7 +243,10 @@ class SalesWidget(QWidget):
             if balance <= 0:
                 QMessageBox.information(self, "Nothing Due", "This invoice is already fully paid.")
                 return
-            dialog = PaymentDialog(self.context, invoice_entity.invoice_number, balance, parent=self)
+            dialog = PaymentDialog(
+                self.context, invoice_entity.invoice_number, balance,
+                customer_id=invoice_entity.customer_id, parent=self,
+            )
             if dialog.exec():
                 data = dialog.get_data()
                 SalesService.register_payment(
@@ -245,6 +255,7 @@ class SalesWidget(QWidget):
                     method=data["method"],
                     amount=data["amount"],
                     reference=data["reference"],
+                    check_id=data.get("check_id"),
                 )
                 self.load_data()
                 for i in range(self.invoice_model.rowCount()):
@@ -265,6 +276,7 @@ class SalesWidget(QWidget):
                     customer_id=data["customer_id"],
                     amount=data["amount"],
                     method=data["method"],
+                    check_id=data.get("check_id"),
                 )
                 QMessageBox.information(self, "Success", f"Deposit {data['deposit_number']} recorded.")
             except Exception as e:

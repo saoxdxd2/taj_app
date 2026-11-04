@@ -1,11 +1,8 @@
-```
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.pyc.*
-*.pyo.*
+*.py[cod]
+*$py.class
+*.so
 .Python
 *.egg-info/
 .eggs/
@@ -15,8 +12,13 @@ develop-eggs/
 .installed.cfg
 .tox/
 .coverage
+coverage.xml
 htmlcov/
+
+# Test caches and temporary trees (kept local by pyproject.toml)
 .pytest_cache/
+.pytest_cache_local/
+.pytest_tmp/
 .mypy_cache/
 .hypothesis/
 
@@ -27,12 +29,12 @@ env/
 ENV/
 .ENV/
 
-# Environment variables
+# Environment variables and local secrets
 .env
 .env.local
 *.env.*
 
-# IDE
+# IDE / editors
 .vscode/
 .idea/
 *.swp
@@ -41,11 +43,30 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
+logs/
+
+# Runtime databases (the real DB lives in %LOCALAPPDATA%)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Backups and sync artefacts
+*.bak
+*.backup
+price_updates.applied-*.json
+website_catalog.tmp
 
 # Temporary files
 *.tmp
 *.temp
-```
+
+# Local AI tooling / caches
+.aider*
+.claude/

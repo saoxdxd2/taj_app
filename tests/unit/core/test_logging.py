@@ -74,6 +74,59 @@ def test_setup_logging_succeeds_when_database_unavailable(monkeypatch, tmp_path)
     logger.info("still logging")
 
 
+def test_setup_logging_falls_back_when_file_is_unwritable(monkeypatch, tmp_path):
+    """A locked profile must degrade logging, not abort startup."""
+    import src.database.session as session_mod
+
+    class UnusedSession:
+        def __init__(self, *a, **kw):
+            raise RuntimeError("no database in this test")
+
+        def close(self):
+            pass
+
+    blocker = tmp_path / "not_a_directory"
+    blocker.write_text("x", encoding="utf-8")
+    monkeypatch.setenv("TAJ_ENVIRONMENT", "production")
+    monkeypatch.setattr(
+        "src.core.logging.LOG_FILE_PATH", str(blocker / "app.log")
+    )
+    monkeypatch.setattr(session_mod, "SessionLocal", UnusedSession)
+
+    setup_logging()  # must not raise
+
+    assert logger._core.handlers, "logging lost every sink after a file error"
+    logger.remove()
+
+
+def test_stdlib_logging_reaches_loguru(monkeypatch, tmp_path):
+    """Service/UI modules use stdlib logging; those errors must be visible."""
+    import logging
+
+    import src.database.session as session_mod
+
+    class UnusedSession:
+        def __init__(self, *a, **kw):
+            raise RuntimeError("no database in this test")
+
+        def close(self):
+            pass
+
+    monkeypatch.setenv("TAJ_ENVIRONMENT", "development")
+    monkeypatch.setattr("src.core.logging.LOG_FILE_PATH", str(tmp_path / "app.log"))
+    monkeypatch.setattr(session_mod, "SessionLocal", UnusedSession)
+
+    setup_logging()
+    messages = []
+    sink_id = logger.add(lambda message: messages.append(str(message)), level="DEBUG")
+    try:
+        logging.getLogger("taj.test").warning("service failed safely")
+        assert any("service failed safely" in message for message in messages)
+    finally:
+        logger.remove(sink_id)
+        logger.remove()
+
+
 def test_production_disables_console_and_redacts(monkeypatch, tmp_path):
     """
     In production the redaction patch must be applied to real log output.
@@ -125,3 +178,25 @@ def test_unknown_environment_falls_back_to_development(monkeypatch):
 def test_explicit_production_environment_is_honoured(monkeypatch):
     monkeypatch.setenv("TAJ_ENVIRONMENT", "production")
     assert _is_development() is False
+
+
+def test_frozen_build_defaults_to_production(monkeypatch):
+    """A packaged app without .env must not run with development logging."""
+    import sys
+
+    monkeypatch.delenv("TAJ_ENVIRONMENT", raising=False)
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(
+        "src.core.logging._read_config_environment",
+        lambda: "development",
+    )
+    assert _is_development() is False
+
+
+def test_explicit_development_wins_even_in_a_frozen_build(monkeypatch):
+    """Packagers and support staff can still request verbose logs."""
+    import sys
+
+    monkeypatch.setenv("TAJ_ENVIRONMENT", "development")
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    assert _is_development() is True

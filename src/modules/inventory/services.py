@@ -269,6 +269,9 @@ class InventoryService:
             reference=reference
         )
         session.add(movement)
+        # SessionLocal disables autoflush. Flush so a second adjustment for
+        # the same product (or a caller re-reading stock) sees this change.
+        session.flush()
         logger.info(f"Adjusted stock for Product ID {product_id} by {quantity_change}. Ref: {reference} by {context.username}")
         return new_quantity
 
@@ -287,6 +290,8 @@ class InventoryService:
             session.add(level)
         else:
             level.min_quantity = min_quantity
+        # SessionLocal disables autoflush; persist before returning.
+        session.flush()
         logger.info(f"Min quantity for product {product_id} set to {min_quantity}.")
         return True
 

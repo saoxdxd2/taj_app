@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                                QLabel, QListWidget, QListWidgetItem, QMessageBox, QGroupBox, QFileDialog,
                                QTableWidget, QTableWidgetItem, QHeaderView)
 from PySide6.QtCore import Qt
-from src.core.backup import BackupManager
+from src.core.system_service import SystemService
 from src.ui.layout import add_elided_columns, size_table_height
 from loguru import logger
 
@@ -17,9 +17,55 @@ class SettingsWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup_ui()
+        self._apply_permission_visibility()
         self.refresh_backups()
         self.refresh_users()
         self.refresh_preferences()
+
+    # ------------------------------------------------------------------
+    # Permission-aware UI
+    # ------------------------------------------------------------------
+    def _current_context(self):
+        from src.core.session import CurrentSession
+        return CurrentSession.get_context()
+
+    def _has_permission(self, permission: str) -> bool:
+        from src.security.permissions import AccessDenied, PermissionManager
+        try:
+            PermissionManager.verify_permission(self._current_context(), permission)
+            return True
+        except (AccessDenied, RuntimeError):
+            return False
+
+    def _apply_permission_visibility(self):
+        """Hides sections the signed-in user cannot use.
+
+        This is convenience only: the services enforce the same permission
+        on every call, so a hidden section is not the security boundary.
+        """
+        if not self._has_permission("Security.Users.View"):
+            self.users_group.setVisible(False)
+        else:
+            self.btn_add_user.setEnabled(
+                self._has_permission("Security.Users.Create")
+            )
+            self.btn_toggle_user.setEnabled(
+                self._has_permission("Security.Users.Update")
+            )
+        if not self._has_permission(SystemService.PERMISSION):
+            for group in (
+                self.backup_group, self.support_group, self.maintenance_group
+            ):
+                group.setVisible(False)
+            self.btn_save_prefs.setEnabled(False)
+
+        # Website sync has its own permissions; the buttons stay visible but
+        # disabled so the feature remains discoverable.
+        can_export = self._has_permission("Settings.WebsiteSync.Export")
+        can_import = self._has_permission("Settings.WebsiteSync.Import")
+        self.btn_export_catalog.setEnabled(can_export)
+        self.btn_change_sync_folder.setEnabled(can_export)
+        self.btn_import_prices.setEnabled(can_import)
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -51,6 +97,7 @@ class SettingsWidget(QWidget):
         backup_layout.addLayout(restore_layout)
 
         backup_group.setLayout(backup_layout)
+        self.backup_group = backup_group
         layout.addWidget(backup_group)
         
         # Support & Diagnostics Section
@@ -62,6 +109,7 @@ class SettingsWidget(QWidget):
         support_layout.addWidget(self.btn_export_diagnostics)
         
         support_group.setLayout(support_layout)
+        self.support_group = support_group
         layout.addWidget(support_group)
         
         # Database Maintenance Section
@@ -73,6 +121,7 @@ class SettingsWidget(QWidget):
         maintenance_layout.addWidget(self.btn_vacuum)
         
         maintenance_group.setLayout(maintenance_layout)
+        self.maintenance_group = maintenance_group
         layout.addWidget(maintenance_group)
         
         # Version Information Section
@@ -172,6 +221,7 @@ class SettingsWidget(QWidget):
         users_layout.addLayout(users_btn_row)
 
         users_group.setLayout(users_layout)
+        self.users_group = users_group
         layout.addWidget(users_group)
 
         # Account Security Section
@@ -283,10 +333,14 @@ class SettingsWidget(QWidget):
         self.restore_btn.setEnabled(bool(self.backup_list.selectedItems()))
 
     def refresh_backups(self):
+        if not self._has_permission(SystemService.PERMISSION):
+            self.backup_group.setVisible(False)
+            return
         self.backup_list.clear()
         try:
-            backups = BackupManager.list_backups()
-            for b in sorted(backups, reverse=True):
+            context = self._current_context()
+            backups = SystemService.list_backups(context)
+            for b in backups:
                 name = os.path.basename(b)
                 try:
                     stat = os.stat(b)
@@ -296,7 +350,10 @@ class SettingsWidget(QWidget):
                 except OSError:
                     label = name
                 item = QListWidgetItem(label)
-                item.setData(Qt.UserRole, name)  # keep raw filename for restore
+                # Keep the absolute path returned by the service. Rebuilding
+                # it later with os.path.join(BACKUP_DIR, filename) would let a
+                # crafted backup filename escape the backup directory.
+                item.setData(Qt.UserRole, b)
                 self.backup_list.addItem(item)
             self._on_backup_selection()
         except Exception as e:
@@ -304,7 +361,14 @@ class SettingsWidget(QWidget):
 
     def create_backup(self):
         try:
-            path = BackupManager.create_backup(prefix="manual")
+            context = self._current_context()
+            path = SystemService.create_backup(context, prefix="manual")
+            if not path:
+                QMessageBox.warning(
+                    self, "Backup Skipped",
+                    "No database exists yet, so there is nothing to back up.",
+                )
+                return
             QMessageBox.information(self, "Backup Successful", f"Backup created at:\n{path}")
             self.refresh_backups()
         except Exception as e:
@@ -316,9 +380,10 @@ class SettingsWidget(QWidget):
             QMessageBox.warning(self, "Warning", "Please select a backup to restore.")
             return
 
-        filename = selected.data(Qt.UserRole)
-        from src.core.paths import BACKUP_DIR
-        full_path = os.path.join(str(BACKUP_DIR), filename)
+        full_path = selected.data(Qt.UserRole)
+        if not full_path:
+            QMessageBox.warning(self, "Warning", "The selected backup has no path.")
+            return
 
         self._execute_restore(full_path)
 
@@ -336,19 +401,21 @@ class SettingsWidget(QWidget):
         
         if reply == QMessageBox.Yes:
             try:
-                BackupManager.restore_backup(path)
+                context = self._current_context()
+                SystemService.restore_backup(context, path)
                 QMessageBox.information(self, "Restore Successful", "Database restored successfully. The application will now close.")
-                import sys
+                # Let the event loop return normally so aboutToQuit (and
+                # the shutdown backup) runs. Raising SystemExit from a Qt
+                # slot can bypass that cleanup.
                 from PySide6.QtWidgets import QApplication
                 QApplication.quit()
-                sys.exit(0)
             except Exception as e:
                 QMessageBox.critical(self, "Restore Failed", f"Failed to restore database:\n{e}")
 
     def export_diagnostics(self):
-        from src.core.diagnostics import DiagnosticsManager
         try:
-            path = DiagnosticsManager.create_diagnostic_bundle()
+            context = self._current_context()
+            path = SystemService.export_diagnostics(context)
             QMessageBox.information(self, "Export Successful", f"Diagnostic bundle exported to:\n{path}")
         except Exception as e:
             QMessageBox.critical(self, "Export Failed", f"Failed to create diagnostic bundle:\n{e}")
@@ -361,13 +428,9 @@ class SettingsWidget(QWidget):
         )
         
         if reply == QMessageBox.Yes:
-            import sqlite3
-            from src.core.paths import DB_PATH
             try:
-                conn = sqlite3.connect(DB_PATH)
-                conn.isolation_level = None
-                conn.execute("VACUUM")
-                conn.close()
+                context = self._current_context()
+                SystemService.vacuum_database(context)
                 QMessageBox.information(self, "Success", "Database optimization completed successfully.")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to optimize database:\n{e}")
@@ -397,14 +460,18 @@ class SettingsWidget(QWidget):
             self.health_table.setItem(row, 2, detail_item)
 
     def change_sync_folder(self):
-        from src.modules.websync.sync_config import get_sync_folder, set_sync_folder
+        from src.core.session import CurrentSession
+        from src.modules.websync.services import WebsiteSyncService
+        from src.modules.websync.sync_config import get_sync_folder
+
         path = QFileDialog.getExistingDirectory(
             self, "Choose Website Sync Folder", str(get_sync_folder())
         )
         if not path:
             return
         try:
-            set_sync_folder(path)
+            context = CurrentSession.get_context()
+            WebsiteSyncService.configure_sync_folder(context, path)
             self.sync_folder_label.setText(
                 f"<b>Sync folder:</b> {path}<br>"
                 "<span style='color:#718096;'>The catalog is refreshed here automatically on every "
@@ -462,9 +529,15 @@ class SettingsWidget(QWidget):
     def refresh_users(self):
         from src.database.session import SessionLocal
         from src.modules.authentication.services import AuthenticationService
+        if not self._has_permission("Security.Users.View"):
+            self.users_group.setVisible(False)
+            return
         try:
+            context = self._current_context()
             with SessionLocal() as session:
-                users = AuthenticationService.list_users(session)
+                users = AuthenticationService.list_users(
+                    context=context, session=session
+                )
             self.users_table.setRowCount(len(users))
             for row, u in enumerate(users):
                 status = "Active" if u["is_active"] else "Disabled"
@@ -478,14 +551,26 @@ class SettingsWidget(QWidget):
             logger.error(f"Failed to list users: {e}")
 
     def add_user(self):
+        if not self._has_permission("Security.Users.Create"):
+            QMessageBox.warning(
+                self, "Permission Denied",
+                "You do not have permission to create user accounts."
+            )
+            return
         from src.ui.dialogs.auth_dialogs import CreateUserDialog
-        dialog = CreateUserDialog(parent=self)
+        dialog = CreateUserDialog(context=self._current_context(), parent=self)
         if dialog.exec():
             self.refresh_users()
 
     def toggle_selected_user(self):
         from src.database.session import SessionLocal
         from src.modules.authentication.services import AuthenticationService
+        if not self._has_permission("Security.Users.Update"):
+            QMessageBox.warning(
+                self, "Permission Denied",
+                "You do not have permission to enable or disable user accounts."
+            )
+            return
         selected = self.users_table.currentItem()
         if not selected:
             QMessageBox.warning(self, "Warning", "Please select a user first.")
@@ -493,8 +578,14 @@ class SettingsWidget(QWidget):
         username = self.users_table.item(selected.row(), 0).text()
         currently_active = self.users_table.item(selected.row(), 2).text() == "Active"
         try:
+            context = self._current_context()
             with SessionLocal() as session:
-                AuthenticationService.set_user_active(session, username, not currently_active)
+                AuthenticationService.set_user_active(
+                    context=context,
+                    session=session,
+                    username=username,
+                    is_active=not currently_active,
+                )
                 session.commit()
             self.refresh_users()
         except Exception as e:
@@ -507,5 +598,7 @@ class SettingsWidget(QWidget):
         if not context:
             QMessageBox.warning(self, "Error", "No active session found.")
             return
-        dialog = ChangePasswordDialog(username=context.username, parent=self)
+        dialog = ChangePasswordDialog(
+            username=context.username, context=context, parent=self
+        )
         dialog.exec()

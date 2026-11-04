@@ -3,6 +3,12 @@
 Scope: `src/`, performed by attempting the attacks rather than by reading
 for patterns. Findings are ordered by severity.
 
+> **Current status:** every finding below has a fix applied. The FastAPI
+> prototype in `src/api` is excluded from the desktop package, is not
+> started by `main.py`, and refuses to import without an explicit
+> `TAJ_ENABLE_EXPERIMENTAL_API=1` opt-in. Re-run this audit before
+> treating that prototype as a production service.
+
 ## CRITICAL
 
 ### 1. Unauthenticated write access to the product catalog
@@ -72,15 +78,27 @@ safe form for a non-bindable identifier.
 ## MEDIUM
 
 ### 5. WebSocket endpoint unauthenticated
-**File:** `src/api/routes.py:227` — `@router.websocket("/ws/{client_type}")`
-accepts a connection without a token, so anyone can subscribe to live
-inventory and sales broadcasts.
+**File:** `src/api/routes.py` — `@router.websocket("/ws/{client_type}")`
+used to accept a connection without a token, so anyone could subscribe
+to live inventory and sales broadcasts.
+
+**Fix applied:** the socket validates a bearer token before `accept()`
+and closes with `WS_1008_POLICY_VIOLATION` otherwise. The whole `src/api`
+prototype is also now excluded from the desktop package and refuses to
+import unless `TAJ_ENABLE_EXPERIMENTAL_API=1` is explicitly set.
 
 ### 6. Unvalidated restore path from the UI
-**File:** `src/ui/widgets/settings_widget.py:323-328` — a file chosen with
-`QFileDialog` is passed to `BackupManager.restore_backup` with no check
-that it is inside the backup directory. A path supplied by any other
-means could overwrite the database.
+**File:** `src/ui/widgets/settings_widget.py` — a file chosen with
+`QFileDialog` used to be passed to `BackupManager.restore_backup` with no
+validation.
+
+**Fix applied:** the UI passes the absolute path returned by
+`SystemService.list_backups` instead of rebuilding it from a filename,
+which closes the path-traversal gap. `BackupManager` also rejects
+non-zip files, symlinks, archives without `taj_froid.db`, files whose
+contents are not a SQLite database, and databases that fail
+`PRAGMA integrity_check`. A safety backup is taken before the live
+database is replaced.
 
 ## Notes on what was checked and found clean
 

@@ -9,9 +9,8 @@ This document governs the build process for TAJ FROID ERP Release Candidate 1 (R
 The build process compiles the Python application into a standalone Windows Executable using PyInstaller.
 
 ## 2. Prerequisites
-- Python 3.14+
-- `pip install -r requirements.txt`
-- `pip install pyinstaller`
+- Python 3.12+
+- `pip install -r requirements-dev.txt` (includes PyInstaller and the runtime set)
 
 ## 3. Build Command
 To produce a clean, reproducible build:
@@ -23,8 +22,9 @@ The pipeline executes the following stages:
 1. **Clean**: Deletes any existing `build/` and `dist/` directories to prevent artifacts from leaking into the new build.
 2. **Spec Generation**: Dynamically creates `taj_froid.spec` tailored to the current environment and configuration.
 3. **Compile**: Invokes `pyinstaller` using the generated spec file.
-   - Bundles `alembic.ini` and `migrations/`.
+   - Bundles `alembic.ini`, `migrations/` and `resources/translations/`.
    - Forces hidden imports for dynamic modules (SQLAlchemy, Alembic, Loguru, etc.).
+   - Excludes the experimental `src/api` and `src/websocket` prototypes.
    - Generates a non-console (GUI) executable.
 4. **Output**: The compiled application will be located in `dist/TAJ_FROID_ERP/`.
 

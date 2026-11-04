@@ -12,7 +12,12 @@ logger = logging.getLogger(__name__)
 def _get_model_dict(obj, is_deleted=False) -> Dict[str, Any]:
     """Helper to convert model attributes to a dictionary."""
     data = {}
+    excluded = getattr(type(obj), "__audit_exclude__", frozenset())
     for c in obj.__table__.columns:
+        if c.key in excluded:
+            # Secrets (e.g. User.password_hash) must never reach the
+            # audit trail or the diagnostic export.
+            continue
         # If object is deleted, we might need to get the old value
         history = get_history(obj, c.key)
         if is_deleted:
@@ -55,21 +60,21 @@ def audit_before_flush(session: Session, flush_context, instances):
     new_audit_events = []
 
     # Process Inserts
+    #
+    # The database has not generated autoincrement ids yet at before_flush
+    # time. Defer CREATE events to after_flush (below) so entity_id is the
+    # real primary key rather than None.
+    pending_creates = session.info.setdefault("_audit_pending_creates", [])
     for obj in session.new:
         if not getattr(type(obj), "__audit__", False):
             continue
-            
-        after_vals = _get_model_dict(obj)
-        event_record = AuditEvent(
-            action="CREATE",
-            entity_name=type(obj).__name__,
-            entity_id=str(getattr(obj, "id", "")),
-            before_values=None,
-            after_values=after_vals,
-            user_id=user_id,
-            correlation_id=correlation_id
-        )
-        new_audit_events.append(event_record)
+
+        pending_creates.append({
+            "obj": obj,
+            "after_values": _get_model_dict(obj),
+            "user_id": user_id,
+            "correlation_id": correlation_id,
+        })
 
     # Process Updates
     for obj in session.dirty:
@@ -83,8 +88,11 @@ def audit_before_flush(session: Session, flush_context, instances):
         before_vals = {}
         after_vals = {}
         has_changes = False
+        excluded = getattr(type(obj), "__audit_exclude__", frozenset())
         
         for c in obj.__table__.columns:
+            if c.key in excluded:
+                continue
             history = get_history(obj, c.key)
             if history.has_changes():
                 has_changes = True
@@ -140,3 +148,59 @@ def audit_before_flush(session: Session, flush_context, instances):
     # We do this after iterating to prevent mutating session state while iterating.
     if new_audit_events:
         session.add_all(new_audit_events)
+
+
+@event.listens_for(Session, "after_flush")
+def audit_after_flush(session: Session, flush_context):
+    """
+    Inserts the deferred CREATE events once autoincrement ids exist.
+
+    Adding objects during after_flush is supported: they are inserted by
+    the next flush (autoflush or commit). AuditEvent has __audit__=False,
+    so this cannot recurse.
+    """
+    pending = session.info.pop("_audit_pending_creates", [])
+    for item in pending:
+        obj = item["obj"]
+        # after_flush runs before the session's identity map is finalized,
+        # so do not test inspect(obj).persistent here; the id is available.
+        session.add(AuditEvent(
+            action="CREATE",
+            entity_name=type(obj).__name__,
+            entity_id=str(obj.id) if obj.id is not None else None,
+            before_values=None,
+            after_values=item["after_values"],
+            user_id=item["user_id"],
+            correlation_id=item["correlation_id"],
+        ))
+
+
+@event.listens_for(Session, "after_rollback")
+def audit_after_rollback(session: Session):
+    """Discards deferred CREATE events from a rolled-back transaction."""
+    session.info.pop("_audit_pending_creates", None)
+
+
+# ----------------------------------------------------------------------
+# Audit trail immutability
+# ----------------------------------------------------------------------
+# 15_SECURITY_STANDARD.md requires audit events to be append-only. The
+# listener above creates them, but nothing previously stopped application
+# code (or a future service) from editing or deleting an existing row.
+# These mapper-level guards reject ORM mutations. Bulk ``query(...).update()``
+# / ``delete()`` statements bypass mapper events, but no production code uses
+# them on AuditEvent; tests use a bulk delete only to reset their fixture.
+@event.listens_for(AuditEvent, "before_update")
+def _reject_audit_event_update(mapper, connection, target):
+    raise ValueError(
+        "Audit events are immutable: they cannot be modified. "
+        "Record a new event instead."
+    )
+
+
+@event.listens_for(AuditEvent, "before_delete")
+def _reject_audit_event_delete(mapper, connection, target):
+    raise ValueError(
+        "Audit events are immutable: they cannot be deleted. "
+        "The audit trail must remain append-only."
+    )

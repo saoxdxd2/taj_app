@@ -34,8 +34,14 @@ def _product(session, admin_context, price="250.00"):
     return product
 
 
-def test_auto_export_writes_catalog_to_sync_folder(sync_folder):
+def test_auto_export_writes_catalog_to_sync_folder(sync_folder, db_engine,
+                                                  monkeypatch):
     """auto_export_catalog writes website_catalog.json into the sync folder."""
+    # The auto path opens its own session; bind it to the test database.
+    from sqlalchemy.orm import sessionmaker
+    import src.database.session as db_session_module
+    monkeypatch.setattr(db_session_module, "SessionLocal", sessionmaker(bind=db_engine))
+
     result = WebsiteSyncService.auto_export_catalog()
     assert result is not None
     assert result["path"].endswith("website_catalog.json")
@@ -64,11 +70,13 @@ def test_process_pending_updates_applies_and_archives(sync_folder, session, db_e
     assert summary is not None
     assert summary["updated_count"] == 1
 
-    # Price persisted in DB (visible through a fresh session on the same engine)
+    # Price persisted in DB (visible through a fresh session on the same engine).
+    # The website update must not overwrite the in-store price.
     from src.modules.inventory.models import Product
     check_session = sessionmaker(bind=db_engine)()
     fresh = check_session.query(Product).filter(Product.id == product.id).first()
-    assert fresh.sale_price == Decimal("199.00")
+    assert fresh.sale_price_website == Decimal("199.00")
+    assert fresh.sale_price == Decimal("250.00")
     check_session.close()
 
     # Pending file archived with applied- prefix; nothing pending anymore

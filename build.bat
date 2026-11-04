@@ -4,8 +4,8 @@ echo TAJ FROID ERP - Build Pipeline
 echo =========================================
 
 echo.
-echo Installing requirements...
-pip install -r requirements.txt
+echo Installing build requirements...
+python -m pip install -r requirements-dev.txt
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Failed to install requirements.
     exit /b %ERRORLEVEL%

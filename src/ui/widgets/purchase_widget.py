@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 
 from src.core.session import CurrentSession
 from src.modules.purchasing.services import PurchasingService
+from src.security.permissions import AccessDenied
 from src.ui.dialogs.purchase_dialogs import NewPurchaseDialog, PurchaseAddItemDialog
 from src.ui.models.purchase_model import PurchaseTableModel, PurchaseItemTableModel
 
@@ -98,6 +99,8 @@ class PurchaseWidget(QWidget):
                 self.context, limit=limit, offset=offset
             )
             self.purchase_model.update_data(purchases)
+        except AccessDenied:
+            self.purchase_model.update_data([])
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load purchases: {str(e)}")
 
@@ -121,6 +124,8 @@ class PurchaseWidget(QWidget):
             purchase = PurchasingService.get_purchase_with_items(self.context, purchase_id)
             if purchase and purchase.items:
                 self.item_model.update_data(purchase.items)
+        except AccessDenied:
+            self.item_model.update_data([])
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to load items: {str(e)}")
 

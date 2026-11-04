@@ -70,11 +70,16 @@ whatever import mechanism the site offers).
 | Field        | Meaning                                        |
 |--------------|------------------------------------------------|
 | `sku`        | Unique product code — **the join key**         |
-| `sale_price` | Selling price **excluding VAT**, in DH         |
+| `sale_price` | **Website** selling price excluding VAT, in DH  |
 | `vat_rate`   | VAT percentage for display                     |
 | `stock`      | Current physical quantity in the ERP           |
 | `active`     | `false` = product should be hidden on the site |
 | `category` / `brand` | Optional labels for filtering          |
+
+> The ERP keeps two prices: `sale_price` for the shop and
+> `sale_price_website` for the website. The catalog exports the website
+> price. If a product has not been published with a website price yet,
+> the store price is used as a fallback rather than exporting zero.
 
 > The website decides what to do with `stock`: hide the "Add to cart"
 > button at 0, show "sur commande", etc.
@@ -110,6 +115,9 @@ or wrapped:
 
 - Prices are validated as positive decimal numbers; bad entries are
   **reported, not fatal**.
+- Website prices are written to the separate `sale_price_website`
+  column. The in-store `sale_price` is **never** changed by a website
+  import, so a web promotion cannot silently reprice the shop.
 - Unknown SKUs are skipped and listed in the result dialog.
 - Unchanged prices are ignored.
 - Every actual change is written to the **audit log** with before/after

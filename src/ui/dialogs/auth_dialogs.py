@@ -11,6 +11,11 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
+import logging
+import html
+
+logger = logging.getLogger(__name__)
+
 
 class FirstRunSetupDialog(QDialog):
     """
@@ -72,7 +77,9 @@ class FirstRunSetupDialog(QDialog):
 
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.Password)
-        self.password_input.setPlaceholderText("Minimum 8 characters")
+        self.password_input.setPlaceholderText(
+            "8+ characters, with upper/lowercase and a digit"
+        )
         form.addRow("New Password:", self.password_input)
 
         self.confirm_input = QLineEdit()
@@ -94,14 +101,16 @@ class FirstRunSetupDialog(QDialog):
         layout.addWidget(buttons)
 
     def _update_strength_hint(self, text):
+        from src.security.sanitizers import validate_password_strength
+
         if not text:
             self.hint_label.setText("")
-        elif len(text) < 8:
-            self.hint_label.setText("Too short - minimum 8 characters")
+            return
+        try:
+            validate_password_strength(text)
+        except ValueError as e:
+            self.hint_label.setText(str(e))
             self.hint_label.setStyleSheet("color: #dc3545; font-size: 11px;")
-        elif len(text) < 12:
-            self.hint_label.setText("Acceptable - a longer password is more secure")
-            self.hint_label.setStyleSheet("color: #fd7e14; font-size: 11px;")
         else:
             self.hint_label.setText("Strong password")
             self.hint_label.setStyleSheet("color: #198754; font-size: 11px;")
@@ -128,28 +137,19 @@ class FirstRunSetupDialog(QDialog):
 
         try:
             from src.modules.authentication.services import AuthenticationService
-            from src.modules.authentication.models import User
-            from src.database.session import SessionLocal
 
-            with SessionLocal() as session:
-                from src.modules.authentication.models import Role as _Role
-                _admin_role = session.query(_Role).filter(_Role.name == "Administrator").first()
-                admin = session.query(User).filter(User.role_id == _admin_role.id).first() if _admin_role else None
-                if admin:
-                    if username != admin.username:
-                        existing = session.query(User).filter(User.username == username).first()
-                        if existing and existing.id != admin.id:
-                            QMessageBox.warning(self, "Validation Error", f"Username '{username}' is already taken.")
-                            return
-                        admin.username = username
-                    admin.password_hash = AuthenticationService.hash_password(password)
-                    session.commit()
+            username = AuthenticationService.complete_first_run_setup(
+                new_username=username, new_password=password
+            )
 
             QMessageBox.information(
                 self, "Setup Complete",
-                f"Account '{username}' created successfully.\n\nPlease log in with your new credentials."
+                f"Account '{username}' created successfully.\n\n"
+                "You will be signed in automatically."
             )
             self.accept()
+        except ValueError as e:
+            QMessageBox.warning(self, "Validation Error", str(e))
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to save account: {str(e)}")
 
@@ -159,9 +159,10 @@ class ChangePasswordDialog(QDialog):
     Allows the currently logged-in user to change their password from Settings.
     """
 
-    def __init__(self, username, parent=None):
+    def __init__(self, username, context=None, parent=None):
         super().__init__(parent)
         self.username = username
+        self.context = context
         self.setWindowTitle("Change Password")
         self.setMinimumWidth(380)
         self._setup_ui()
@@ -170,7 +171,9 @@ class ChangePasswordDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(14)
 
-        info = QLabel(f"Changing password for: <b>{self.username}</b>")
+        info = QLabel(
+            f"Changing password for: <b>{html.escape(str(self.username))}</b>"
+        )
         info.setTextFormat(Qt.RichText)
         layout.addWidget(info)
 
@@ -185,7 +188,9 @@ class ChangePasswordDialog(QDialog):
 
         self.new_input = QLineEdit()
         self.new_input.setEchoMode(QLineEdit.Password)
-        self.new_input.setPlaceholderText("Minimum 8 characters")
+        self.new_input.setPlaceholderText(
+            "8+ characters, with upper/lowercase and a digit"
+        )
         form.addRow("New Password:", self.new_input)
 
         self.confirm_input = QLineEdit()
@@ -219,16 +224,16 @@ class ChangePasswordDialog(QDialog):
             return
 
         from src.modules.authentication.services import AuthenticationService
-
-        user_ok = AuthenticationService.authenticate_user(username=self.username, password=current)
-        if not user_ok:
-            QMessageBox.warning(self, "Incorrect Password", "The current password you entered is incorrect.")
-            self.current_input.clear()
-            self.current_input.setFocus()
-            return
+        from src.core.session import CurrentSession
 
         try:
-            AuthenticationService.change_password(username=self.username, new_password=new_pass)
+            context = self.context or CurrentSession.get_context()
+            AuthenticationService.change_password(
+                context=context,
+                username=self.username,
+                new_password=new_pass,
+                current_password=current,
+            )
             QMessageBox.information(self, "Success", "Password changed successfully.")
             self.accept()
         except ValueError as e:
@@ -243,8 +248,9 @@ class CreateUserDialog(QDialog):
     The account is persisted in the database immediately.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, context=None, parent=None):
         super().__init__(parent)
+        self.context = context
         self.setWindowTitle("Add User")
         self.setMinimumWidth(400)
         self._setup_ui()
@@ -263,7 +269,9 @@ class CreateUserDialog(QDialog):
 
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.Password)
-        self.password_input.setPlaceholderText("Minimum 8 characters")
+        self.password_input.setPlaceholderText(
+            "8+ characters, with upper/lowercase and a digit"
+        )
         form.addRow("Password:", self.password_input)
 
         self.confirm_input = QLineEdit()
@@ -273,12 +281,31 @@ class CreateUserDialog(QDialog):
 
         from PySide6.QtWidgets import QComboBox
         self.role_combo = QComboBox()
+
+        from src.core.session import CurrentSession
         from src.database.session import SessionLocal
-        from src.modules.authentication.models import Role
-        with SessionLocal() as session:
-            roles = session.query(Role).all()
-        for r in roles:
-            self.role_combo.addItem(r.name)
+        from src.modules.authentication.services import AuthenticationService
+
+        try:
+            self.context = self.context or CurrentSession.get_context()
+        except RuntimeError:
+            self.context = None
+        self._roles_error = None
+        try:
+            with SessionLocal() as session:
+                roles = AuthenticationService.list_roles(
+                    context=self.context, session=session
+                )
+        except Exception as e:
+            roles = []
+            self._roles_error = str(e)
+            logger.warning(f"Could not load roles for the user dialog: {e}")
+
+        for role_name in roles:
+            self.role_combo.addItem(role_name)
+        if not roles:
+            self.role_combo.addItem("No assignable roles")
+            self.role_combo.setEnabled(False)
         form.addRow("Role:", self.role_combo)
 
         layout.addLayout(form)
@@ -304,12 +331,27 @@ class CreateUserDialog(QDialog):
         if password != confirm:
             QMessageBox.warning(self, "Validation Error", "Passwords do not match.")
             return
+        if getattr(self, "_roles_error", None):
+            QMessageBox.warning(self, "Cannot Create User", self._roles_error)
+            return
+        if not self.role_combo.isEnabled() or not role_name:
+            QMessageBox.warning(self, "Validation Error", "No role is available to assign.")
+            return
 
         try:
+            from src.core.session import CurrentSession
             from src.modules.authentication.services import AuthenticationService
             from src.database.session import SessionLocal
+
+            context = self.context or CurrentSession.get_context()
             with SessionLocal() as session:
-                AuthenticationService.create_user(session, username, password, role_name)
+                AuthenticationService.create_user(
+                    context=context,
+                    session=session,
+                    username=username,
+                    password=password,
+                    role_name=role_name,
+                )
                 session.commit()
             QMessageBox.information(
                 self, "User Created",
