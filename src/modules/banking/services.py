@@ -335,6 +335,7 @@ class BankingService:
             "name": account.name,
             "type": account.account_type.value,
             "bank": account.bank,
+            "account_number": account.account_number,
             "is_active": account.is_active,
         } for account in accounts]
 

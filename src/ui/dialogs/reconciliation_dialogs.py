@@ -1,6 +1,7 @@
 """Dialogs for importing, categorizing and matching bank statement lines."""
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 
 from PySide6.QtCore import Qt
@@ -59,11 +60,15 @@ class ImportStatementDialog(FormDialog):
 
         self.account_combo = QComboBox()
         accounts = BankingService.list_accounts(context=self.context)
-        for account in accounts:
+        for index, account in enumerate(accounts):
             label = account["name"]
             if account["bank"]:
                 label += f" ({account['bank']})"
             self.account_combo.addItem(label, userData=account["id"])
+            if self._same_account_number(
+                account.get("account_number"), parsed.account_number
+            ):
+                self.account_combo.setCurrentIndex(index)
         form.addRow("Bank Account *", self.account_combo)
 
         totals = QLabel(
@@ -124,6 +129,17 @@ class ImportStatementDialog(FormDialog):
         box.accepted.disconnect()
         box.accepted.connect(self.validate_and_accept)
         box.button(QDialogButtonBox.Save).setEnabled(bool(accounts))
+
+    @staticmethod
+    def _same_account_number(stored, printed) -> bool:
+        """The PDF prints the RIB in groups, so compare only the digits."""
+        if not stored or not printed:
+            return False
+        left = re.sub(r"\D", "", stored)
+        right = re.sub(r"\D", "", printed)
+        if not left or not right:
+            return False
+        return left in right or right in left
 
     def _fill_preview(self):
         transactions = self.parsed.transactions

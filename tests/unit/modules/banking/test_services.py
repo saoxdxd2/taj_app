@@ -463,10 +463,13 @@ def test_a_statement_with_matched_lines_cannot_be_deleted(session, admin_context
 
 def test_accounts_are_listed_for_the_import_selector(session, admin_context):
     account = _account(session)
+    account.account_number = "011 780 0000123456"
+    session.flush()
     rows = BankingService.list_accounts(context=admin_context, session=session)
     assert [row["id"] for row in rows] == [account.id]
     assert rows[0]["name"] == "CIH Bank"
     assert rows[0]["type"] == "Bank"
+    assert rows[0]["account_number"] == "011 780 0000123456"
 
 
 def test_summary_lists_imported_statements_with_a_real_balance(session, admin_context):

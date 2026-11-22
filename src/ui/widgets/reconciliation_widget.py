@@ -373,6 +373,18 @@ class ReconciliationWidget(QWidget):
     # ------------------------------------------------------------------
 
     def on_import(self):
+        try:
+            accounts = BankingService.list_accounts(context=self.context)
+        except Exception as exc:
+            QMessageBox.critical(self, "Error", f"Failed to load accounts: {exc}")
+            return
+        if not accounts:
+            QMessageBox.information(
+                self, "No Bank Account",
+                "Create the bank account of this statement first in the "
+                "Accounts tab, then import the file here.",
+            )
+            return
         path, _ = QFileDialog.getOpenFileName(
             self, "Import Bank Statement", "",
             "Bank statements (*.pdf *.csv);;All files (*)",
