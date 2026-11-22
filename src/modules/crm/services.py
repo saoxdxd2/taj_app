@@ -2,6 +2,7 @@ import logging
 from decimal import Decimal
 from typing import Optional, List
 from src.modules.crm.models import Customer, Address
+from src.modules.parties import PartyType, as_party_type, individual_full_name
 from src.core.context import RequestContext
 from src.security.permissions import PermissionManager
 from src.modules.audit.services import AuditService
@@ -61,22 +62,37 @@ class CRMService:
 
     @staticmethod
     @transactional
-    def update_customer(context: RequestContext, session, customer_id: int, company_name: str, contact_name: Optional[str] = None, 
+    def update_customer(context: RequestContext, session, customer_id: int, company_name: Optional[str] = None,
+                        contact_name: Optional[str] = None, 
                         email: Optional[str] = None, phone: Optional[str] = None, 
-                        ice_number: Optional[str] = None) -> Optional[Customer]:
+                        ice_number: Optional[str] = None,
+                        party_type=None, first_name: Optional[str] = None,
+                        last_name: Optional[str] = None) -> Optional[Customer]:
         """
-        Updates an existing customer.
+        Updates an existing company or individual customer.
+        An individual's full name is derived from first/last name and stored
+        in company_name, so existing lists and documents keep working.
         """
         PermissionManager.verify_permission(context, "CRM.Customers.Update")
         
         customer = session.query(Customer).filter(Customer.id == customer_id).first()
         if not customer:
             return None
-            
-        if not company_name:
+
+        kind = as_party_type(party_type if party_type is not None else customer.party_type)
+        if kind == PartyType.INDIVIDUAL:
+            first_name = first_name if first_name is not None else customer.first_name
+            last_name = last_name if last_name is not None else customer.last_name
+            if not (first_name or "").strip():
+                raise ValueError("First name is required for an individual customer.")
+            company_name = individual_full_name(first_name, last_name)
+        elif not company_name:
             raise ValueError("Company name is required.")
             
+        customer.party_type = kind
         customer.company_name = company_name
+        customer.first_name = first_name if kind == PartyType.INDIVIDUAL else None
+        customer.last_name = last_name if kind == PartyType.INDIVIDUAL else None
         customer.contact_name = contact_name
         customer.email = email
         customer.phone = phone
@@ -87,24 +103,39 @@ class CRMService:
 
     @staticmethod
     @transactional
-    def create_customer(context: RequestContext, session, company_name: str, contact_name: Optional[str] = None, 
+    def create_customer(context: RequestContext, session, company_name: Optional[str] = None,
+                        contact_name: Optional[str] = None, 
                         email: Optional[str] = None, phone: Optional[str] = None, 
-                        ice_number: Optional[str] = None) -> Customer:
+                        ice_number: Optional[str] = None,
+                        party_type=PartyType.ENTERPRISE,
+                        first_name: Optional[str] = None,
+                        last_name: Optional[str] = None) -> Customer:
         """
-        Creates a new customer.
+        Creates a company or an individual customer. An individual's full
+        name is stored in company_name so every screen keeps one display name.
         """
         PermissionManager.verify_permission(context, "CRM.Customers.Create")
-        if not company_name:
+
+        kind = as_party_type(party_type)
+        if kind == PartyType.INDIVIDUAL:
+            if not (first_name or "").strip():
+                raise ValueError("First name is required to create an individual customer.")
+            company_name = individual_full_name(first_name, last_name)
+        elif not company_name:
             raise ValueError("Company name is required to create a customer.")
             
         customer = Customer(
+            party_type=kind,
             company_name=company_name,
+            first_name=first_name if kind == PartyType.INDIVIDUAL else None,
+            last_name=last_name if kind == PartyType.INDIVIDUAL else None,
             contact_name=contact_name,
             email=email,
             phone=phone,
             ice_number=ice_number
         )
         session.add(customer)
+        session.flush()  # Flush to get ID and persist default values
         logger.info(f"Created new customer: {company_name} by {context.username}")
         return customer
 
@@ -199,4 +230,148 @@ class CRMService:
             "outstanding_balance": total_invoiced - total_paid,
             "last_purchase": last_purchase,
             "available_deposits": available_deposits,
+        }
+
+    @staticmethod
+    @transactional
+    def get_customer_statement(context: RequestContext, session, customer_id: int,
+                               date_from=None, date_to=None) -> dict:
+        """
+        Account statement ('relevé de compte') for one customer.
+        Debit increases what the customer owes, credit decreases it; the
+        running balance is what is still due at each line.
+
+        Sources: validated/issued/paid invoices (debit), payments received
+        and customer deposits ('bons') (credit). Applying a deposit to an
+        invoice creates a Payment stamped with the deposit number — that is
+        an allocation, not new money, so it is skipped to avoid crediting
+        the same funds twice. Returns/refunds are paid when validated, so
+        they do not change the outstanding balance.
+        """
+        PermissionManager.verify_permission(context, "CRM.Customers.View")
+
+        from src.modules.statements import as_naive_utc, statement_bounds
+        from src.modules.sales.models import (
+            CustomerDeposit, Invoice, InvoiceState, Payment,
+        )
+
+        customer = session.query(Customer).filter(Customer.id == customer_id).first()
+        if not customer:
+            raise ValueError(f"Customer ID {customer_id} not found.")
+
+        start, end = statement_bounds(date_from, date_to)
+
+        invoices = (
+            session.query(Invoice)
+            .filter(
+                Invoice.customer_id == customer_id,
+                Invoice.state.in_(
+                    (InvoiceState.VALIDATED, InvoiceState.ISSUED, InvoiceState.PAID)
+                ),
+            )
+            .all()
+        )
+        invoice_by_id = {invoice.id: invoice for invoice in invoices}
+
+        payments = []
+        if invoice_by_id:
+            payments = (
+                session.query(Payment)
+                .filter(Payment.invoice_id.in_(invoice_by_id.keys()))
+                .all()
+            )
+
+        deposits = (
+            session.query(CustomerDeposit)
+            .filter(CustomerDeposit.customer_id == customer_id)
+            .all()
+        )
+        deposit_numbers = {deposit.deposit_number for deposit in deposits}
+
+        movements = []
+        for invoice in invoices:
+            movements.append({
+                "date": as_naive_utc(invoice.created_at),
+                "order": 0,
+                "id": invoice.id,
+                "type": "Invoice",
+                "document": invoice.invoice_number,
+                "reference": "",
+                "due_date": as_naive_utc(invoice.due_date),
+                "debit": invoice.total_amount,
+                "credit": Decimal("0.00"),
+            })
+        for payment in payments:
+            if payment.reference and payment.reference in deposit_numbers:
+                continue  # allocation of funds already credited as a deposit
+            invoice = invoice_by_id[payment.invoice_id]
+            movements.append({
+                "date": as_naive_utc(payment.created_at),
+                "order": 1,
+                "id": payment.id,
+                "type": "Payment",
+                "document": invoice.invoice_number,
+                "reference": payment.reference or payment.method.value,
+                "due_date": None,
+                "debit": Decimal("0.00"),
+                "credit": payment.amount,
+            })
+        for deposit in deposits:
+            movements.append({
+                "date": as_naive_utc(deposit.created_at),
+                "order": 2,
+                "id": deposit.id,
+                "type": "Deposit",
+                "document": deposit.deposit_number,
+                "reference": deposit.method.value,
+                "due_date": None,
+                "debit": Decimal("0.00"),
+                "credit": deposit.amount,
+            })
+
+        movements.sort(key=lambda movement: (
+            movement["date"], movement["order"], movement["id"]
+        ))
+
+        opening = Decimal("0.00")
+        balance = Decimal("0.00")
+        total_debit = Decimal("0.00")
+        total_credit = Decimal("0.00")
+        rows = []
+        for movement in movements:
+            signed = movement["debit"] - movement["credit"]
+            if start is not None and movement["date"] < start:
+                opening += signed
+                continue
+            if end is not None and movement["date"] > end:
+                continue
+            balance += signed
+            total_debit += movement["debit"]
+            total_credit += movement["credit"]
+            rows.append({
+                "date": movement["date"],
+                "type": movement["type"],
+                "document": movement["document"],
+                "reference": movement["reference"],
+                "due_date": movement["due_date"],
+                "debit": movement["debit"],
+                "credit": movement["credit"],
+                "balance": balance,
+            })
+
+        return {
+            "kind": "customer",
+            "party": {
+                "id": customer.id,
+                "name": customer.company_name,
+                "phone": customer.phone,
+                "email": customer.email,
+            },
+            "date_from": start,
+            "date_to": end,
+            "opening_balance": opening,
+            "rows": rows,
+            "total_debit": total_debit,
+            "total_credit": total_credit,
+            "closing_balance": opening + total_debit - total_credit,
         }

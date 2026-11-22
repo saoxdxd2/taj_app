@@ -7,7 +7,7 @@ from loguru import logger
 
 # Graceful degradation check
 try:
-    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.units import mm
     from reportlab.lib import colors
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -226,6 +226,149 @@ class PDFEngine:
             raise RuntimeError(f"Failed to write PDF to {filepath}: {e}")
 
         logger.info(f"Generated facture PDF: {filepath}")
+        return filepath
+
+    # ------------------------------------------------------------------
+    # Account statement (relevé client / fournisseur)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def generate_statement_pdf(statement: Dict,
+                               output_dir: Optional[str] = None) -> str:
+        """
+        Prints a customer or supplier account statement with a running
+        balance. `statement` is the dict returned by CRMService
+        .get_customer_statement() or SupplierService.get_supplier_statement().
+        Returns the path of the written file.
+        """
+        if not PDF_AVAILABLE:
+            raise RuntimeError("PDF engine (ReportLab) is unavailable.")
+
+        if output_dir is None:
+            desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+            if not os.path.exists(desktop_path) or not os.path.isdir(desktop_path):
+                desktop_path = os.path.expanduser("~")
+            output_dir = desktop_path
+
+        party = statement.get("party", {})
+        name = str(party.get("name") or "Compte")
+        safe_name = "".join(c if c.isalnum() else "_" for c in name)
+        start = statement.get("date_from")
+        end = statement.get("date_to")
+        period = f"{start:%Y%m%d}" if start else "debut"
+        period += "_" + (f"{end:%Y%m%d}" if end else "aujourdhui")
+        filepath = os.path.join(output_dir, f"Releve_{safe_name}_{period}.pdf")
+
+        is_customer = statement.get("kind") == "customer"
+        title = "RELEVÉ CLIENT" if is_customer else "RELEVÉ FOURNISSEUR"
+        type_labels = {
+            "Invoice": "Facture",
+            "Payment": "Paiement",
+            "Deposit": "Bon",
+            "Purchase": "Achat",
+        }
+
+        def _money(value):
+            return f"{value:,.2f}"
+
+        def _date(value):
+            return value.strftime("%d/%m/%Y") if value else ""
+
+        doc = SimpleDocTemplate(
+            filepath, pagesize=landscape(A4),
+            leftMargin=12 * mm, rightMargin=12 * mm,
+            topMargin=12 * mm, bottomMargin=12 * mm,
+        )
+        styles = getSampleStyleSheet()
+        style_right = ParagraphStyle("right", parent=styles["Normal"], alignment=TA_RIGHT)
+        elements = []
+
+        header_right = [
+            Paragraph(f"<b><font size=16>{title}</font></b>", style_right),
+            Paragraph(f"<b>{name}</b>", style_right),
+        ]
+        if party.get("phone"):
+            header_right.append(Paragraph(f"Tél : {party['phone']}", style_right))
+        if party.get("email"):
+            header_right.append(Paragraph(f"Email : {party['email']}", style_right))
+
+        end_label = _date(end) or "aujourd'hui"
+        header = Table(
+            [[
+                Paragraph(
+                    f"<b><font size=14>TAJ FROID</font></b><br/>"
+                    f"Période : {_date(start)} au {end_label}<br/>"
+                    f"Solde d'ouverture : <b>{_money(statement.get('opening_balance', 0))} DH</b>",
+                    styles["Normal"],
+                ),
+                header_right,
+            ]],
+            colWidths=[140 * mm, 130 * mm],
+        )
+        header.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("LINEBELOW", (0, 0), (-1, 0), 1, DARK),
+        ]))
+        elements.append(header)
+        elements.append(Spacer(1, 6 * mm))
+
+        data = [["Date", "Référence", "Type", "Document", "Échéance",
+                 "Débit", "Crédit", "Solde"]]
+        for row in statement.get("rows", []):
+            data.append([
+                _date(row.get("date")),
+                str(row.get("reference") or ""),
+                type_labels.get(row.get("type"), str(row.get("type") or "")),
+                str(row.get("document") or ""),
+                _date(row.get("due_date")),
+                _money(row.get("debit")) if row.get("debit") else "",
+                _money(row.get("credit")) if row.get("credit") else "",
+                _money(row.get("balance")),
+            ])
+
+        table = Table(
+            data,
+            colWidths=[22 * mm, 45 * mm, 24 * mm, 44 * mm, 24 * mm, 27 * mm, 27 * mm, 30 * mm],
+            repeatRows=1,
+        )
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), DARK),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("ALIGN", (5, 0), (-1, -1), "RIGHT"),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT]),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 5 * mm))
+
+        totals = [
+            ["Total débit", f"{_money(statement.get('total_debit', 0))} DH"],
+            ["Total crédit", f"{_money(statement.get('total_credit', 0))} DH"],
+            ["Solde de clôture", f"{_money(statement.get('closing_balance', 0))} DH"],
+        ]
+        totals_table = Table(totals, colWidths=[45 * mm, 45 * mm], hAlign="RIGHT")
+        totals_table.setStyle(TableStyle([
+            ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+            ("BACKGROUND", (0, -1), (-1, -1), DARK),
+            ("TEXTCOLOR", (0, -1), (-1, -1), colors.white),
+            ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(totals_table)
+
+        try:
+            doc.build(elements)
+        except Exception as e:
+            raise RuntimeError(f"Failed to write PDF to {filepath}: {e}")
+
+        logger.info(f"Generated statement PDF: {filepath}")
         return filepath
 
     # ------------------------------------------------------------------

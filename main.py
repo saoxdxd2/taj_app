@@ -32,6 +32,7 @@ def init_db():
     import src.modules.purchasing.models
     import src.modules.sales.models
     import src.modules.finance.models
+    import src.modules.accounting.models
     import src.modules.audit.models
 
     # --- HEALTH CHECK ENGINE ---
@@ -133,6 +134,60 @@ def init_db():
         initialize_security(session)
         session.commit()
 
+def _start_local_operator_session():
+    """Signs the application in as the local Administrator.
+
+    The desktop build is single-operator and has no login screen. The
+    service layer and the audit trail still require a RequestContext, so
+    this attaches the first active Administrator account. Roles and
+    permission checks keep working exactly as before.
+    """
+    from src.core.context import RequestContext
+    from src.core.session import CurrentSession
+    from src.database.session import SessionLocal
+    from src.modules.authentication.models import Role, User
+    from src.modules.authentication.services import AuthenticationService
+
+    with SessionLocal() as session:
+        admin_role = (
+            session.query(Role)
+            .filter(Role.name == AuthenticationService.ADMIN_ROLE)
+            .first()
+        )
+        if admin_role is None:
+            raise RuntimeError(
+                "Administrator role is missing; security bootstrap did not run."
+            )
+
+        admins = (
+            session.query(User)
+            .filter(User.role_id == admin_role.id)
+            .order_by(User.id)
+            .all()
+        )
+        if not admins:
+            raise RuntimeError("No Administrator account exists in the database.")
+
+        user = next((u for u in admins if u.is_active), admins[0])
+
+        CurrentSession.initialize(RequestContext(
+            user_id=str(user.id),
+            username=user.username,
+            role=user.role.name,
+            permissions={p.name for p in user.role.permissions},
+            workstation="Local",
+        ))
+
+        if not user.is_active:
+            user.is_active = True
+            session.commit()
+            logger.warning(
+                f"Re-activated Administrator '{user.username}' for the local session."
+            )
+
+        logger.info(f"Local session started as Administrator '{user.username}'.")
+
+
 def _startup(app):
     """Builds and shows the application, returning the main window.
 
@@ -140,12 +195,6 @@ def _startup(app):
     Qt event loop; otherwise its Python wrapper can be garbage-collected
     while the window is still visible.
     """
-    # The first-run setup and login dialogs are the only visible windows while
-    # they run. Closing the last one would normally make Qt quit before the
-    # main window is created. Keep the application alive until the main window
-    # is on screen, then restore the normal quit-on-last-window behaviour.
-    app.setQuitOnLastWindowClosed(False)
-
     # Initialize DB and ensure default admin exists. Logging is configured
     # inside init_db, so a later UI import failure has a traceback in the
     # log and can be reported through the startup-failure dialog.
@@ -155,10 +204,14 @@ def _startup(app):
     from src.ui.theme import apply_theme
     apply_theme(app)
 
+    # Every widget reads CurrentSession in its constructor, so the local
+    # operator session must exist before the main window is built.
+    _start_local_operator_session()
+
     # Import the UI only after logging and the database are ready. If a
     # widget module is broken, main() can still log the traceback and show
     # the startup-failure dialog instead of dying during module import.
-    from src.ui.main_window import LoginDialog, MainWindow
+    from src.ui.main_window import MainWindow
 
     # Start automatic website synchronization (catalog auto-export +
     # pending price-update auto-import)
@@ -183,45 +236,8 @@ def _startup(app):
 
     app.aboutToQuit.connect(shutdown_backup)
 
-    # --- FIRST-RUN SETUP ---
-    # Check if ANY Administrator user still has the factory default password.
-    # The service searches by role so a renamed 'admin' account is still
-    # detected, and it re-checks the factory password before allowing setup.
-    from src.modules.authentication.services import AuthenticationService
-    from src.ui.dialogs.auth_dialogs import FirstRunSetupDialog
-    _needs_setup = AuthenticationService.needs_first_run_setup()
-    logged_in = False
-    if _needs_setup:
-        setup = FirstRunSetupDialog()
-        if setup.exec() != FirstRunSetupDialog.Accepted:
-            sys.exit(0)
-        # Auto-login with the credentials just created — no need to
-        # type them again on the login screen. If it fails for any reason,
-        # fall through to the normal login dialog instead of opening the
-        # main window without a session.
-        try:
-            logged_in = AuthenticationService.login(
-                username=setup.username_input.text().strip(),
-                password=setup.password_input.text(),
-            )
-        except Exception:
-            logger.exception("Auto-login after first-run setup failed")
-            logged_in = False
-        if not logged_in:
-            logger.warning(
-                "Auto-login after first-run setup failed; showing the login dialog."
-            )
-    # --- END FIRST-RUN SETUP ---
-
-    # Show Login Gateway (skipped when auto-logged-in after setup)
-    if not logged_in:
-        login = LoginDialog()
-        if login.exec() != LoginDialog.Accepted:
-            sys.exit(0)
-
     window = MainWindow()
     window.show()
-    app.setQuitOnLastWindowClosed(True)
     return window
 
 

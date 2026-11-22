@@ -29,6 +29,7 @@ def db_engine():
         Payment, CustomerDeposit, SalesReturn, ReturnItem,
     )
     from src.modules.finance.models import FinancialJournalEntry, Expense, Check
+    from src.modules.accounting.models import PaymentAccount, PaymentMethodOption, AccountMovement
     from src.modules.inventory.models import AttributeDef, ProductAttribute
     from src.modules.audit.models import AuditEvent
     from src.modules.pricing.models import PricingPolicy

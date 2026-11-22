@@ -23,5 +23,8 @@ argon2-cffi>=25.1.0
 # PDF factures
 reportlab>=4.4.6
 
+# Bank statement PDF import
+pypdf>=6.0.0
+
 # Logging
 loguru>=0.7.3

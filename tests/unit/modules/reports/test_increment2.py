@@ -212,6 +212,94 @@ def test_period_profit_validates_range(session, admin_context):
                                                start=now, end=now)
 
 
+# --- Profit & stock report ---
+
+def test_profit_and_stock_report_combines_sales_expenses_and_stock(
+    session, admin_context, customer, supplier
+):
+    from src.modules.finance.services import FinanceService
+    from src.modules.inventory.models import StockLevel
+
+    product = _stocked_product(session, admin_context, "PSR-01", cost="100.00", price="150.00")
+    inv = SalesService.create_invoice_draft(context=admin_context, session=session, customer_id=customer.id)
+    SalesService.add_item_to_invoice(
+        context=admin_context, session=session, invoice_id=inv.id,
+        product_id=product.id, quantity=2,
+        unit_price=Decimal("150.00"), vat_rate=Decimal("20.00"),
+        unit_cost=Decimal("100.00"),
+    )
+    SalesService.validate_invoice(context=admin_context, session=session, invoice_id=inv.id)
+
+    purchase = PurchasingService.create_purchase_draft(
+        context=admin_context, session=session, reference="ACH-PSR", supplier_id=supplier.id
+    )
+    PurchasingService.add_item_to_purchase(
+        context=admin_context, session=session, purchase_id=purchase.id,
+        product_id=product.id, quantity=10, unit_cost=Decimal("95.00"),
+    )
+    PurchasingService.validate_purchase(context=admin_context, session=session, purchase_id=purchase.id)
+
+    FinanceService.record_expense(
+        session=session, reference="DEP-PSR",
+        description="Loyer", amount=Decimal("20.00"),
+    )
+
+    now = datetime.now(timezone.utc)
+    report = ReportsService.get_profit_and_stock_report(
+        context=admin_context, session=session,
+        start=now - timedelta(days=1), end=now + timedelta(days=1),
+    )
+    assert report["invoices_count"] == 1
+    assert report["revenue_excl_vat"] == Decimal("300.00")
+    assert report["cogs"] == Decimal("200.00")
+    assert report["gross_margin"] == Decimal("100.00")
+    assert report["total_purchases"] == Decimal("950.00")
+    assert report["total_expenses"] == Decimal("20.00")
+    assert report["net_margin"] == Decimal("80.00")
+    # 50 received + 10 purchased - 2 sold = 58 left, valued at current prices.
+    assert report["closing_stock_cost"] == Decimal("5800.00")
+    assert report["closing_stock_retail"] == Decimal("8700.00")
+    # Everything moved inside the window, so nothing was held at its start.
+    assert report["opening_stock_cost"] == Decimal("0.00")
+    assert session.query(StockLevel).filter_by(product_id=product.id).one().quantity == 58
+
+
+def test_profit_and_stock_report_opening_stock_uses_history(
+    session, admin_context
+):
+    from src.modules.inventory.models import StockMovement, StockMovementType
+    from src.modules.inventory.services import InventoryService
+
+    product = InventoryService.create_product(
+        context=admin_context, session=session,
+        name="Produit Ancien", sku="PSR-OLD",
+        purchase_price=Decimal("50.00"), sale_price=Decimal("80.00"),
+    )
+    past = datetime.now(timezone.utc) - timedelta(days=10)
+    session.add(StockMovement(
+        product_id=product.id, movement_type=StockMovementType.PURCHASE,
+        quantity_change=7, reference="INIT-OLD", created_at=past,
+    ))
+    session.flush()
+
+    now = datetime.now(timezone.utc)
+    report = ReportsService.get_profit_and_stock_report(
+        context=admin_context, session=session,
+        start=now - timedelta(days=5), end=now + timedelta(days=1),
+    )
+    assert report["opening_stock_cost"] == Decimal("350.00")
+    assert report["opening_stock_retail"] == Decimal("560.00")
+    assert report["closing_stock_cost"] == Decimal("350.00")
+
+
+def test_profit_and_stock_report_validates_range(session, admin_context):
+    now = datetime.now(timezone.utc)
+    with pytest.raises(ValueError, match="before end"):
+        ReportsService.get_profit_and_stock_report(
+            context=admin_context, session=session, start=now, end=now
+        )
+
+
 def test_top_products_by_margin(session, admin_context, customer):
     """Ranking puts the higher-margin product first."""
     cheap = _stocked_product(session, admin_context, "TOP-01", cost="100.00", price="200.00")  # 50%

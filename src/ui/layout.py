@@ -168,3 +168,25 @@ def size_table_height(table, visible_rows: int = 8) -> None:
     table.setMaximumHeight(
         header.height() + row_height * visible_rows + scaled(8)
     )
+
+
+def show_table_rows(table, rows: int, max_rows: int = 8,
+                    exact: bool = False) -> None:
+    """
+    Gives a table in a dialog enough height to show whole rows.
+
+    Qt's default table size hint is about three rows, so a dialog that
+    relies on it silently hides most of a statement behind a scrollbar.
+    This sets a floor (never more than max_rows) computed from the header
+    and row metrics, so it still tracks the DPI and the font. With
+    ``exact`` the table also stops growing, which is what a short list of
+    matches wants; a long statement preview keeps the default ceiling.
+    """
+    rows = min(max(int(rows), 1), max_rows)
+    header = table.horizontalHeader().sizeHint().height()
+    row_height = table.verticalHeader().defaultSectionSize()
+    height = header + row_height * rows + scaled(4)
+    table.setMinimumHeight(height)
+    if exact:
+        table.setMaximumHeight(height)
+

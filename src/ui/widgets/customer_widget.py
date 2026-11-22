@@ -23,12 +23,14 @@ class CustomerWidget(QWidget):
         self.btn_edit = QPushButton("Edit")
         self.btn_archive = QPushButton("Archive")
         self.btn_stats = QPushButton("Trade Stats")
+        self.btn_statement = QPushButton("Statement")
         
         toolbar.addWidget(self.btn_refresh)
         toolbar.addWidget(self.btn_add)
         toolbar.addWidget(self.btn_edit)
         toolbar.addWidget(self.btn_archive)
         toolbar.addWidget(self.btn_stats)
+        toolbar.addWidget(self.btn_statement)
         toolbar.addStretch()
         layout.addLayout(toolbar)
 
@@ -53,6 +55,7 @@ class CustomerWidget(QWidget):
         self.btn_edit.clicked.connect(self.on_edit_customer)
         self.btn_archive.clicked.connect(self.on_archive_customer)
         self.btn_stats.clicked.connect(self.on_trade_stats)
+        self.btn_statement.clicked.connect(self.on_statement)
 
     def refresh_table(self):
         self.pagination.reset()
@@ -163,6 +166,29 @@ class CustomerWidget(QWidget):
         buttons.rejected.connect(dialog.reject)
         buttons.clicked.connect(dialog.accept)
         form.addRow(buttons)
+        dialog.exec()
+
+    def on_statement(self):
+        """Debit/credit statement with a running balance for the selected client."""
+        from src.core.session import CurrentSession
+        from src.ui.dialogs.statement_dialog import StatementDialog
+
+        customer_id = self.get_selected_customer_id()
+        if not customer_id:
+            QMessageBox.warning(self, "Warning", "Please select a customer to view their statement.")
+            return
+
+        context = CurrentSession.get_context()
+        dialog = StatementDialog(
+            loader=lambda date_from, date_to: CRMService.get_customer_statement(
+                context,
+                customer_id=customer_id,
+                date_from=date_from,
+                date_to=date_to,
+            ),
+            title="Customer Statement",
+            parent=self,
+        )
         dialog.exec()
 
     def on_archive_customer(self):

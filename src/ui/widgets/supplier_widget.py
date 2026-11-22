@@ -22,11 +22,13 @@ class SupplierWidget(QWidget):
         self.btn_add = QPushButton("Add Supplier")
         self.btn_edit = QPushButton("Edit")
         self.btn_archive = QPushButton("Archive")
+        self.btn_statement = QPushButton("Statement")
         
         toolbar.addWidget(self.btn_refresh)
         toolbar.addWidget(self.btn_add)
         toolbar.addWidget(self.btn_edit)
         toolbar.addWidget(self.btn_archive)
+        toolbar.addWidget(self.btn_statement)
         toolbar.addStretch()
         layout.addLayout(toolbar)
 
@@ -50,6 +52,7 @@ class SupplierWidget(QWidget):
         self.btn_add.clicked.connect(self.on_add_supplier)
         self.btn_edit.clicked.connect(self.on_edit_supplier)
         self.btn_archive.clicked.connect(self.on_archive_supplier)
+        self.btn_statement.clicked.connect(self.on_statement)
 
     def refresh_table(self):
         self.pagination.reset()
@@ -110,6 +113,29 @@ class SupplierWidget(QWidget):
             QMessageBox.critical(self, "Error", str(e))
             
         self.refresh_table()
+
+    def on_statement(self):
+        """Purchase/payment statement with a running balance for the selected supplier."""
+        from src.core.session import CurrentSession
+        from src.ui.dialogs.statement_dialog import StatementDialog
+
+        supplier_id = self.get_selected_supplier_id()
+        if not supplier_id:
+            QMessageBox.warning(self, "Warning", "Please select a supplier to view their statement.")
+            return
+
+        context = CurrentSession.get_context()
+        dialog = StatementDialog(
+            loader=lambda date_from, date_to: SupplierService.get_supplier_statement(
+                context,
+                supplier_id=supplier_id,
+                date_from=date_from,
+                date_to=date_to,
+            ),
+            title="Supplier Statement",
+            parent=self,
+        )
+        dialog.exec()
 
     def on_archive_supplier(self):
         from src.core.session import CurrentSession

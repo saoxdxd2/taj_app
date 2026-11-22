@@ -50,11 +50,10 @@ python main.py
 ```
 
 The first start runs health checks, applies Alembic migrations, creates
-the built-in roles/permissions, and opens the mandatory first-run setup
-dialog. The bootstrap account is `admin` with the factory password
-`admin`; the setup dialog forces a new username and a strong password
-before the main window can open. Do not deploy an installation that has
-not completed this step.
+the built-in roles/permissions, and opens the main window directly. This
+single-operator desktop build has no login screen: it signs in as the
+first active Administrator account, so role-based permission checks and
+audit attribution keep working without a password prompt.
 
 ## Configuration
 
@@ -207,8 +206,9 @@ Confirm `resources/translations/en` and `.../fr` exist. A packaged build
 must include them; the PyInstaller spec does this by default.
 
 **I forgot the administrator password.**
-There is no password-recovery backdoor. Restore a backup, or use another
-administrator account to reset it from Settings → User Management.
+Not an obstacle: the desktop build signs in as the local Administrator
+automatically, so no password is requested at startup. Passwords are kept
+for the role/permission model only.
 
 ## Repository layout
 
@@ -232,9 +232,9 @@ engineering/             historical plans, reviews and task records
 ## Security notes
 
 - Passwords are Argon2id hashes; repeated failures trigger a growing
-  temporary lockout.
-- The factory administrator password is usable only long enough for the
-  mandatory first-run setup; the setup path is replay-safe.
+  temporary lockout. The desktop build starts as the local Administrator
+  without a login prompt, but every service call is still checked against
+  that account's role permissions and attributed in the audit trail.
 - Restores are permission-gated, confirmation-gated, and validate the
   archive before replacing the live database.
 - Audit events reject ORM updates/deletes. Do not use bulk SQL against the

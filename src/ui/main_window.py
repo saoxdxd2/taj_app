@@ -1,15 +1,10 @@
 import logging
-import sys
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
-                               QHBoxLayout, QListWidget, QStackedWidget, QMessageBox,
-                               QDialog, QFormLayout, QLineEdit, QDialogButtonBox,
-                               QLabel, QSizePolicy)
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QListWidget,
+                               QStackedWidget, QSizePolicy, QScrollArea, QFrame)
 
 from src.core.session import CurrentSession
-from src.modules.authentication.services import AuthenticationService
 from src.i18n import _, tr
-from src.ui.layout import autosize_dialog, scaled, text_width
+from src.ui.layout import scaled, text_width
 
 from src.ui.widgets.dashboard_widget import DashboardWidget
 from src.ui.widgets.product_widget import ProductWidget
@@ -22,65 +17,6 @@ from src.ui.widgets.settings_widget import SettingsWidget
 from src.ui.widgets.calendar_widget import CalendarWidget
 
 logger = logging.getLogger(__name__)
-
-
-class LoginDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(_(tr.auth.title))
-        # A minimum width that grows with the DPI instead of a fixed one:
-        # a hardcoded 380px is correct only on a 96 DPI screen with English
-        # text, and clips the label once either of those changes.
-        autosize_dialog(self, min_width=380)
-        self.setup_ui()
-
-    def setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setSpacing(14)
-        layout.setContentsMargins(28, 28, 28, 20)
-
-        title = QLabel(
-            "<h2 style='color:#1f3a5f;'>Taj ERP</h2>"
-            f"<p style='color:#718096;'>{_(tr.auth.subtitle)}</p>"
-        )
-        title.setTextFormat(Qt.RichText)
-        title.setWordWrap(True)
-        layout.addWidget(title)
-
-        form_layout = QFormLayout()
-        form_layout.setSpacing(10)
-
-        self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText(_(tr.auth.username))
-        self.password_input = QLineEdit()
-        self.password_input.setPlaceholderText(_(tr.auth.password))
-        self.password_input.setEchoMode(QLineEdit.Password)
-
-        form_layout.addRow(_(tr.auth.username), self.username_input)
-        form_layout.addRow(_(tr.auth.password), self.password_input)
-        layout.addLayout(form_layout)
-
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.button_box.button(QDialogButtonBox.Ok).setText(_(tr.auth.sign_in))
-        self.button_box.button(QDialogButtonBox.Cancel).setText(_(tr.common.cancel))
-        self.button_box.accepted.connect(self.attempt_login)
-        self.button_box.rejected.connect(self.reject)
-        layout.addWidget(self.button_box)
-
-    def attempt_login(self):
-        username = self.username_input.text().strip()
-        password = self.password_input.text()
-
-        try:
-            success = AuthenticationService.login(username=username, password=password)
-            if success:
-                self.accept()
-            else:
-                QMessageBox.warning(self, _(tr.auth.title), _(tr.auth.failed))
-        except Exception as e:
-            QMessageBox.critical(
-                self, _(tr.auth.title), _(tr.auth.error, error=str(e))
-            )
 
 
 class MainWindow(QMainWindow):
@@ -157,7 +93,15 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.finance_widget)
         self.stack.addWidget(self.sales_widget)
         self.stack.addWidget(self.analytics_widget)
-        self.stack.addWidget(self.settings_widget)
+
+        # Settings is taller than the window (backups, health, sync, users,
+        # preferences...). Without a scroll container Qt squeezes the group
+        # boxes into the available height and their titles overlap.
+        self.settings_page = QScrollArea()
+        self.settings_page.setWidgetResizable(True)
+        self.settings_page.setFrameShape(QFrame.NoFrame)
+        self.settings_page.setWidget(self.settings_widget)
+        self.stack.addWidget(self.settings_page)
 
         layout.addWidget(self.sidebar)
         layout.addWidget(self.stack)
@@ -175,7 +119,7 @@ class MainWindow(QMainWindow):
 
         # Context Label
         context = CurrentSession.get_context()
-        self.statusBar().showMessage(f"Logged in as: {context.username} ({context.role})")
+        self.statusBar().showMessage(f"Local operator: {context.username} ({context.role})")
 
     def _process_pending_updates(self):
         """Applies website price updates without letting a malformed file

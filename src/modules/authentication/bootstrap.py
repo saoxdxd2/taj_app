@@ -16,9 +16,8 @@ it on every start:
 * existing grants are never removed, so a local customization survives.
 
 The bootstrap administrator is still created only when no Administrator
-user exists at all. Its factory password is intentionally detected by
-:meth:`AuthenticationService.needs_first_run_setup`, which forces the
-first-run setup dialog before the main window opens.
+user exists at all. The desktop entry point then starts a local session as
+that account; there is no interactive login screen.
 """
 from __future__ import annotations
 
@@ -77,6 +76,12 @@ PERMISSION_DESCRIPTIONS: Dict[str, str] = {
     "Finance.Checks.Create": "Register checks",
     "Finance.Checks.Update": "Clear, bounce or cancel checks",
     "Finance.Reports.View": "View cash-flow and debtor reports",
+    "Accounting.Accounts.View": "View cash/bank accounts and their ledger",
+    "Accounting.Accounts.Manage": "Create accounts, deposit, withdraw and transfer funds",
+    "Accounting.Methods.View": "View the payment-method catalog",
+    "Accounting.Methods.Manage": "Create, edit and deactivate payment methods",
+    "Accounting.Reconciliation.View": "View imported bank statements and their lines",
+    "Accounting.Reconciliation.Manage": "Import statements, categorize and match bank lines",
     "Pricing.Policies.View": "View pricing policies",
     "Pricing.Policies.Create": "Create pricing policies",
     "Pricing.Policies.Delete": "Delete pricing policies",
@@ -171,8 +176,8 @@ def ensure_bootstrap_admin(session) -> bool:
     """Creates the factory administrator only when none exists.
 
     Returns True when a new account was created. The factory password is
-    deliberately left in place because ``needs_first_run_setup`` uses it
-    as the trigger for the mandatory first-run setup dialog.
+    left in place because the desktop build signs in locally without
+    asking for it.
     """
     admin_role = (
         session.query(Role)
@@ -199,7 +204,7 @@ def ensure_bootstrap_admin(session) -> bool:
     session.flush()
     logger.warning(
         "Created the bootstrap administrator with the factory password. "
-        "First-run setup is required before the application can be used."
+        "The desktop app signs in locally as this account."
     )
     return True
 

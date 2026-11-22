@@ -1,157 +1,18 @@
 """
 Authentication dialogs:
-- FirstRunSetupDialog: Shown on first launch to force admin to set real credentials.
 - ChangePasswordDialog: Available in Settings to change the current user's password.
 - CreateUserDialog: Administrator creates a new user account with a role.
 """
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QFormLayout, QLineEdit,
-    QDialogButtonBox, QLabel, QMessageBox, QFrame
+    QDialogButtonBox, QLabel, QMessageBox
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
 
 import logging
 import html
 
 logger = logging.getLogger(__name__)
-
-
-class FirstRunSetupDialog(QDialog):
-    """
-    Shown on first launch when the admin account still has the default password.
-    Forces the user to set a secure username and password before using the app.
-    Cannot be dismissed without completing the setup.
-    """
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("First-Time Setup - TAJ FROID ERP")
-        self.setMinimumWidth(420)
-        self.setWindowFlags(
-            self.windowFlags()
-            & ~Qt.WindowCloseButtonHint
-            & ~Qt.WindowContextHelpButtonHint
-        )
-        self._setup_ui()
-
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setSpacing(16)
-
-        header = QLabel("Welcome to TAJ FROID ERP")
-        font = QFont()
-        font.setPointSize(14)
-        font.setBold(True)
-        header.setFont(font)
-        header.setAlignment(Qt.AlignCenter)
-        layout.addWidget(header)
-
-        warning = QLabel(
-            "This is your first login.\n\n"
-            "The default administrator password has not been changed.\n"
-            "You must create a secure username and password before continuing.\n\n"
-            "This step cannot be skipped."
-        )
-        warning.setWordWrap(True)
-        warning.setAlignment(Qt.AlignCenter)
-        warning.setStyleSheet(
-            "background-color: #fff3cd; color: #664d03; "
-            "border: 1px solid #ffecb5; border-radius: 6px; padding: 12px;"
-        )
-        layout.addWidget(warning)
-
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        layout.addWidget(line)
-
-        form = QFormLayout()
-        form.setLabelAlignment(Qt.AlignRight)
-        form.setSpacing(10)
-
-        self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText("e.g. administrator")
-        self.username_input.setMaxLength(50)
-        form.addRow("New Username:", self.username_input)
-
-        self.password_input = QLineEdit()
-        self.password_input.setEchoMode(QLineEdit.Password)
-        self.password_input.setPlaceholderText(
-            "8+ characters, with upper/lowercase and a digit"
-        )
-        form.addRow("New Password:", self.password_input)
-
-        self.confirm_input = QLineEdit()
-        self.confirm_input.setEchoMode(QLineEdit.Password)
-        self.confirm_input.setPlaceholderText("Repeat password")
-        form.addRow("Confirm Password:", self.confirm_input)
-
-        layout.addLayout(form)
-
-        self.hint_label = QLabel("")
-        self.hint_label.setWordWrap(True)
-        self.hint_label.setStyleSheet("color: #888; font-size: 11px;")
-        self.password_input.textChanged.connect(self._update_strength_hint)
-        layout.addWidget(self.hint_label)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok)
-        buttons.button(QDialogButtonBox.Ok).setText("Create Account and Continue")
-        buttons.accepted.connect(self._on_accept)
-        layout.addWidget(buttons)
-
-    def _update_strength_hint(self, text):
-        from src.security.sanitizers import validate_password_strength
-
-        if not text:
-            self.hint_label.setText("")
-            return
-        try:
-            validate_password_strength(text)
-        except ValueError as e:
-            self.hint_label.setText(str(e))
-            self.hint_label.setStyleSheet("color: #dc3545; font-size: 11px;")
-        else:
-            self.hint_label.setText("Strong password")
-            self.hint_label.setStyleSheet("color: #198754; font-size: 11px;")
-
-    def _on_accept(self):
-        username = self.username_input.text().strip()
-        password = self.password_input.text()
-        confirm = self.confirm_input.text()
-
-        if not username:
-            QMessageBox.warning(self, "Validation Error", "Username cannot be empty.")
-            return
-        if len(username) < 3:
-            QMessageBox.warning(self, "Validation Error", "Username must be at least 3 characters.")
-            return
-        if len(password) < 8:
-            QMessageBox.warning(self, "Validation Error", "Password must be at least 8 characters.")
-            return
-        if password != confirm:
-            QMessageBox.warning(self, "Validation Error", "Passwords do not match.")
-            self.confirm_input.clear()
-            self.confirm_input.setFocus()
-            return
-
-        try:
-            from src.modules.authentication.services import AuthenticationService
-
-            username = AuthenticationService.complete_first_run_setup(
-                new_username=username, new_password=password
-            )
-
-            QMessageBox.information(
-                self, "Setup Complete",
-                f"Account '{username}' created successfully.\n\n"
-                "You will be signed in automatically."
-            )
-            self.accept()
-        except ValueError as e:
-            QMessageBox.warning(self, "Validation Error", str(e))
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to save account: {str(e)}")
 
 
 class ChangePasswordDialog(QDialog):

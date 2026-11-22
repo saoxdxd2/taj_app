@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     backup_retention_days: int = 30
     log_rotation_size_mb: int = 10
     disk_space_threshold_percent: int = 90
+
+    # WhatsApp Cloud API (Meta). Credentials come from the environment or
+    # .env only — the access token is a secret and is never stored in the
+    # database or written to logs.
+    whatsapp_access_token: Optional[str] = None
+    whatsapp_phone_number_id: Optional[str] = None
+    whatsapp_api_version: str = "v20.0"
+    whatsapp_default_country_code: str = "212"
     
     # Environment
     environment: str = "development"  # development, testing, production
