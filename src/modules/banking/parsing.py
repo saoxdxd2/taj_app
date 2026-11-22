@@ -150,7 +150,10 @@ def parse_money(text: str) -> Optional[Decimal]:
     if cleaned in ("", "-", "--"):
         return None
     if "," in cleaned and "." in cleaned:
-        cleaned = cleaned.replace(".", "").replace(",", ".")
+        if cleaned.rfind(",") > cleaned.rfind("."):
+            cleaned = cleaned.replace(".", "").replace(",", ".")
+        else:
+            cleaned = cleaned.replace(",", "")
     else:
         cleaned = cleaned.replace(",", ".")
     try:

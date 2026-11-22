@@ -1,10 +1,14 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-                               QTableView, QHeaderView, QMessageBox, QSplitter, QLabel)
+                               QTableView, QHeaderView, QMessageBox, QSplitter, QLabel,
+                               QFileDialog, QApplication)
 from PySide6.QtCore import Qt
 
 from src.core.session import CurrentSession
+from src.modules.purchasing.invoice_import import InvoiceImportService
+from src.modules.purchasing.ocr import OcrUnavailable
 from src.modules.purchasing.services import PurchasingService
 from src.security.permissions import AccessDenied
+from src.ui.dialogs.invoice_import_dialog import InvoiceImportDialog
 from src.ui.dialogs.purchase_dialogs import NewPurchaseDialog, PurchaseAddItemDialog
 from src.ui.models.purchase_model import PurchaseTableModel, PurchaseItemTableModel
 
@@ -22,10 +26,12 @@ class PurchaseWidget(QWidget):
         # Buttons - Purchases
         btn_layout = QHBoxLayout()
         self.btn_new_draft = QPushButton("New Draft Purchase")
+        self.btn_import_scan = QPushButton("Import Invoice Scan...")
         self.btn_validate = QPushButton("Validate Purchase")
         self.btn_refresh = QPushButton("Refresh")
 
         btn_layout.addWidget(self.btn_new_draft)
+        btn_layout.addWidget(self.btn_import_scan)
         btn_layout.addWidget(self.btn_validate)
         btn_layout.addWidget(self.btn_refresh)
         btn_layout.addStretch()
@@ -81,6 +87,7 @@ class PurchaseWidget(QWidget):
 
         # Connect signals
         self.btn_new_draft.clicked.connect(self.create_draft)
+        self.btn_import_scan.clicked.connect(self.import_invoice_scan)
         self.btn_validate.clicked.connect(self.validate_purchase)
         self.btn_refresh.clicked.connect(self.load_data)
         self.btn_add_item.clicked.connect(self.add_item)
@@ -142,6 +149,57 @@ class PurchaseWidget(QWidget):
                 self.load_data()
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to create draft: {str(e)}")
+
+    def import_invoice_scan(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select Supplier Invoice Scan", "",
+            "Scanned paper (*.pdf *.png *.jpg *.jpeg *.tif *.tiff *.bmp)",
+        )
+        if not path:
+            return
+
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            scan = InvoiceImportService.scan(self.context, path)
+        except OcrUnavailable as exc:
+            QMessageBox.critical(self, "Could not read the scan", str(exc))
+            return
+        except AccessDenied:
+            QMessageBox.warning(self, "Access Denied", "You cannot import purchases.")
+            return
+        except Exception as exc:
+            QMessageBox.critical(self, "Scan failed", f"Could not read this paper:\n{exc}")
+            return
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        dialog = InvoiceImportDialog(self.context, scan, parent=self)
+        if not dialog.exec():
+            return
+
+        try:
+            purchase = InvoiceImportService.save_scan(self.context, **dialog.get_data())
+        except ValueError as exc:
+            QMessageBox.warning(self, "Import refused", str(exc))
+            return
+        except AccessDenied:
+            QMessageBox.warning(self, "Access Denied", "You cannot create purchases.")
+            return
+        except Exception as exc:
+            QMessageBox.critical(self, "Import failed", f"Could not save the purchase:\n{exc}")
+            return
+
+        QMessageBox.information(
+            self, "Draft created",
+            f"Draft purchase {purchase.reference} was created.\n\n"
+            "Review it, then use 'Validate Purchase' when you want stock and "
+            "accounting to be updated.",
+        )
+        self.load_data()
+        for row in range(self.purchase_model.rowCount()):
+            if self.purchase_model.get_entity_id_at(row) == purchase.id:
+                self.purchase_table.selectRow(row)
+                break
 
     def add_item(self):
         selection = self.purchase_table.selectionModel()
