@@ -237,7 +237,7 @@ def _startup(app):
     app.aboutToQuit.connect(shutdown_backup)
 
     window = MainWindow()
-    window.show()
+    window.showMaximized()
     return window
 
 
