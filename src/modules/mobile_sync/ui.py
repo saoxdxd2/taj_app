@@ -90,12 +90,10 @@ class MobileInboxWidget(QWidget):
         self.lbl_token = QLabel("Agent token: " + ("set" if load_agent_token() else "NOT set"))
         form.addRow("", self.lbl_token)
 
-        self.inp_secret = QLineEdit()
-        self.inp_secret.setEchoMode(QLineEdit.Password)
-        self.inp_secret.setPlaceholderText("One-time setup secret (ERP_SETUP_SECRET)")
-        form.addRow("Setup secret", self.inp_secret)
+        self.lbl_device = QLabel("Device ID: " + __import__("src.modules.mobile_sync.crypto", fromlist=["compute_device_id"]).compute_device_id()[:16] + "...")
+        form.addRow("", self.lbl_device)
 
-        self.btn_bootstrap = QPushButton("Bootstrap agent token")
+        self.btn_bootstrap = QPushButton("Auto-connect (no secret needed)")
         self.btn_bootstrap.clicked.connect(self._on_bootstrap)
         form.addRow("", self.btn_bootstrap)
 
@@ -162,17 +160,13 @@ class MobileInboxWidget(QWidget):
 
     def _on_bootstrap(self):
         client = RelayClient(self._relay_url)
-        secret = self.inp_secret.text().strip()
-        if not secret:
-            QMessageBox.warning(self, "Missing secret", "Enter the setup secret.")
-            return
         try:
-            token = client.bootstrap_agent_token(secret)
+            token = client.bootstrap_agent_token()
             store_agent_token(token)
             self.lbl_token.setText("Agent token: set")
-            self.lbl_status.setText("Agent token bootstrapped.")
+            self.lbl_status.setText("Agent token auto-connected.")
         except Exception as exc:
-            QMessageBox.critical(self, "Bootstrap failed", str(exc))
+            QMessageBox.critical(self, "Auto-connect failed", str(exc))
 
     def _on_delete_token(self):
         delete_agent_token()

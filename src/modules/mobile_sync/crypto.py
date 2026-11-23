@@ -9,7 +9,11 @@ ever stores ciphertext.
 from __future__ import annotations
 
 import base64
+import hashlib
 import logging
+import os
+import platform
+import socket
 from typing import Optional, Tuple
 
 from nacl.public import PrivateKey, PublicKey, SealedBox
@@ -20,7 +24,7 @@ logger = logging.getLogger(__name__)
 KEYRING_SERVICE = "taj-froid-mobile"
 PRIVATE_KEY_USER = "x25519-private-key"
 AGENT_TOKEN_USER = "relay-agent-token"
-BACKUP_HINT_USER = "x25519-backup-passphrase"
+DEVICE_ID_USER = "device-id-seed"
 
 # Magic bytes for a JPEG, used to validate decrypted payloads.
 JPEG_MAGIC = b"\xff\xd8\xff"
@@ -121,3 +125,24 @@ def delete_agent_token() -> None:
 
 def random_token(nbytes: int = 32) -> str:
     return _b64encode(nacl_random(nbytes))
+
+
+def compute_device_id() -> str:
+    """Deterministic device fingerprint (SHA-256 of machine + user + app).
+
+    No stored seed needed — the fingerprint is reproducible on the same
+    machine/user, so re-bootstrap always recognises the same device.
+    """
+    parts = [
+        platform.node(),           # machine name
+        os.getlogin() if hasattr(os, "getlogin") else os.environ.get("USERNAME", ""),
+        socket.gethostname(),
+        "tajfroid-mobile-agent",
+    ]
+    try:
+        parts.append(platform.machine())
+        parts.append(platform.processor())
+    except Exception:  # noqa: BLE001
+        pass
+    raw = "|".join(parts).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()

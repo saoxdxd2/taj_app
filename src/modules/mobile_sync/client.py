@@ -93,10 +93,13 @@ class RelayClient:
 
     # ---- bootstrap (one-time setup secret -> agent token) ----
 
-    def bootstrap_agent_token(self, setup_secret: str) -> str:
+    def bootstrap_agent_token(self, device_id: str = None) -> str:
+        if device_id is None:
+            from .crypto import compute_device_id
+            device_id = compute_device_id()
         with httpx.Client(timeout=self._timeout) as c:
             r = c.post(self._url("/api/agent/bootstrap"),
-                       json={"setupSecret": setup_secret},
+                       json={"deviceId": device_id},
                        headers={"Accept": "application/json"})
             r.raise_for_status()
             data = r.json()
