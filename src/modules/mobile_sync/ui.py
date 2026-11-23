@@ -168,6 +168,9 @@ class MobileInboxWidget(QWidget):
         self.lbl_status.setText(f"Relay URL saved: {url}")
 
     def _on_bootstrap(self):
+        if load_agent_token():
+            self.lbl_status.setText("Agent token already set on this machine.")
+            return
         client = RelayClient(self._relay_url)
         try:
             token = client.bootstrap_agent_token()
@@ -175,7 +178,15 @@ class MobileInboxWidget(QWidget):
             self.lbl_token.setText("Agent token: set")
             self.lbl_status.setText("Agent token auto-connected.")
         except Exception as exc:
-            QMessageBox.critical(self, "Auto-connect failed", str(exc))
+            msg = str(exc)
+            if "409" in msg or "already registered" in msg.lower():
+                msg = (
+                    "An agent is already registered on the relay. "
+                    "If this is the same machine, the token is missing locally; "
+                    "delete the old agent token row in Turso or restore the token. "
+                    "If this is a different machine, multi-agent is not enabled yet."
+                )
+            QMessageBox.critical(self, "Auto-connect failed", msg)
 
     def _on_delete_token(self):
         delete_agent_token()

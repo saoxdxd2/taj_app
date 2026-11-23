@@ -10,7 +10,6 @@ import logging
 import os
 import sys
 import threading
-import time
 from pathlib import Path
 
 # Ensure the repo root is on sys.path when launched directly.
@@ -22,9 +21,8 @@ from src.core.context import RequestContext
 from src.core.session import CurrentSession
 from src.database.session import SessionLocal
 from src.modules.authentication.bootstrap import initialize_security
-from src.modules.mobile_sync.agent import MobileAgent
 from src.modules.mobile_sync.crypto import load_agent_token
-from src.modules.mobile_sync.ui import MobileInboxWidget  # noqa: F401 (kept for parity)
+from src.modules.mobile_sync.worker import TraySyncWorker
 
 logger = logging.getLogger("mobile_tray")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -73,11 +71,11 @@ def run_tray():
     _init_session()
     context = CurrentSession.get_context()
 
-    agent = None
+    worker = None
     if relay_url and load_agent_token():
-        agent = MobileAgent(relay_url, context)
-        agent.start()
-        logger.info("Mobile agent started against %s", relay_url)
+        worker = TraySyncWorker(relay_url, context)
+        worker.start()
+        logger.info("Mobile sync worker started against %s", relay_url)
     else:
         logger.warning("Relay URL or agent token missing; agent not started.")
 
@@ -86,16 +84,36 @@ def run_tray():
     draw = ImageDraw.Draw(img)
     draw.text((20, 20), "M", fill=(255, 255, 255))
 
+    stop_ui = threading.Event()
+
+    def _refresh_title():
+        """Surface the latest SyncStatus on the existing tray tooltip."""
+        while not stop_ui.wait(2.0):
+            if worker is None:
+                continue
+            try:
+                icon.title = "TAJ Mobile Sync — " + worker.get_status().compact()
+            except Exception:  # noqa: BLE001 - icon may be tearing down
+                logger.debug("Could not update tray status title.")
+
     def on_quit(icon, item):
-        if agent is not None:
-            agent.stop()
-            agent.wait(5000)
+        stop_ui.set()
+        if worker is not None:
+            worker.stop()
+            worker.wait(5000)
         icon.stop()
 
     icon = pystray.Icon("taj_mobile_tray", img, "TAJ Mobile Sync", menu=pystray.Menu(
         pystray.MenuItem("Quit", on_quit),
     ))
-    icon.run()
+    ui_thread = threading.Thread(target=_refresh_title, name="mobile-sync-tray-status", daemon=True)
+    ui_thread.start()
+    try:
+        icon.run()
+    finally:
+        stop_ui.set()
+        if worker is not None:
+            worker.stop()
 
 
 if __name__ == "__main__":

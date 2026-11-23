@@ -1,69 +1,69 @@
 """Qt-safe polling agent for the mobile relay.
 
-Runs in a background QThread. Polls every 30s (with exponential backoff on
-errors) and emits signals so the UI thread can react. Never blocks the UI.
+Runs in a background QThread. Polls every 30s (bounded exponential backoff
+with jitter on transient errors) and emits signals so the UI thread can react.
+Never blocks the UI. Credentials/config failures stop the loop instead of
+retrying immediately. The plain-thread :class:`worker.TraySyncWorker` shares
+the same :class:`worker.SyncEngine`.
 """
 from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
 
 from PySide6.QtCore import QThread, Signal
 
 from .client import RelayClient
-from .inbox import process_scan, post_status
+from .sync import SyncStatus
+from .worker import BATCH_SIZE, POLL_INTERVAL, SyncEngine
 
 logger = logging.getLogger(__name__)
-
-POLL_INTERVAL = 30.0
-MAX_BACKOFF = 300.0
 
 
 class MobileAgent(QThread):
     new_scan_ready = Signal(object, object)   # (MobileScan row, InvoiceScan)
     scan_failed = Signal(str, str)            # (relay_id, message)
-    status = Signal(str)
+    status = Signal(str)                      # compact SyncStatus text
 
-    def __init__(self, base_url: str, context, parent=None):
+    def __init__(self, base_url: str, context, parent=None,
+                 batch_size: int = BATCH_SIZE, poll_interval: float = POLL_INTERVAL):
         super().__init__(parent)
-        self._base_url = base_url
         self._context = context
         self._stop = False
-        self._client = RelayClient(base_url)
+        self._engine = SyncEngine(
+            RelayClient(base_url), context,
+            batch_size=batch_size, poll_interval=poll_interval,
+        )
+        # Kept for callers that peek at it; the durable checkpoint now lives
+        # in sync.py's state file instead of this in-memory set.
         self._processed: set = set()
 
     def stop(self) -> None:
         self._stop = True
 
-    def run(self) -> None:
-        backoff = POLL_INTERVAL
-        while not self._stop:
-            try:
-                scans = self._client.list_uploaded_scans(limit=10)
-                backoff = POLL_INTERVAL
-                for scan in scans:
-                    if self._stop:
-                        break
-                    rid = scan.get("id")
-                    if not rid or rid in self._processed:
-                        continue
-                    try:
-                        row, invoice_scan = process_scan(self._context, self._client, scan)
-                        self._processed.add(rid)
-                        if invoice_scan is not None:
-                            self.new_scan_ready.emit(row, invoice_scan)
-                    except Exception as exc:  # noqa: BLE001
-                        logger.error("Failed to process scan %s: %s", rid, exc)
-                        self.scan_failed.emit(str(rid), str(exc))
-                self.status.emit("ok")
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("Mobile agent poll failed: %s", exc)
-                self.status.emit(f"error: {exc}")
-                backoff = min(backoff * 2, MAX_BACKOFF)
+    def get_status(self) -> SyncStatus:
+        """Minimal accessor for status surfaces (tray/UI)."""
+        return self._engine.get_status()
 
-            # Sleep in small increments so stop() is responsive.
-            slept = 0.0
-            while slept < backoff and not self._stop:
-                time.sleep(min(1.0, backoff - slept))
-                slept += 1.0
+    def run(self) -> None:
+        delay = 0.0
+        while not self._stop:
+            if delay and self._sleep(delay):
+                break
+            delay = self._engine.run_once(
+                on_scan=lambda row, invoice_scan: self.new_scan_ready.emit(row, invoice_scan),
+                on_scan_failed=lambda rid, message: self.scan_failed.emit(rid, message),
+                on_status=lambda st: self.status.emit(st.compact()),
+                should_stop=lambda: self._stop,
+            )
+            if delay is None:
+                break
+
+    def _sleep(self, seconds: float) -> bool:
+        """Sleep in small increments so stop() stays responsive."""
+        slept = 0.0
+        while slept < seconds and not self._stop:
+            step = min(1.0, seconds - slept)
+            time.sleep(step)
+            slept += step
+        return self._stop

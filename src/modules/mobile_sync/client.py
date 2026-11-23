@@ -51,6 +51,21 @@ class RelayClient:
             data = r.json()
             return data.get("scans", data if isinstance(data, list) else [])
 
+    def get_catalog(self, since_version: int = 0) -> Optional[Dict[str, Any]]:
+        """Fetch a catalog batch; returns None on HTTP 304 (no changes).
+
+        Same relay route as before, just routed through the shared client so
+        errors are categorized consistently. Response bodies are never logged.
+        """
+        with httpx.Client(timeout=self._timeout) as c:
+            r = c.get(self._url("/api/catalog"),
+                      params={"version": since_version},
+                      headers=self._headers())
+            if r.status_code == 304:
+                return None
+            r.raise_for_status()
+            return r.json()
+
     def download_scan_file(self, scan_id: str) -> bytes:
         with httpx.Client(timeout=self._timeout) as c:
             r = c.get(self._url(f"/api/agent/scans/{scan_id}/file"), headers=self._headers())
