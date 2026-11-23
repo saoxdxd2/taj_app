@@ -34,7 +34,7 @@ def init_db():
     import src.modules.finance.models
     import src.modules.accounting.models
     import src.modules.audit.models
-
+    import src.modules.mobile_sync.models
     # --- HEALTH CHECK ENGINE ---
     from src.core.health_check import HealthCheckEngine, HealthStatus
     health_results = HealthCheckEngine.run_all()

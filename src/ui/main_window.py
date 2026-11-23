@@ -15,6 +15,7 @@ from src.ui.widgets.finance_widget import FinanceWidget
 from src.ui.widgets.sales_widget import SalesWidget
 from src.ui.widgets.settings_widget import SettingsWidget
 from src.ui.widgets.calendar_widget import CalendarWidget
+from src.modules.mobile_sync.ui import MobileInboxWidget
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,7 @@ class MainWindow(QMainWindow):
             "💰  " + _(tr.nav.finance),
             "🧾  " + _(tr.nav.sales),
             "📊  " + _(tr.nav.analytics),
+            "📱  Mobile",
             "⚙️  " + _(tr.nav.settings),
         ]
         self.sidebar.addItems(nav_items)
@@ -82,6 +84,7 @@ class MainWindow(QMainWindow):
         self.sales_widget = SalesWidget()
         from src.ui.widgets.analytics_widget import AnalyticsWidget
         self.analytics_widget = AnalyticsWidget()
+        self.mobile_widget = MobileInboxWidget()
         self.settings_widget = SettingsWidget()
 
         self.stack.addWidget(self.dashboard_widget)
@@ -93,6 +96,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.finance_widget)
         self.stack.addWidget(self.sales_widget)
         self.stack.addWidget(self.analytics_widget)
+        self.stack.addWidget(self.mobile_widget)
 
         # Settings is taller than the window (backups, health, sync, users,
         # preferences...). Without a scroll container Qt squeezes the group
