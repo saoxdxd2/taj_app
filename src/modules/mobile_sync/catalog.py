@@ -15,8 +15,13 @@ from src.database.transaction import transactional
 logger = logging.getLogger(__name__)
 
 
-def build_catalog_payload(context: RequestContext) -> Dict[str, Any]:
-    """Builds the versioned catalog payload from the current DB state."""
+def build_catalog_payload(context: RequestContext, base_revision: int = 0) -> Dict[str, Any]:
+    """Builds the versioned catalog payload from the current DB state.
+
+    ``base_revision`` is the last relay revision this desktop successfully
+    pushed. The relay rejects a stale base so an offline rebuild cannot
+    silently overwrite a newer catalog.
+    """
     from src.modules.inventory.models import Product, ProductState, StockLevel
 
     @transactional
@@ -47,9 +52,16 @@ def build_catalog_payload(context: RequestContext) -> Dict[str, Any]:
     import hashlib, json
     digest = hashlib.sha256(json.dumps(products, sort_keys=True).encode()).hexdigest()
     version = int(digest[:8], 16)
-    return {"version": version, "products": products}
+    return {
+        "version": version,
+        "baseRevision": int(base_revision or 0),
+        "products": products,
+    }
 
 
-def push_catalog(context: RequestContext, client) -> Dict[str, Any]:
-    payload = build_catalog_payload(context)
-    return client.push_catalog(payload["version"], payload["products"])
+def push_catalog(context: RequestContext, client, base_revision: int = 0) -> Dict[str, Any]:
+    payload = build_catalog_payload(context, base_revision=base_revision)
+    return client.push_catalog(
+        payload["version"], payload["products"],
+        base_revision=payload["baseRevision"],
+    )

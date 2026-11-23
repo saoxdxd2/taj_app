@@ -17,6 +17,7 @@ from src.modules.mobile_sync.crypto import (
     decrypt_sealed_box, sha256_bytes, verify_jpeg_magic,
 )
 from src.modules.mobile_sync.models import MobileScan, MobileScanState
+from src.modules.mobile_sync.sync import describe_error, normalize_scan_id, safe_text
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +39,21 @@ def process_scan(context: RequestContext, client, relay_scan: dict) -> Tuple[Mob
     from src.database.session import SessionLocal
     from src.modules.purchasing.invoice_import import InvoiceImportService
 
-    relay_id = relay_scan["id"]
+    relay_id = normalize_scan_id(
+        relay_scan.get("id") if isinstance(relay_scan, dict) else None
+    )
+    if relay_id is None:
+        # Invalid IDs are dropped before this point in normal operation.
+        raise ValueError("Invalid relay scan ID.")
+    client_id = safe_text(
+        relay_scan.get("clientId") or relay_scan.get("client_id"), 36
+    )
     with SessionLocal() as session:
         row = session.query(MobileScan).filter(MobileScan.relay_scan_id == relay_id).first()
         if row is None:
             row = MobileScan(
                 relay_scan_id=relay_id,
-                client_id=relay_scan.get("clientId") or relay_scan.get("client_id"),
+                client_id=client_id or None,
                 captured_at=_parse_dt(relay_scan.get("capturedAt") or relay_scan.get("captured_at")),
                 status=MobileScanState.UPLOADED.value,
             )
@@ -56,8 +65,9 @@ def process_scan(context: RequestContext, client, relay_scan: dict) -> Tuple[Mob
     try:
         ciphertext = client.download_scan_file(relay_id)
     except Exception as exc:  # noqa: BLE001
-        post_status(client, relay_id, "failed", message=f"download failed: {exc}")
-        _update_row(relay_id, status=MobileScanState.FAILED.value, message=f"download failed: {exc}")
+        post_status(client, relay_id, "failed", message=f"download failed: {describe_error(exc)}")
+        _update_row(relay_id, status=MobileScanState.FAILED.value,
+                    message=f"download failed: {describe_error(exc)}")
         raise
 
     if len(ciphertext) > MAX_BYTES:
@@ -110,8 +120,9 @@ def process_scan(context: RequestContext, client, relay_scan: dict) -> Tuple[Mob
     try:
         invoice_scan = InvoiceImportService.scan(context, path)
     except Exception as exc:  # noqa: BLE001
-        post_status(client, relay_id, "failed", message=f"ocr failed: {exc}")
-        _update_row(relay_id, status=MobileScanState.FAILED.value, message=f"ocr failed: {exc}")
+        post_status(client, relay_id, "failed", message=f"ocr failed: {describe_error(exc)}")
+        _update_row(relay_id, status=MobileScanState.FAILED.value,
+                    message=f"ocr failed: {describe_error(exc)}")
         raise
 
     _update_row(relay_id, status=MobileScanState.NEEDS_REVIEW.value)
@@ -132,20 +143,24 @@ def _parse_dt(value) -> Optional[datetime]:
         if dt.tzinfo is not None:
             dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
         return dt
-    except ValueError:
+    except (ValueError, OverflowError, OSError):
         return None
 
 
 def post_status(client, relay_id: str, status: str,
                 purchase_reference: Optional[str] = None,
                 message: Optional[str] = None) -> None:
-    """Best-effort status push to the relay. Never raises."""
+    """Best-effort status push to the relay. Never raises or logs bodies."""
+    safe_id = normalize_scan_id(relay_id)
+    if safe_id is None:
+        return
     try:
-        client.post_scan_status(relay_id, status,
-                                purchase_reference=purchase_reference,
-                                message=message)
+        client.post_scan_status(safe_id, status,
+                                purchase_reference=safe_text(purchase_reference, 50),
+                                message=safe_text(message, 500))
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Could not push status %s for %s: %s", status, relay_id, exc)
+        logger.warning("Could not push status %s for %s: %s",
+                       safe_text(status, 20), safe_id, describe_error(exc))
 
 
 def _update_row(relay_id: str, **fields) -> None:
