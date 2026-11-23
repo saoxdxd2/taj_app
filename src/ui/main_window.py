@@ -1,6 +1,7 @@
 import logging
 from PySide6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QListWidget,
-                               QStackedWidget, QSizePolicy, QScrollArea, QFrame)
+                               QStackedWidget, QSizePolicy, QScrollArea, QFrame,
+                               QApplication)
 
 from src.core.session import CurrentSession
 from src.i18n import _, tr
@@ -24,9 +25,21 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Taj ERP")
-        # A starting size, not a constraint: setMinimumSize below keeps the
-        # window usable, and the layout handles the rest.
-        self.resize(1280, 800)
+        # Size to the available screen so the window never opens off-screen
+        # or larger than the display. Center it on first launch.
+        from PySide6.QtGui import QScreen
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is not None:
+            avail = screen.availableGeometry()
+            w = min(1280, avail.width() - 40)
+            h = min(800, avail.height() - 40)
+            self.resize(w, h)
+            # Center on screen
+            x = avail.x() + (avail.width() - w) // 2
+            y = avail.y() + (avail.height() - h) // 2
+            self.move(x, y)
+        else:
+            self.resize(1280, 800)
         self.setMinimumSize(scaled(900), scaled(560))
 
         self.setup_ui()

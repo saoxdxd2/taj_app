@@ -101,17 +101,24 @@ class MobileInboxWidget(QWidget):
         self.btn_pair.clicked.connect(self._on_pair)
         form.addRow("", self.btn_pair)
 
-        self.lbl_qr = QLabel()
-        self.lbl_qr.setAlignment(Qt.AlignCenter)
-        self.lbl_qr.setMinimumSize(260, 260)
-        self.lbl_qr.setMaximumSize(300, 300)
-        form.addRow("Pairing QR", self.lbl_qr)
-
         self.btn_delete_token = QPushButton("Delete agent token")
         self.btn_delete_token.clicked.connect(self._on_delete_token)
         form.addRow("", self.btn_delete_token)
 
         layout.addWidget(cfg)
+
+        # QR code displayed in its own centered area (not constrained by form layout)
+        qr_group = QGroupBox("Pairing QR")
+        qr_layout = QVBoxLayout(qr_group)
+        qr_layout.setAlignment(Qt.AlignCenter)
+        self.lbl_qr = QLabel()
+        self.lbl_qr.setAlignment(Qt.AlignCenter)
+        self.lbl_qr.setMinimumSize(320, 320)
+        qr_layout.addWidget(self.lbl_qr, alignment=Qt.AlignCenter)
+        self.lbl_qr_hint = QLabel("Click 'Create pairing session' to generate a QR code")
+        self.lbl_qr_hint.setAlignment(Qt.AlignCenter)
+        qr_layout.addWidget(self.lbl_qr_hint, alignment=Qt.AlignCenter)
+        layout.addWidget(qr_group)
 
         # Sync group
         sync = QGroupBox("Sync")
@@ -200,14 +207,23 @@ class MobileInboxWidget(QWidget):
     def _show_qr(self, text: str):
         try:
             import qrcode
-            img = qrcode.make(text)
+            qr = qrcode.QRCode(version=None, box_size=8, border=2,
+                               error_correction=qrcode.constants.ERROR_CORRECT_M)
+            qr.add_data(text)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
             buf = io.BytesIO()
             img.save(buf, format="PNG")
             pm = QPixmap()
             pm.loadFromData(buf.getvalue())
-            self.lbl_qr.setPixmap(pm.scaled(250, 250, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            # Scale to fit the label while keeping aspect ratio
+            target = min(self.lbl_qr.width() - 10, self.lbl_qr.height() - 10, 360)
+            if target < 200:
+                target = 360
+            self.lbl_qr.setPixmap(pm.scaled(target, target, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self.lbl_qr_hint.setText("Scan this QR code with your phone camera")
         except Exception as exc:
-            self.lbl_qr.setText(f"QR error: {exc}\n{text}")
+            self.lbl_qr.setText(f"QR error: {exc}")
 
     def _on_push(self):
         client = self._client()
