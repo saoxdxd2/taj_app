@@ -182,14 +182,14 @@ class MobileInboxWidget(QWidget):
             session = client.create_pairing_session()
             code = session.get("pairingCode", "")
             priv, pub = ensure_keypair()
-            payload = {
+            import urllib.parse
+            params = urllib.parse.urlencode({
                 "relay": self._relay_url,
                 "code": code,
-                "publicKey": public_key_b64(),
-                "version": 1,
-            }
-            import json as _json
-            qr_text = _json.dumps(payload)
+                "pk": public_key_b64(),
+                "v": "1",
+            })
+            qr_text = f"{self._relay_url}/pair?{params}"
             self._show_qr(qr_text)
             self.lbl_status.setText(f"Pairing session created. Code: {code}")
         except Exception as exc:
