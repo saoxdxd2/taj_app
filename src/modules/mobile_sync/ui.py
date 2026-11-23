@@ -103,6 +103,8 @@ class MobileInboxWidget(QWidget):
 
         self.lbl_qr = QLabel()
         self.lbl_qr.setAlignment(Qt.AlignCenter)
+        self.lbl_qr.setMinimumSize(260, 260)
+        self.lbl_qr.setMaximumSize(300, 300)
         form.addRow("Pairing QR", self.lbl_qr)
 
         self.btn_delete_token = QPushButton("Delete agent token")
@@ -203,7 +205,7 @@ class MobileInboxWidget(QWidget):
             img.save(buf, format="PNG")
             pm = QPixmap()
             pm.loadFromData(buf.getvalue())
-            self.lbl_qr.setPixmap(pm.scaled(200, 200, Qt.KeepAspectRatio))
+            self.lbl_qr.setPixmap(pm.scaled(250, 250, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         except Exception as exc:
             self.lbl_qr.setText(f"QR error: {exc}\n{text}")
 
