@@ -113,7 +113,7 @@ class MobileInboxWidget(QWidget):
         qr_layout.setAlignment(Qt.AlignCenter)
         self.lbl_qr = QLabel()
         self.lbl_qr.setAlignment(Qt.AlignCenter)
-        self.lbl_qr.setMinimumSize(320, 320)
+        self.lbl_qr.setFixedSize(400, 400)
         qr_layout.addWidget(self.lbl_qr, alignment=Qt.AlignCenter)
         self.lbl_qr_hint = QLabel("Click 'Create pairing session' to generate a QR code")
         self.lbl_qr_hint.setAlignment(Qt.AlignCenter)
@@ -217,10 +217,7 @@ class MobileInboxWidget(QWidget):
             pm = QPixmap()
             pm.loadFromData(buf.getvalue())
             # Scale to fit the label while keeping aspect ratio
-            target = min(self.lbl_qr.width() - 10, self.lbl_qr.height() - 10, 360)
-            if target < 200:
-                target = 360
-            self.lbl_qr.setPixmap(pm.scaled(target, target, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            self.lbl_qr.setPixmap(pm.scaled(380, 380, Qt.KeepAspectRatio, Qt.SmoothTransformation))
             self.lbl_qr_hint.setText("Scan this QR code with your phone camera")
         except Exception as exc:
             self.lbl_qr.setText(f"QR error: {exc}")

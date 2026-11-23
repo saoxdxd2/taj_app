@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         # Size to the available screen so the window never opens off-screen
         # or larger than the display. Center it on first launch.
         from PySide6.QtGui import QScreen
-        screen = self.screen() or QApplication.primaryScreen()
+        screen = QApplication.primaryScreen()
         if screen is not None:
             avail = screen.availableGeometry()
             w = min(1280, avail.width() - 40)
@@ -109,7 +109,14 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.finance_widget)
         self.stack.addWidget(self.sales_widget)
         self.stack.addWidget(self.analytics_widget)
-        self.stack.addWidget(self.mobile_widget)
+
+        # Mobile inbox is tall (config, sync, QR, inbox list). Wrap in a
+        # scroll area so nothing is clipped on smaller screens.
+        self.mobile_page = QScrollArea()
+        self.mobile_page.setWidgetResizable(True)
+        self.mobile_page.setFrameShape(QFrame.NoFrame)
+        self.mobile_page.setWidget(self.mobile_widget)
+        self.stack.addWidget(self.mobile_page)
 
         # Settings is taller than the window (backups, health, sync, users,
         # preferences...). Without a scroll container Qt squeezes the group
