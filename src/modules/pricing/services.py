@@ -45,15 +45,15 @@ def _base_price_for_channel(product: Product, channel: SaleChannel) -> Decimal:
     Returns the product's list price for a channel.
 
     The website has its own price column (migration c9e5f3b7d2a1); store
-    and mobile app share the in-store price.
+    and mobile app share the pinned/effective in-store price.
     """
     if channel == SaleChannel.WEBSITE:
         price = product.sale_price_website
         # A product priced for the store but not yet published on the website
-        # falls back to the store price rather than selling at zero.
+        # falls back to the base ERP price rather than selling at zero.
         if price and price > 0:
             return price
-    return product.sale_price
+    return product.effective_price
 
 
 class PricingService:

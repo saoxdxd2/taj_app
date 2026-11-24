@@ -1,0 +1,25 @@
+{
+  "agent": "E",
+  "pages": [10, 11],
+  "records": [
+    {"n": 132, "category": "Filtration", "brand": "Krohler", "sku": "TFU-83MI-UF", "spec": "Column Water Dispenser (Distributeur d'eau) with 4-Filter Reverse Osmosis, Inox", "qty": 2, "status": "Verified", "ledger": "P7 (TFU-83N1)", "page": 10, "notes": ""},
+    {"n": 133, "category": "Filtration", "brand": "TCL", "sku": "TY-LW8110T", "spec": "Water Dispenser (Distributeur d'eau)", "qty": 1, "status": "Check carton", "ledger": "P7", "page": 10, "notes": ""},
+    {"n": 134, "category": "Filtration", "brand": "Eco Aqua", "sku": "[No code]", "spec": "Water Filter (Filtre d'eau) — no model code written on sheet", "qty": 4, "status": "Check box", "ledger": "P8", "page": 10, "notes": ""},
+    {"n": 135, "category": "Filtration", "brand": "Tatch", "sku": "[No code]", "spec": "Water Filter (Filtre d'eau) — no model code written on sheet", "qty": 1, "status": "Check box", "ledger": "P8", "page": 10, "notes": ""},
+    {"n": 136, "category": "Small Appl.", "brand": "Bonomi", "sku": "YT2009JL", "spec": "Electric Barbecue Grill", "qty": 11, "status": "Check carton", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 137, "category": "Small Appl.", "brand": "Severin", "sku": "KA 5997", "spec": "Newspresa 20-Bar Espresso Machine, 1350W Thermoblock, 1L Tank, Steam Wand", "qty": 3, "status": "Verified", "ledger": "P1 (note: 629)", "page": 10, "notes": ""},
+    {"n": 138, "category": "Small Appl.", "brand": "Severin", "sku": "[No code]", "spec": "Coffee Machine — no model code written on sheet", "qty": 1, "status": "Check box", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 139, "category": "Small Appl.", "brand": "Krohler", "sku": "PEAF9512", "spec": "Air Fryer", "qty": 2, "status": "Check carton", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 140, "category": "Small Appl.", "brand": "Krohler", "sku": "PEAF-9811", "spec": "8.5L Oil-Free Air Fryer, 2000W, 80–200°C, 10 Auto Programs, LED Touchscreen", "qty": 1, "status": "Verified", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 141, "category": "Small Appl.", "brand": "Krohler", "sku": "PEAF9411", "spec": "Air Fryer", "qty": 1, "status": "Check carton", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 142, "category": "Small Appl.", "brand": "Fitco", "sku": "FAF1028DSS", "spec": "Air Fryer", "qty": 2, "status": "Check carton", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 143, "category": "Small Appl.", "brand": "Tefal", "sku": "EY855D10", "spec": "Easy Fry Mega 7.5L Air Fryer, 2020W, 8 Preset Programs, Digital Touchscreen, Inox/Black", "qty": 1, "status": "Verified", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 144, "category": "Small Appl.", "brand": "Genial", "sku": "GBM5130SBS", "spec": "Stand Mixer / Dough Kneader (عجانة)", "qty": 2, "status": "Check carton", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 145, "category": "Small Appl.", "brand": "Genial", "sku": "KTSM6423", "spec": "Dough Kneader (عجانة)", "qty": 1, "status": "Check carton", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 146, "category": "Small Appl.", "brand": "Daiko", "sku": "RP9590K", "spec": "8L 1800W Stand Mixer / Dough Kneader (عجانة), Stainless Steel Bowl", "qty": 1, "status": "Verified", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 147, "category": "Small Appl.", "brand": "Tatch", "sku": "007117", "spec": "Dough Kneader (عجانة) — verify 007117 vs OU7117 on carton", "qty": 1, "status": "Check carton", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 148, "category": "Small Appl.", "brand": "Unspecified", "sku": "TH212", "spec": "7L Stand Mixer / Dough Kneader (عجانة) — no brand written on sheet", "qty": 2, "status": "Check box", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 149, "category": "Small Appl.", "brand": "Taurus", "sku": "[No code]", "spec": "Food Processor / Kitchen Robot — no model code written on sheet", "qty": 1, "status": "Check box", "ledger": "P6", "page": 10, "notes": ""},
+    {"n": 150, "category": "Small Appl.", "brand": "Unspecified", "sku": "CH020A", "spec": "Electric Hotplate (Réchaud électrique) — no brand written on sheet", "qty": 2, "status": "Check box", "ledger": "P6", "page": 11, "notes": ""}
+  ]
+}

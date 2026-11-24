@@ -44,6 +44,7 @@ CHECKPOINT_KEYS = frozenset({
     "last_pushed_version",
     "last_pushed_revision",
     "last_pushed_at",
+    "last_pushed_pins",
     "last_pulled_version",
     "last_pulled_at",
     "processed_scan_ids",
@@ -283,6 +284,17 @@ def _clean_checkpoint(state: Dict[str, Any]) -> Dict[str, Any]:
                     seen.add(rid)
                 if ids:
                     clean[key] = ids[-MAX_PROCESSED_IDS:]
+        elif key == "last_pushed_pins":
+            pins: Dict[str, Any] = {}
+            if isinstance(value, dict):
+                for sku, pin in value.items():
+                    if not isinstance(sku, str) or not sku.strip():
+                        continue
+                    if pin is None or isinstance(pin, str):
+                        pins[sku.strip()] = pin
+                    if len(pins) >= MAX_BATCH_ITEMS:
+                        break
+            clean[key] = pins
         elif key == "last_scan_id":
             rid = normalize_scan_id(value)
             if rid:
@@ -601,14 +613,105 @@ def push_catalog(context, client, version: Optional[int] = None,
         result.get("revision"), payload["baseRevision"],
     ) if isinstance(result, dict) else payload["baseRevision"]
     state["last_pushed_at"] = _now_iso()
+    # Remember exactly what this ERP push said about pins. A later pull only
+    # applies pins that differ from this snapshot; otherwise a pin set locally
+    # after the push would be silently cleared by old relay data.
+    pushed_pins: Dict[str, Any] = {}
+    for item in payload.get("products", []):
+        if not isinstance(item, dict):
+            continue
+        sku = item.get("sku")
+        if isinstance(sku, str) and sku.strip():
+            pushed_pins[sku.strip()] = item.get("pinned_price", "")
+    state["last_pushed_pins"] = pushed_pins
     save_state(state)
     logger.info("Pushed catalog version %s (%s products, revision %s).",
                 payload["version"], len(payload["products"]), state["last_pushed_revision"])
     return result
 
 
-def pull_catalog(client, since_version: int = 0) -> Tuple[int, List[Dict[str, Any]]]:
-    """Pull one catalog batch; 304 means the checkpoint is still current."""
+def apply_remote_pins(products: List[Dict[str, Any]], context=None,
+                      session=None) -> int:
+    """Apply pins that changed since the last ERP push, by SKU only.
+
+    ``pinned_price: null`` is legacy/unknown state and is ignored. ``""``
+    clears a pin only when the last push said that SKU was pinned; a decimal
+    sets it when it differs from the last pushed value. This stops old relay
+    data from clearing a pin that was entered locally after the last push.
+    Duplicate SKUs use last-value-wins so the audit listener logs once.
+    """
+    if not products:
+        return 0
+
+    from src.core.context import RequestContext
+    from src.core.session import CurrentSession
+    from src.database.session import SessionLocal
+    from src.modules.inventory.models import Product
+    from src.modules.inventory.services import InventoryService
+
+    if context is None:
+        try:
+            context = CurrentSession.get_context()
+        except RuntimeError:
+            # Sync is a trusted background operation. Attribution in the audit
+            # listener degrades to null, but the pin must not be lost.
+            context = RequestContext(
+                user_id="0", username="mobile-sync", role="System",
+                permissions=set(),
+            )
+
+    state = load_state()
+    raw_pushed = state.get("last_pushed_pins")
+    has_pushed_snapshot = isinstance(raw_pushed, dict)
+    pushed_pins = raw_pushed if has_pushed_snapshot else {}
+
+    pins_by_sku: Dict[str, Any] = {}
+    for product in products:
+        if not isinstance(product, dict) or "pinned_price" not in product:
+            continue
+        sku = product.get("sku")
+        if not isinstance(sku, str) or not sku.strip():
+            continue
+        sku = sku.strip()
+        remote_pin = product["pinned_price"]
+        if remote_pin is None:
+            # Legacy/unknown state: never clear a pin we cannot interpret.
+            continue
+        if not has_pushed_snapshot and remote_pin == "":
+            # Old checkpoint: no safe way to tell an explicit clear from an
+            # ERP snapshot we pushed ourselves. Preserve local pins.
+            continue
+        if sku in pushed_pins and remote_pin == pushed_pins[sku]:
+            continue
+        pins_by_sku[sku] = remote_pin
+
+    applied = 0
+    for sku, remote_pin in pins_by_sku.items():
+        lookup_session = session if session is not None else SessionLocal()
+        try:
+            product_id = lookup_session.query(Product.id).filter(Product.sku == sku).scalar()
+        finally:
+            if session is None:
+                lookup_session.close()
+        if product_id is None:
+            logger.info("Remote pin skipped: SKU %s is not in the local catalog.", sku)
+            continue
+        InventoryService.set_pinned_price(
+            context=context, session=session, product_id=product_id,
+            pinned_price=remote_pin, verify_permission=False,
+        )
+        applied += 1
+    return applied
+
+
+def pull_catalog(client, since_version: int = 0, context=None,
+                 session=None) -> Tuple[int, List[Dict[str, Any]]]:
+    """Pull one catalog batch; 304 means the checkpoint is still current.
+
+    A successful pulled snapshot also applies phone-entered pins by SKU.
+    The checkpoint only advances after that apply succeeds, so a failed
+    write can be retried on the next pull.
+    """
     data = client.get_catalog(since_version)
     if data is None:  # HTTP 304
         return since_version, []
@@ -619,6 +722,7 @@ def pull_catalog(client, since_version: int = 0) -> Tuple[int, List[Dict[str, An
     products = data.get("products", [])
     if not isinstance(products, (list, tuple)):
         products = []
+    apply_remote_pins(list(products), context=context, session=session)
     state = load_state()
     state["last_pulled_version"] = new_version
     state["last_pulled_at"] = _now_iso()

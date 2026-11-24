@@ -1,0 +1,9 @@
+# OPTIONAL retail price input. Empty sale_price = NEEDS PRICING, NOT an import blocker.
+# Import stages these SKUs at sale_price=0.00, pinned_price unset, state DRAFT; they stay hidden from sales until a pin is entered from ERP/phone.
+# Never invent, infer, default-from-supplier, or copy TCL/ROWA pro-forma prices into retail sale_price.
+# Fill sale_price from an approved retail source before pricing; vat_rate may stay empty to use the ERP default 20.00 with a warning.
+# Decimal comma is accepted in a quoted CSV field (e.g. "10,50" -> 10.50); VAT is a percentage in 0..100.
+sku,sale_price,vat_rate
+UA50DU7000U,,
+UA43T5300AU,,
+F710TLG,,

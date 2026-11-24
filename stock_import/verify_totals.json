@@ -1,0 +1,123 @@
+{
+  "agent": "F",
+  "checks": [
+    {
+      "name": "summary_sku_count_sum",
+      "expected": "41 + 24 + 28 + 27 + 15 + 15 = 150 SKUs",
+      "computed": "150",
+      "result": "PASS",
+      "note": "Page 1 summary table category SKU counts sum to the printed GRAND TOTAL of 150."
+    },
+    {
+      "name": "summary_unit_count_sum",
+      "expected": "66 + 63 + 54 + 42 + 40 + 32 = 297 units",
+      "computed": "297",
+      "result": "PASS",
+      "note": "Page 1 summary table category units sum to the printed GRAND TOTAL of 297."
+    },
+    {
+      "name": "summary_category_totals_vs_catalog_rows",
+      "expected": "Laundry & Dishwashers 41/66; TV & Audio 24/63; Refrigerators & Freezers 28/54; Cooking & Ventilation 27/42; Water Heaters & Filtration 15/40; Small Appliances 15/32",
+      "computed": "Parsed rows give exactly: Laundry(36)+Dishwashers(5)=41 / 66; TV & Audio=24 / 63; Refrigerators(25)+Freezers(3)=28 / 54; Cooking(23)+Ventilation(4)=27 / 42; Water Heaters(11)+Filtration(4)=15 / 40; Small Appliances=15 / 32",
+      "result": "PASS",
+      "note": "Every summary category total is reproduced by the 150 numbered catalog rows when the sub-categories are grouped as the summary does."
+    },
+    {
+      "name": "ledger_sheet_totals_sum",
+      "expected": "P1 47, P2 34, P3 19, P4 54, P5 28, P6 31, P7 49, P8 35; 47+34+19+54+28+31+49+35 = 297",
+      "computed": "297",
+      "result": "PASS",
+      "note": "Handwritten ledger reconciliation values on page 1 (confirmed by OCR of page-01.png) arithmetically equal 297 and match the printed equation."
+    },
+    {
+      "name": "ledger_totals_vs_row_ledger_sources",
+      "expected": "P1 47, P2 34, P3 19, P4 54, P5 28, P6 31, P7 49, P8 35 (sum 297)",
+      "computed": "P1 47, P2 34, P3 19, P4 54, P5 28, P6 31, P7 49, P8 35 (sum 297)",
+      "result": "PASS",
+      "note": "Independently derived by allocating each catalog row's Qty to the page(s) in its Ledger Source column (using explicit ×N split markers where present); all 150 rows resolved with zero unallocated units."
+    },
+    {
+      "name": "status_split_arithmetic",
+      "expected": "89 SKUs verified + 61 SKUs flagged = 150",
+      "computed": "150",
+      "result": "PASS",
+      "note": "The printed split is arithmetically valid; see status_split_vs_catalog_rows for the row-level mismatch."
+    },
+    {
+      "name": "status_split_vs_catalog_rows",
+      "expected": "89 Verified / 61 Check (carton or label)",
+      "computed": "95 Verified / 55 Check (45 Check carton + 10 Check box) = 150",
+      "result": "FAIL",
+      "note": "The catalog rows do not contain the printed split: 6 fewer Verified and 6 more Check than claimed. OCR of all 11 page images independently found exactly 45 'Check carton' and 10 'Check box' tokens, matching the extracted text. No subset rule (e.g. Verified rows carrying verify/retour/note annotations) yields exactly 89/61 (8 such annotated Verified rows would give 87/63). The 89/61 figure appears stale or based on an undocumented classification."
+    },
+    {
+      "name": "grand_total_page_11",
+      "expected": "VERIFIED GRAND TOTAL: 150 deduplicated SKUs / 297 units",
+      "computed": "150 parsed rows / 297 parsed units; OCR of page-11.png shows row 150 Qty 2 and 'VERIFIED GRAND TOTAL - 150 DEDUPLICATED SKUs ... 297'",
+      "result": "PASS",
+      "note": "Consistent with checks 1-5 and with the parsed row data."
+    },
+    {
+      "name": "corrections_duplicate_and_drift_consistency",
+      "expected": "14 duplicate rows purged (-20 phantom units); prior summary had 1-unit drift 298 -> 297",
+      "computed": "14 duplicate model names are explicitly listed; 298 - 20 = 278 only conflicts with 297 if the 298 included the 20 phantom units, which the text does not state",
+      "result": "PASS",
+      "note": "Internally consistent as staged corrections: the -20 phantom units were removed when deduplicating the raw ledger (implied pre-purge total 317 units / 164 rows), and the 298 -> 297 item is a separate arithmetic drift in the prior deduplicated summary. The document gives no pre-purge totals, so -20 cannot be independently verified. All 14 named duplicate models still appear exactly once in the final 150-row catalog, consistent with deduplication."
+    },
+    {
+      "name": "derived_row_count_and_qty_sum",
+      "expected": "150 numbered rows (1..150), Qty sum 297",
+      "computed": "150 rows, no gaps, no duplicate row numbers, Qty sum 297",
+      "result": "PASS",
+      "note": "Deterministic parse of stock_register_extracted.txt: row numbers 1..150 all present exactly once; each Qty taken as the last integer line before the Catalog Status cell. High confidence."
+    },
+    {
+      "name": "summary_share_percentages",
+      "expected": "22.2% + 21.2% + 18.2% + 14.1% + 13.5% + 10.8% = 100.0%",
+      "computed": "100.0%",
+      "result": "PASS",
+      "note": "Each share matches its category units / 297 rounded to 1 decimal place."
+    },
+    {
+      "name": "unresolved_possible_duplicate_variant",
+      "expected": "0 duplicate rows claimed, but checklist flags 1 possible duplicate pair (#39 / #40)",
+      "computed": "Rows 39 and 40 remain separate (1 unit each); if merged into the checklist's stated '1 SKU (2 units)', totals would become 149 SKUs / 297 units",
+      "result": "PASS",
+      "note": "Current printed totals are unaffected because the merge is only a checklist item, but it remains an open risk to the 150/297 target."
+    }
+  ],
+  "expected_final": {
+    "skus": 150,
+    "units": 297,
+    "by_ledger": {
+      "P1": 47,
+      "P2": 34,
+      "P3": 19,
+      "P4": 54,
+      "P5": 28,
+      "P6": 31,
+      "P7": 49,
+      "P8": 35
+    },
+    "by_category": {
+      "Laundry & Dishwashers": {"skus": 41, "units": 66},
+      "TV & Audio": {"skus": 24, "units": 63},
+      "Refrigerators & Freezers": {"skus": 28, "units": 54},
+      "Cooking & Ventilation": {"skus": 27, "units": 42},
+      "Water Heaters & Filtration": {"skus": 15, "units": 40},
+      "Small Appliances": {"skus": 15, "units": 32}
+    }
+  },
+  "derived_from_text": {
+    "row_count": 150,
+    "qty_sum": 297,
+    "confidence": "high"
+  },
+  "discrepancies": [
+    "Status split mismatch: page 1 says 89 Verified / 61 Check, but the 150 catalog rows are 95 Verified / 55 Check (45 carton + 10 box). The sum 150 is correct; the split is off by 6 SKUs in each direction and cannot be derived from the rows.",
+    "Corrections wording ambiguity: '14 Duplicate Rows Purged (-20 Phantom Units)' and 'prior summary 1-unit drift (298 -> 297)' describe different stages; they conflict only if one assumes the 298 already excluded the phantom units. The document never states the pre-purge totals, so -20 is not independently verifiable, but there is no arithmetic contradiction under the staged reading.",
+    "Unresolved possible duplicate: page 11 checklist flags #39 Krohler KRG-3730-COMB-NF-G and #40 Krohler KRG370combi NFG as possibly the same barcode. Merging them as the checklist states ('1 SKU (2 units)') would produce 149 SKUs / 297 units — units stay 297 because both physical units are retained; only the row count falls.",
+    "Page 1 states '0 duplicate rows' while page 11 flags a possible duplicate pair; not a current numeric contradiction, but the duplicate status is not fully resolved.",
+    "Audit limitation: this model cannot visually render PNG images. Page images were verified via local Windows OCR instead. OCR confirmed the page 1 summary figures, the printed ledger equation, the 89/61 printed split, the 14-duplicate/-20 and 298->297 wording, and the page 11 grand total of 150 SKUs / 297 units. OCR independently confirmed 55 Check status tokens but missed 6 Verified tokens across pages 3, 4, 5, 8, 9 and 10, so the row-level 95 Verified count relies on the extracted text parse (which is internally consistent and matches every other total)."
+  ]
+}

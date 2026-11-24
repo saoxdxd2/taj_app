@@ -1,0 +1,168 @@
+{
+  "rows": 150,
+  "units": 297,
+  "status_counts": {
+    "Verified": 95,
+    "Check carton": 45,
+    "Check box": 10
+  },
+  "category_counts": {
+    "TV & Audio": 24,
+    "Refrigerators": 25,
+    "Freezers": 3,
+    "Laundry": 36,
+    "Dishwashers": 5,
+    "Cooking": 23,
+    "Ventilation": 4,
+    "Water Heaters": 11,
+    "Filtration": 4,
+    "Small Appl.": 15
+  },
+  "category_units": {
+    "TV & Audio": 63,
+    "Refrigerators": 48,
+    "Freezers": 6,
+    "Laundry": 59,
+    "Dishwashers": 7,
+    "Cooking": 38,
+    "Ventilation": 4,
+    "Water Heaters": 32,
+    "Filtration": 8,
+    "Small Appl.": 32
+  },
+  "ledger_units_allocated": {
+    "P4": 54,
+    "P8": 35,
+    "P1": 47,
+    "P2": 34,
+    "P3": 19,
+    "P7": 49,
+    "P5": 28,
+    "P6": 31
+  },
+  "ledger_rows_not_allocated": [],
+  "duplicate_real_skus": {},
+  "placeholder_sku_rows": [
+    {
+      "n": 86,
+      "sku": "[No code]",
+      "brand": "Tatch",
+      "qty": 1,
+      "spec": "10 kg Washing Machine (no model code written on sheet)"
+    },
+    {
+      "n": 120,
+      "sku": "[No code]",
+      "brand": "General",
+      "qty": 1,
+      "spec": "Range Hood / Hotte (reclassified from Refrigerators; written \"hot General\", no code)"
+    },
+    {
+      "n": 125,
+      "sku": "[No code]",
+      "brand": "Junkers",
+      "qty": 1,
+      "spec": "6L Gas Water Heater (no model code written on sheet)"
+    },
+    {
+      "n": 126,
+      "sku": "[No code]",
+      "brand": "Chaffoteaux",
+      "qty": 5,
+      "spec": "6L Water Heater (no model code written on sheet)"
+    },
+    {
+      "n": 134,
+      "sku": "[No code]",
+      "brand": "Eco Aqua",
+      "qty": 4,
+      "spec": "Water Filter (Filtre d'eau) — no model code written on sheet"
+    },
+    {
+      "n": 135,
+      "sku": "[No code]",
+      "brand": "Tatch",
+      "qty": 1,
+      "spec": "Water Filter (Filtre d'eau) — no model code written on sheet"
+    },
+    {
+      "n": 138,
+      "sku": "[No code]",
+      "brand": "Severin",
+      "qty": 1,
+      "spec": "Coffee Machine — no model code written on sheet"
+    },
+    {
+      "n": 149,
+      "sku": "[No code]",
+      "brand": "Taurus",
+      "qty": 1,
+      "spec": "Food Processor / Kitchen Robot — no model code written on sheet"
+    }
+  ],
+  "purged_skus_retained_once": {
+    "BNF601341VNA": 1,
+    "BINF 601341 XNA": 1,
+    "KFL-6.1-SK-V": 1,
+    "KPB-8.2-CX": 1,
+    "KPB-7.1-SE": 1,
+    "MLV1540IG": 1,
+    "CK6060-DGLITDIN": 1,
+    "MOK-MK-20-BL": 1,
+    "TFU-83MI-UF": 1,
+    "CS5057R": 1,
+    "GRL 70": 1,
+    "P70H20EL": 1,
+    "GP-6L": 1,
+    "JSD12-6A": 1
+  },
+  "flagged_rows_count": 16,
+  "documented_resolutions_count": 25,
+  "documented_resolutions": [
+    "row 10: Ledger source wrapped across lines in PDF (\"ret.)\" on 4th line); joined into one cell.",
+    "row 11: SKU wrapped across two lines in PDF (\"UA65U8000HU\" + \"XMV\"); joined.",
+    "row 12: SKU wrapped across two lines in PDF (\"UA55U8000HU\" + \"XMV\"); joined.",
+    "row 15: SKU wrapped across two lines in PDF (\"UA40T5300AU\" + \"XMV\"); joined.",
+    "row 16: Ledger source wrapped in PDF; \")\" moved to line 3. Joined as \"P8 (QNE70B)\".",
+    "row 24: Ledger source wrapped across two lines in PDF; joined.",
+    "row 35: Ledger source wrapped across three lines (\"P4\" + \"(RDSA32\" + \"5X)\") and joined. Ledger shorthand is RDSA325X while the verified SKU is RDSA32SX; both copied exactly as printed.",
+    "row 38: SKU wrapped across two lines (\"KRG-4730-NF-\" + \"G\"); joined without a space (mid-code break after a hyphen).",
+    "row 39: SKU wrapped across two lines (\"KRG-3730-\" + \"COMB-NF-G\"); joined without a space (mid-code break after a hyphen).",
+    "row 40: SKU wrapped across two lines (\"KRG370combi\" + \"NFG\"); joined with a space because the register itself writes this SKU as \"KRG370combi NFG\" in the page-11 verification checklist.",
+    "row 41: Spec contains an en dash (U+2013) in \"91L–100L\".",
+    "row 42: SKU wrapped across two lines (\"FIT-\" + \"463NTXTRA\") and joined without a space. Ledger source wrapped onto a second line as \"(FIF463)\"; joined with a space after P2, preserving the ledger's FIF463 spelling.",
+    "row 43: SKU wrapped across two lines (\"TINS 551221\" + \"SNA\"); joined with a space because the code itself contains a space (consistent with the register's other spaced Indesit/Whirlpool codes).",
+    "row 44: SKU wrapped across two lines (\"BNF601341VN\" + \"A\"); joined without a space, matching the spelling \"BNF601341VNA\" used in the register's page-1 correction notes.",
+    "row 45: SKU wrapped across two lines (\"BINF 601341\" + \"XNA\"); joined with a space, matching the spelling \"BINF 601341 XNA\" used in the register's page-1 correction notes.",
+    "row 46: SKU wrapped across two lines (\"UINF601021KM\" + \"A\"); joined without a space (mid-code break).",
+    "row 47: Brand wrapped across two lines (\"Arthur\" + \"Martin\"); joined with a space, matching the brand as written in the register's page-11 checklist.",
+    "row 49: SKU wrapped across two lines (\"WTMS 551221\" + \"XNA\"); joined with a space because the code itself contains spaces.",
+    "row 56: SKU wrapped across two lines (\"P607FLB /\" + \"F607FLB\"); joined with a space, preserving the slash and the spaces around it.",
+    "row 60: Ledger source wrapped across three lines (\"P7\" + \"(F312TL\" + \"L)\") and joined as \"P7 (F312TLL)\"; ledger shorthand ends in TLL while the verified SKU is F312TLG.",
+    "row 67: SKU printed on two lines ('B1W73235WM' + 'A') in the SKU cell; joined without a space per the wrap rule.",
+    "row 74: Ledger annotation wraps as '(KP1395' / 'CX)'; joined as one model code with no space.",
+    "row 76: Ledger annotation wraps as '(KEL61S' / 'KV)'; joined as one model code with no space.",
+    "row 94: Ledger annotation wraps as '(CS5057' / 'RG)'; joined as one model code with no space.",
+    "row 96: SKU cell has 'CKS6060BD' on line 1 and 'ELITE' on line 2; treated as a SKU containing a space (cf. row 71 'REF. GAN1100') rather than a separate annotation."
+  ],
+  "source_document_discrepancies": [
+    "SOURCE DOCUMENT - status_split_vs_catalog_rows: The catalog rows do not contain the printed split: 6 fewer Verified and 6 more Check than claimed. OCR of all 11 page images independently found exactly 45 'Check carton' and 10 'Check box' tokens, matching the extracted text. No subset rule (e.g. Verified rows carrying verify/retour/note annotations) yields exactly 89/61 (8 such annotated Verified rows would give 87/63). The 89/61 figure appears stale or based on an undocumented classification."
+  ],
+  "audit_notes": [
+    "dedup: Lines 52-55 claim 14 duplicate rows were purged with -20 phantom units, but all 14 listed SKUs are still present exactly once each as Verified SKU values in the 150-row table: BNF601341VNA row 44 (lines 587-588), BINF 601341 XNA row 45 (lines 598-599), KFL-6.1-SK-V row 76 (line 953), KPB-8.2-CX row 77 (line 966), KPB-7.1-SE row 78 (line 976), MLV1540IG row 93 (line 1139), CK6060-DGLITDIN row 95 (lines 1161-1162), MOK-MK-20-BL row 100 (line 1229), TFU-83MI-UF row 132 (line 1608), CS5057R row 94 (line 1150), GRL 70 row 107 (line 1301), P70H20EL row 108 (line 1310), GP-6L row 130 (line 1571), JSD12-6A row 131 (line 1581). Their quantities sum to exactly 20 units (same as the claimed -20 phantom units), so those 20 units remain inside the 297-unit grand total. Caveat: this is consistent with the narrow reading that only the extra duplicate COPIES were purged and one row per SKU was retained; the prior draft is not in the source, so the purge cannot be independently verified. What must be true: the final 150-row catalog contains all 14 SKUs and all 20 of those units; removing them would give 136 rows / 277 units and break the stated totals.",
+    "dedup: Lines 5 and 1815 claim '0 duplicate rows' / '0 Duplicates'. At the literal string level, '[No code]' is printed as the Verified SKU value in 8 rows: 86 (line 1069), 120 (line 1450), 125 (line 1512), 126 (line 1524), 134 (line 1629), 135 (line 1639), 138 (line 1669), 149 (line 1777). These are missing-code placeholders rather than real SKUs; after excluding them, there are no duplicate SKU values in the 150 rows.",
+    "dedup: No other discrepancies found: row numbers are contiguous 1..150 with no gaps or repeats; the 3 merge source codes appear only in the corrections text (lines 61-62) and never as standalone table rows; the 3 brand corrections and 2 range-hood reclassifications match their table rows; total quantity sums to 297 and category counts match the page-1 summary.",
+    "flags: Page-1 summary claims '89 SKUs matched to verified catalog specs' and '61 SKUs flagged for carton / label check', but the 150-row table actually has 95 Verified and 55 Check rows (45 Check carton + 10 Check box). Raw text token counts independently confirm 95/45/10. Use the table counts, not the page-1 summary.",
+    "flags: #129 (checklist P7, 'quantity scribbled over; counted as 1'): table row qty 1, Verified, ledger 'P7 (check qty)'. The table carries a 'check qty' note but does not itself say the quantity was scribbled over; qty 1 matches the checklist.",
+    "flags: #74 (checklist P8, 'quantity overwritten; counted as 1'): table row qty 1, Verified, ledger 'P8 (KP1395 CX)'. No overwritten-quantity annotation appears in the table row; only the alternate code KP1395 CX. Qty 1 matches the checklist.",
+    "flags: #10: checklist says both return items were 'marked retour on the manual sheet', but this row's ledger reads 'P2 (×1) + P4 (×2) + P8 (×1 ret.)' (abbreviated 'ret.') and its description says '1 unit marked Return'. Only #6 literally reads 'P8 (retour)'. Exclusion scope per document: 1 of 4 units for #10; full qty 1 for #6.",
+    "flags: Checklist page references are handwritten-ledger sheet numbers, not PDF page numbers: #6/#10 listed P8 appear on PDF p.2, #40 listed P8 and #39 listed P3 both appear on PDF p.4, #74 listed P8 appears on PDF p.6, #86 on PDF p.7, #120/#125/#126 on PDF p.9, #134/#135/#138/#148/#149 on PDF p.10, #129 listed P7 appears on PDF p.9, #150 on PDF p.11. The 'page' field in this JSON is the PDF page; the ledger sheet is in 'ledger' / 'checklist_page_ref'.",
+    "flags: Line-wrap artifacts in extracted text (not data errors): #39 'KRG-3730- / COMB-NF-G', #40 'KRG370combi / NFG', #126 brand 'Chaffotea / ux', #148 and #150 brand 'Unspecifie / d', #44 'BNF601341VN / A', #46 'UINF601021KM / A', #96 'CKS6060BD / ELITE', and #119/#120 ledger 'P8 (reclassifi / ed)'. Values above are the unwrapped printed values.",
+    "flags: No quantity discrepancy found for #126 (checklist 5 units; table 5), #134 (checklist 4 units; table 4), #6 (checklist 1 unit; table 1), #10 (checklist 1 of 4 units; table qty 4 with 1 marked ret.), or the duplicate pair #39+#40 (1+1=2 units as the checklist's merge target).",
+    "flags: Agent limitation: page-11.png could not be visually decoded by this model (image input unsupported). The page-11 checklist was read from extracted text lines 1817-1831; all table rows were independently parsed from the full extracted text (150/150 rows parsed with a status)."
+  ],
+  "blockers": [
+    "8 rows have placeholder SKUs and would collapse on import: [86, 120, 125, 126, 134, 135, 138, 149]"
+  ],
+  "RESULT": "DO NOT IMPORT - BLOCKERS PRESENT"
+}

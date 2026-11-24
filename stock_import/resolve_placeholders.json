@@ -1,0 +1,140 @@
+{
+  "agent": "I",
+  "scheme": "Deterministic internal-placeholder format: PH-<NNN>-<CAT3>-<BRD3>-<LEDGER>. 'PH-' is a fixed marker meaning INTERNAL PLACEHOLDER ONLY (never a manufacturer SKU). <NNN> = canonical catalog row number zero-padded to 3 digits. <CAT3> = first 3 ASCII alphanumerics of the category, uppercased. <BRD3> = first 3 ASCII alphanumerics of the brand, uppercased. <LEDGER> = the Pn sheet token extracted from the ledger field (P1..P8). Every component is derived solely from already-audited catalog fields; no model number is invented or implied. Codes are ASCII-only and at most 24 characters.",
+  "checks": [
+    {
+      "name": "catalog_row_count_150",
+      "result": "PASS",
+      "detail": "len(catalog) = 150"
+    },
+    {
+      "name": "catalog_units_297",
+      "result": "PASS",
+      "detail": "sum(qty) = 297"
+    },
+    {
+      "name": "placeholder_rows_match_expected",
+      "result": "PASS",
+      "detail": "rows with sku '[No code]' = [86, 120, 125, 126, 134, 135, 138, 149]; expected [86, 120, 125, 126, 134, 135, 138, 149]"
+    },
+    {
+      "name": "all_affected_status_check_box",
+      "result": "PASS",
+      "detail": "statuses = {86: 'Check box', 120: 'Check box', 125: 'Check box', 126: 'Check box', 134: 'Check box', 135: 'Check box', 138: 'Check box', 149: 'Check box'}"
+    },
+    {
+      "name": "real_sku_count_142",
+      "result": "PASS",
+      "detail": "real SKUs = 142"
+    },
+    {
+      "name": "proposed_codes_mutually_distinct",
+      "result": "PASS",
+      "detail": "8 codes, unique count = 8; codes = ['PH-086-LAU-TAT-P5', 'PH-120-VEN-GEN-P8', 'PH-125-WAT-JUN-P5', 'PH-126-WAT-CHA-P1', 'PH-134-FIL-ECO-P8', 'PH-135-FIL-TAT-P8', 'PH-138-SMA-SEV-P6', 'PH-149-SMA-TAU-P6']"
+    },
+    {
+      "name": "codes_ascii",
+      "result": "PASS",
+      "detail": "all codes contain only ASCII characters"
+    },
+    {
+      "name": "codes_len_le_24",
+      "result": "PASS",
+      "detail": "lengths = [17, 17, 17, 17, 17, 17, 17, 17]; max = 17"
+    },
+    {
+      "name": "placeholder_prefix_PH",
+      "result": "PASS",
+      "detail": "all codes start with fixed marker 'PH-' (INTERNAL PLACEHOLDER)"
+    },
+    {
+      "name": "no_collision_with_real_skus",
+      "result": "PASS",
+      "detail": "compared 8 codes vs 142 real SKUs case-insensitively; collisions = []"
+    },
+    {
+      "name": "substituted_row_count_150",
+      "result": "PASS",
+      "detail": "rows = 150"
+    },
+    {
+      "name": "substituted_units_297",
+      "result": "PASS",
+      "detail": "units = 297"
+    },
+    {
+      "name": "no_real_sku_altered",
+      "result": "PASS",
+      "detail": "real SKUs changed = []"
+    }
+  ],
+  "rows": [
+    {
+      "n": 86,
+      "original_sku": "[No code]",
+      "proposed_internal_sku": "PH-086-LAU-TAT-P5",
+      "reason": "Ledger sheet P5 records a Tatch 10 kg washing machine with no model code written on the handwritten sheet; this internal placeholder keeps the row distinct on import without asserting any manufacturer SKU.",
+      "physical_label_check_required": true
+    },
+    {
+      "n": 120,
+      "original_sku": "[No code]",
+      "proposed_internal_sku": "PH-120-VEN-GEN-P8",
+      "reason": "Ventilation row reclassified from Refrigerators on ledger P8 (written 'hot General', no code); internal placeholder preserves identity until the box label/barcode is physically checked.",
+      "physical_label_check_required": true
+    },
+    {
+      "n": 125,
+      "original_sku": "[No code]",
+      "proposed_internal_sku": "PH-125-WAT-JUN-P5",
+      "reason": "Ledger sheet P5 records a Junkers 6L gas water heater with no model code written on the sheet; internal placeholder avoids inventing a model number.",
+      "physical_label_check_required": true
+    },
+    {
+      "n": 126,
+      "original_sku": "[No code]",
+      "proposed_internal_sku": "PH-126-WAT-CHA-P1",
+      "reason": "Ledger sheet P1 records a Chaffoteaux 6L water heater with no model code written on the sheet; internal placeholder avoids inventing a model number.",
+      "physical_label_check_required": true
+    },
+    {
+      "n": 134,
+      "original_sku": "[No code]",
+      "proposed_internal_sku": "PH-134-FIL-ECO-P8",
+      "reason": "Ledger sheet P8 records an Eco Aqua water filter with no model code written on the sheet; internal placeholder keeps this filter distinct from row 135.",
+      "physical_label_check_required": true
+    },
+    {
+      "n": 135,
+      "original_sku": "[No code]",
+      "proposed_internal_sku": "PH-135-FIL-TAT-P8",
+      "reason": "Ledger sheet P8 records a Tatch water filter with no model code written on the sheet; internal placeholder keeps this filter distinct from row 134.",
+      "physical_label_check_required": true
+    },
+    {
+      "n": 138,
+      "original_sku": "[No code]",
+      "proposed_internal_sku": "PH-138-SMA-SEV-P6",
+      "reason": "Ledger sheet P6 records a Severin coffee machine with no model code written on the sheet; internal placeholder avoids inventing a model number.",
+      "physical_label_check_required": true
+    },
+    {
+      "n": 149,
+      "original_sku": "[No code]",
+      "proposed_internal_sku": "PH-149-SMA-TAU-P6",
+      "reason": "Ledger sheet P6 records a Taurus food processor / kitchen robot with no model code written on the sheet; internal placeholder avoids inventing a model number.",
+      "physical_label_check_required": true
+    }
+  ],
+  "collision_check": {
+    "codes_checked": 8,
+    "collisions": [],
+    "method": "Case-insensitive exact-string comparison: each proposed code was uppercased and tested for membership in the set of all 142 real SKUs uppercased; the 8 proposed codes were also checked pairwise for mutual distinctness. 8 codes x 142 real SKUs = 1136 comparisons plus 28 pairwise comparisons; zero matches."
+  },
+  "totals_after_substitution": {
+    "rows": 150,
+    "units": 297,
+    "real_skus_altered": 0
+  },
+  "discrepancies": []
+}

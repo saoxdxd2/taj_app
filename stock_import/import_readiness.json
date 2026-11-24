@@ -1,0 +1,82 @@
+{
+  "agent": "L",
+  "scope": "full",
+  "checks": [
+    {
+      "name": "manifest_invariants",
+      "result": "PASS",
+      "detail": "stock_import\\import_manifest.json: 150 rows / 297 units / contiguous 1..150 / 150 unique effective SKUs."
+    },
+    {
+      "name": "price_coverage",
+      "result": "WARN",
+      "detail": "NEEDS PRICING (non-blocking) for 150/150 SKU(s) (no price file at stock_import\\prices.csv): 007117, 32S5K, 32STD2000, 40S5K, 43LM6300, 43S5K, 43STE6600, 50S5K, 55P8L, 65QNED70B, 75 (43\"), 75P7L, AKM 268/IX, AO235HX, B11BS, B1W73235WMA, B1W73435SMA, BCNA300E3W, BD200, BINF 601341 XNA .... Import stages sale_price=0.00, pinned_price unset, state DRAFT; a later ERP/phone pin makes them sellable. No price is invented or copied from supplier pro-forma data."
+    },
+    {
+      "name": "prices_not_default_or_cost_reference",
+      "result": "PASS",
+      "detail": "No price file present; no unsafe values to reject. Blank/zero rows are NEEDS PRICING warnings, not blockers."
+    },
+    {
+      "name": "placeholder_label_confirmations",
+      "result": "FAIL",
+      "detail": "Edit stock_import\\label_confirmations.json (human input; this script will not create it): row 86 has no non-empty 'confirmed_real_sku'; row 86 has no non-empty 'confirmed_by'; row 120 has no non-empty 'confirmed_real_sku'; row 120 has no non-empty 'confirmed_by'; row 125 has no non-empty 'confirmed_real_sku'; row 125 has no non-empty 'confirmed_by'; row 126 has no non-empty 'confirmed_real_sku'; row 126 has no non-empty 'confirmed_by'; row 134 has no non-empty 'confirmed_real_sku'; row 134 has no non-empty 'confirmed_by'; row 135 has no non-empty 'confirmed_real_sku'; row 135 has no non-empty 'confirmed_by'; row 138 has no non-empty 'confirmed_real_sku'; row 138 has no non-empty 'confirmed_by'; row 149 has no non-empty 'confirmed_real_sku'; row 149 has no non-empty 'confirmed_by'."
+    },
+    {
+      "name": "duplicate_pair_39_40_decision",
+      "result": "FAIL",
+      "detail": "Edit stock_import\\decision_queue.json (human input; this script will not create it): the #39/#40 entry exists but is not resolved (set resolved=true and a non-empty decision/outcome)."
+    },
+    {
+      "name": "all_human_decisions_resolved",
+      "result": "FAIL",
+      "detail": "Edit stock_import\\decision_queue.json (human input; this script will not create it): 24 of 24 entries still have a null decision/decided_by/decided_at: DQ-001, DQ-002, DQ-003, DQ-004, DQ-005, DQ-006, DQ-007, DQ-008, DQ-009, DQ-010, DQ-011, DQ-012, DQ-013, DQ-014, DQ-015, DQ-016, DQ-017, DQ-018, DQ-019, DQ-020 ....."
+    },
+    {
+      "name": "relay_snapshot_safety",
+      "result": "PASS",
+      "detail": "PUT /api/agent/catalog deletes only SKUs absent from the pushed snapshot, then upserts with pin-preserving semantics and a baseRevision check. Production was confirmed EMPTY by direct DB query at verification time, but that is point-in-time only: re-check catalog membership immediately before pushing. Full scope pushes the complete 150-row snapshot, so no other rows are at risk. no full snapshot at stock_import\\relay_snapshot.json."
+    },
+    {
+      "name": "status_split_errata_acknowledged",
+      "result": "PASS",
+      "detail": "stock_import\\SOURCE_ERRATA.md acknowledges the 95 Verified / 55 Check row-level split."
+    },
+    {
+      "name": "explicit_import_push_approval",
+      "result": "FAIL",
+      "detail": "APPROVAL REQUIRED - MISSING file: stock_import\\APPLY_APPROVED.txt. Create it with exactly 'APPROVED BY HUMAN' before any --apply or relay push; dry-run planning does not require it."
+    }
+  ],
+  "hard_blockers": [
+    "placeholder_label_confirmations: Edit stock_import\\label_confirmations.json (human input; this script will not create it): row 86 has no non-empty 'confirmed_real_sku'; row 86 has no non-empty 'confirmed_by'; row 120 has no non-empty 'confirmed_real_sku'; row 120 has no non-empty 'confirmed_by'; row 125 has no non-empty 'confirmed_real_sku'; row 125 has no non-empty 'confirmed_by'; row 126 has no non-empty 'confirmed_real_sku'; row 126 has no non-empty 'confirmed_by'; row 134 has no non-empty 'confirmed_real_sku'; row 134 has no non-empty 'confirmed_by'; row 135 has no non-empty 'confirmed_real_sku'; row 135 has no non-empty 'confirmed_by'; row 138 has no non-empty 'confirmed_real_sku'; row 138 has no non-empty 'confirmed_by'; row 149 has no non-empty 'confirmed_real_sku'; row 149 has no non-empty 'confirmed_by'.",
+    "duplicate_pair_39_40_decision: Edit stock_import\\decision_queue.json (human input; this script will not create it): the #39/#40 entry exists but is not resolved (set resolved=true and a non-empty decision/outcome).",
+    "all_human_decisions_resolved: Edit stock_import\\decision_queue.json (human input; this script will not create it): 24 of 24 entries still have a null decision/decided_by/decided_at: DQ-001, DQ-002, DQ-003, DQ-004, DQ-005, DQ-006, DQ-007, DQ-008, DQ-009, DQ-010, DQ-011, DQ-012, DQ-013, DQ-014, DQ-015, DQ-016, DQ-017, DQ-018, DQ-019, DQ-020 .....",
+    "explicit_import_push_approval: APPROVAL REQUIRED - MISSING file: stock_import\\APPLY_APPROVED.txt. Create it with exactly 'APPROVED BY HUMAN' before any --apply or relay push; dry-run planning does not require it."
+  ],
+  "needs_pricing": [
+    "NEEDS PRICING (non-blocking) for 150/150 SKU(s) (no price file at stock_import\\prices.csv): 007117, 32S5K, 32STD2000, 40S5K, 43LM6300, 43S5K, 43STE6600, 50S5K, 55P8L, 65QNED70B, 75 (43\"), 75P7L, AKM 268/IX, AO235HX, B11BS, B1W73235WMA, B1W73435SMA, BCNA300E3W, BD200, BINF 601341 XNA .... Import stages sale_price=0.00, pinned_price unset, state DRAFT; a later ERP/phone pin makes them sellable. No price is invented or copied from supplier pro-forma data."
+  ],
+  "warnings": [
+    "NEEDS PRICING (non-blocking) for 150/150 SKU(s) (no price file at stock_import\\prices.csv): 007117, 32S5K, 32STD2000, 40S5K, 43LM6300, 43S5K, 43STE6600, 50S5K, 55P8L, 65QNED70B, 75 (43\"), 75P7L, AKM 268/IX, AO235HX, B11BS, B1W73235WMA, B1W73435SMA, BCNA300E3W, BD200, BINF 601341 XNA .... Import stages sale_price=0.00, pinned_price unset, state DRAFT; a later ERP/phone pin makes them sellable. No price is invented or copied from supplier pro-forma data.",
+    "PUT /api/agent/catalog deletes only SKUs absent from the pushed snapshot, then upserts with pin-preserving semantics and a baseRevision check. Production was confirmed EMPTY by direct DB query at verification time, but that is point-in-time only: re-check catalog membership immediately before pushing.",
+    "60 flagged rows (16 checklist rows + 44 extra check-carton rows) are still awaiting a physical decision (verify_flags.json). Non-blocking for this gate; resolve before trusting stock status.",
+    "verify_flags.json discrepancy: Page-1 summary claims '89 SKUs matched to verified catalog specs' and '61 SKUs flagged for carton / label check', but the 150-row table actually has 95 Verified and 55 Check rows (45 Check carton + 10 Check box). Raw text token counts independently confirm 95/45/10. Use the table counts, not the page-1 summary.",
+    "verify_flags.json discrepancy: #129 (checklist P7, 'quantity scribbled over; counted as 1'): table row qty 1, Verified, ledger 'P7 (check qty)'. The table carries a 'check qty' note but does not itself say the quantity was scribbled over; qty 1 matches the checklist.",
+    "verify_flags.json discrepancy: #74 (checklist P8, 'quantity overwritten; counted as 1'): table row qty 1, Verified, ledger 'P8 (KP1395 CX)'. No overwritten-quantity annotation appears in the table row; only the alternate code KP1395 CX. Qty 1 matches the checklist.",
+    "verify_flags.json discrepancy: #10: checklist says both return items were 'marked retour on the manual sheet', but this row's ledger reads 'P2 (×1) + P4 (×2) + P8 (×1 ret.)' (abbreviated 'ret.') and its description says '1 unit marked Return'. Only #6 literally reads 'P8 (retour)'. Exclusion scope per document: 1 of 4 units for #10; full qty 1 for #6.",
+    "verify_flags.json discrepancy: Checklist page references are handwritten-ledger sheet numbers, not PDF page numbers: #6/#10 listed P8 appear on PDF p.2, #40 listed P8 and #39 listed P3 both appear on PDF p.4, #74 listed P8 appears on PDF p.6, #86 on PDF p.7, #120/#125/#126 on PDF p.9, #134/#135/#138/#148/#149 on PDF p.10, #129 listed P7 appears on PDF p.9, #150 on PDF p.11. The 'page' field in this JSON is the PDF page; the ledger sheet is in 'ledger' / 'checklist_page_ref'.",
+    "verify_flags.json discrepancy: Line-wrap artifacts in extracted text (not data errors): #39 'KRG-3730- / COMB-NF-G', #40 'KRG370combi / NFG', #126 brand 'Chaffotea / ux', #148 and #150 brand 'Unspecifie / d', #44 'BNF601341VN / A', #46 'UINF601021KM / A', #96 'CKS6060BD / ELITE', and #119/#120 ledger 'P8 (reclassifi / ed)'. Values above are the unwrapped printed values.",
+    "verify_flags.json discrepancy: No quantity discrepancy found for #126 (checklist 5 units; table 5), #134 (checklist 4 units; table 4), #6 (checklist 1 unit; table 1), #10 (checklist 1 of 4 units; table qty 4 with 1 marked ret.), or the duplicate pair #39+#40 (1+1=2 units as the checklist's merge target).",
+    "verify_flags.json discrepancy: Agent limitation: page-11.png could not be visually decoded by this model (image input unsupported). The page-11 checklist was read from extracted text lines 1817-1831; all table rows were independently parsed from the full extracted text (150/150 rows parsed with a status).",
+    "verify_totals.json discrepancy: Status split mismatch: page 1 says 89 Verified / 61 Check, but the 150 catalog rows are 95 Verified / 55 Check (45 carton + 10 box). The sum 150 is correct; the split is off by 6 SKUs in each direction and cannot be derived from the rows.",
+    "verify_totals.json discrepancy: Corrections wording ambiguity: '14 Duplicate Rows Purged (-20 Phantom Units)' and 'prior summary 1-unit drift (298 -> 297)' describe different stages; they conflict only if one assumes the 298 already excluded the phantom units. The document never states the pre-purge totals, so -20 is not independently verifiable, but there is no arithmetic contradiction under the staged reading.",
+    "verify_totals.json discrepancy: Unresolved possible duplicate: page 11 checklist flags #39 Krohler KRG-3730-COMB-NF-G and #40 Krohler KRG370combi NFG as possibly the same barcode. Merging them as the checklist states ('1 SKU (2 units)') would produce 149 SKUs / 297 units — units stay 297 because both physical units are retained; only the row count falls.",
+    "verify_totals.json discrepancy: Page 1 states '0 duplicate rows' while page 11 flags a possible duplicate pair; not a current numeric contradiction, but the duplicate status is not fully resolved.",
+    "verify_totals.json discrepancy: Audit limitation: this model cannot visually render PNG images. Page images were verified via local Windows OCR instead. OCR confirmed the page 1 summary figures, the printed ledger equation, the 89/61 printed split, the 14-duplicate/-20 and 298->297 wording, and the page 11 grand total of 150 SKUs / 297 units. OCR independently confirmed 55 Check status tokens but missed 6 Verified tokens across pages 3, 4, 5, 8, 9 and 10, so the row-level 95 Verified count relies on the extracted text parse (which is internally consistent and matches every other total).",
+    "verify_dedup.json discrepancy: Lines 52-55 claim 14 duplicate rows were purged with -20 phantom units, but all 14 listed SKUs are still present exactly once each as Verified SKU values in the 150-row table: BNF601341VNA row 44 (lines 587-588), BINF 601341 XNA row 45 (lines 598-599), KFL-6.1-SK-V row 76 (line 953), KPB-8.2-CX row 77 (line 966), KPB-7.1-SE row 78 (line 976), MLV1540IG row 93 (line 1139), CK6060-DGLITDIN row 95 (lines 1161-1162), MOK-MK-20-BL row 100 (line 1229), TFU-83MI-UF row 132 (line 1608), CS5057R row 94 (line 1150), GRL 70 row 107 (line 1301), P70H20EL row 108 (line 1310), GP-6L row 130 (line 1571), JSD12-6A row 131 (line 1581). Their quantities sum to exactly 20 units (same as the claimed -20 phantom units), so those 20 units remain inside the 297-unit grand total. Caveat: this is consistent with the narrow reading that only the extra duplicate COPIES were purged and one row per SKU was retained; the prior draft is not in the source, so the purge cannot be independently verified. What must be true: the final 150-row catalog contains all 14 SKUs and all 20 of those units; removing them would give 136 rows / 277 units and break the stated totals.",
+    "verify_dedup.json discrepancy: Lines 5 and 1815 claim '0 duplicate rows' / '0 Duplicates'. At the literal string level, '[No code]' is printed as the Verified SKU value in 8 rows: 86 (line 1069), 120 (line 1450), 125 (line 1512), 126 (line 1524), 134 (line 1629), 135 (line 1639), 138 (line 1669), 149 (line 1777). These are missing-code placeholders rather than real SKUs; after excluding them, there are no duplicate SKU values in the 150 rows.",
+    "verify_dedup.json discrepancy: No other discrepancies found: row numbers are contiguous 1..150 with no gaps or repeats; the 3 merge source codes appear only in the corrections text (lines 61-62) and never as standalone table rows; the 3 brand corrections and 2 range-hood reclassifications match their table rows; total quantity sums to 297 and category counts match the page-1 summary."
+  ],
+  "RESULT": "NO-GO"
+}

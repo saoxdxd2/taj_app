@@ -70,7 +70,7 @@ class InvoiceAddItemDialog(FormDialog):
         self.context = context
         super().__init__(
             title="Add Item to Invoice",
-            subtitle="Unit price and VAT pre-fill from the product's sale price.",
+            subtitle="Unit price and VAT pre-fill from the product's effective price.",
             min_width=500,
             parent=parent,
         )
@@ -100,8 +100,8 @@ class InvoiceAddItemDialog(FormDialog):
         # Populate products
         self.products = InventoryService.get_all_products(context=self.context)
         for p in self.products:
-            if p.state.value == "Active":
-                # Typically, only Active products are sold
+            if p.state.value == "Active" and p.priced:
+                # Only Active, priced products are sellable (pinned or base).
                 self.product_combo.addItem(f"[{p.sku}] {p.name}", userData=p.id)
 
         self.unit_cost_input = QDoubleSpinBox()
@@ -143,7 +143,7 @@ class InvoiceAddItemDialog(FormDialog):
             # Find the product
             for p in self.products:
                 if p.id == product_id:
-                    self.unit_price_input.setValue(float(p.sale_price))
+                    self.unit_price_input.setValue(float(p.effective_price))
                     self.vat_rate_input.setValue(float(p.vat_rate))
                     break
 

@@ -1,0 +1,1130 @@
+{
+  "purpose": "Human decision queue for the 150-row / 297-unit stock import. Nothing here has been decided by an agent.",
+  "status": "AWAITING HUMAN DECISIONS - DO NOT IMPORT UNTIL ALL ENTRIES ARE RESOLVED",
+  "source_files": [
+    "import_manifest.json",
+    "verify_flags.json",
+    "verify_dedup.json",
+    "resolve_placeholders.json",
+    "WAREHOUSE_CHECKLIST.md"
+  ],
+  "instructions": [
+    "For each entry, replace decision with one of the listed options (or a clearly stated alternative), then set decided_by and decided_at.",
+    "Leave an entry's decision as null if it is deferred; a null decision means the import remains blocked.",
+    "8 of the 10 missing_model_or_brand rows are the same physical items as the 8 internal placeholder rows; resolve each pair once and record the answer in both entries and in label_confirmations.json.",
+    "DQ-001 arithmetic corrected: merging the two qty-1 rows into the checklist's stated '1 SKU (2 units)' gives 149 rows / 297 units. Units do not change; only the row count falls."
+  ],
+  "unresolved_count": 24,
+  "groups": [
+    {
+      "type": "possible_duplicate_pair",
+      "description": "One decision covering the #39/#40 pair (not two separate decisions).",
+      "entries": [
+        {
+          "id": "DQ-001",
+          "group": "possible_duplicate_pair",
+          "n": "39 / 40",
+          "sku": "KRG-3730-COMB-NF-G | KRG370combi NFG",
+          "brand": "Krohler",
+          "qty": "1 + 1 = 2 units across two rows",
+          "status": "Verified (#39) / Check carton (#40)",
+          "ledger": "P3 (#39) / P8 (#40)",
+          "page": "PDF p.4",
+          "question": "Physically compare the carton barcodes for #39 (KRG-3730-COMB-NF-G, ledger P3, Verified) and #40 (KRG370combi NFG, ledger P8, Check carton). The register recommends merging them into one SKU with 2 units if the barcodes match. Which action should be taken?",
+          "options": [
+            "keep separate (150/297): retain both rows and their current SKUs (KRG-3730-COMB-NF-G and KRG370combi NFG)",
+            "merge into 1 SKU with 2 units (149/297): collapse #39 + #40 into one SKU row holding both units",
+            "defer: leave both rows unresolved and excluded from the import until both carton barcodes are compared"
+          ],
+          "recommended_option": "defer: leave both rows unresolved and excluded from the import until both carton barcodes are compared",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "covered_rows": [
+            {
+              "n": 39,
+              "sku": "KRG-3730-COMB-NF-G",
+              "brand": "Krohler",
+              "qty": 1,
+              "status": "Verified",
+              "ledger": "P3",
+              "page": "PDF p.4"
+            },
+            {
+              "n": 40,
+              "sku": "KRG370combi NFG",
+              "brand": "Krohler",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P8",
+              "page": "PDF p.4"
+            }
+          ],
+          "source": "verify_flags.json:possible_duplicate_pair; verify_dedup.json",
+          "arithmetic_note": "CORRECTED: the checklist states 'merge them into 1 SKU (2 units)'. Starting totals are 150 rows / 297 units; merging two qty-1 rows into one qty-2 row gives 149 rows and still 297 units. Both physical units are retained, so only the row count falls. An earlier 149/296 figure was arithmetically wrong and has been removed from all artifacts."
+        }
+      ]
+    },
+    {
+      "type": "internal_placeholders",
+      "description": "8 rows with internal PH- codes; each needs the real SKU read from the carton barcode before import.",
+      "entries": [
+        {
+          "id": "DQ-002",
+          "group": "internal_placeholders",
+          "n": 86,
+          "sku": "PH-086-LAU-TAT-P5",
+          "original_sku": "[No code]",
+          "brand": "Tatch",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P5",
+          "page": "PDF p.7",
+          "question": "Row #86 (10 kg Washing Machine (no model code written on sheet)) has no model code on the handwritten sheet; PH-086-LAU-TAT-P5 is an INTERNAL placeholder, not a real SKU. Scan the carton barcode/physical label and supply the real SKU for this unit (ledger P5). What is the real SKU?",
+          "options": [
+            "scan the carton barcode and replace internal code PH-086-LAU-TAT-P5 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+            "keep internal code PH-086-LAU-TAT-P5 and import as-is (internal-only; not a sellable manufacturer SKU)",
+            "defer this row: exclude it from the import until the carton label/barcode is observed"
+          ],
+          "recommended_option": "scan the carton barcode and replace internal code PH-086-LAU-TAT-P5 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
+          "label_confirmations_row": 86,
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+        },
+        {
+          "id": "DQ-003",
+          "group": "internal_placeholders",
+          "n": 120,
+          "sku": "PH-120-VEN-GEN-P8",
+          "original_sku": "[No code]",
+          "brand": "General",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P8 (reclassified)",
+          "page": "PDF p.9",
+          "question": "Row #120 (Range Hood / Hotte (reclassified from Refrigerators; written \"hot General\", no code)) has no model code on the handwritten sheet; PH-120-VEN-GEN-P8 is an INTERNAL placeholder, not a real SKU. Scan the carton barcode/physical label and supply the real SKU for this unit (ledger P8 (reclassified)). What is the real SKU?",
+          "options": [
+            "scan the carton barcode and replace internal code PH-120-VEN-GEN-P8 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+            "keep internal code PH-120-VEN-GEN-P8 and import as-is (internal-only; not a sellable manufacturer SKU)",
+            "defer this row: exclude it from the import until the carton label/barcode is observed"
+          ],
+          "recommended_option": "scan the carton barcode and replace internal code PH-120-VEN-GEN-P8 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
+          "label_confirmations_row": 120,
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+        },
+        {
+          "id": "DQ-004",
+          "group": "internal_placeholders",
+          "n": 125,
+          "sku": "PH-125-WAT-JUN-P5",
+          "original_sku": "[No code]",
+          "brand": "Junkers",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P5",
+          "page": "PDF p.9",
+          "question": "Row #125 (6L Gas Water Heater (no model code written on sheet)) has no model code on the handwritten sheet; PH-125-WAT-JUN-P5 is an INTERNAL placeholder, not a real SKU. Scan the carton barcode/physical label and supply the real SKU for this unit (ledger P5). What is the real SKU?",
+          "options": [
+            "scan the carton barcode and replace internal code PH-125-WAT-JUN-P5 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+            "keep internal code PH-125-WAT-JUN-P5 and import as-is (internal-only; not a sellable manufacturer SKU)",
+            "defer this row: exclude it from the import until the carton label/barcode is observed"
+          ],
+          "recommended_option": "scan the carton barcode and replace internal code PH-125-WAT-JUN-P5 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
+          "label_confirmations_row": 125,
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+        },
+        {
+          "id": "DQ-005",
+          "group": "internal_placeholders",
+          "n": 126,
+          "sku": "PH-126-WAT-CHA-P1",
+          "original_sku": "[No code]",
+          "brand": "Chaffoteaux",
+          "qty": 5,
+          "status": "Check box",
+          "ledger": "P1",
+          "page": "PDF p.9",
+          "question": "Row #126 (6L Water Heater (no model code written on sheet)) has no model code on the handwritten sheet; PH-126-WAT-CHA-P1 is an INTERNAL placeholder, not a real SKU. Scan the carton barcode/physical label and supply the real SKU for this unit (ledger P1). What is the real SKU?",
+          "options": [
+            "scan the carton barcode and replace internal code PH-126-WAT-CHA-P1 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+            "keep internal code PH-126-WAT-CHA-P1 and import as-is (internal-only; not a sellable manufacturer SKU)",
+            "defer this row: exclude it from the import until the carton label/barcode is observed"
+          ],
+          "recommended_option": "scan the carton barcode and replace internal code PH-126-WAT-CHA-P1 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
+          "label_confirmations_row": 126,
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+        },
+        {
+          "id": "DQ-006",
+          "group": "internal_placeholders",
+          "n": 134,
+          "sku": "PH-134-FIL-ECO-P8",
+          "original_sku": "[No code]",
+          "brand": "Eco Aqua",
+          "qty": 4,
+          "status": "Check box",
+          "ledger": "P8",
+          "page": "PDF p.10",
+          "question": "Row #134 (Water Filter (Filtre d'eau) — no model code written on sheet) has no model code on the handwritten sheet; PH-134-FIL-ECO-P8 is an INTERNAL placeholder, not a real SKU. Scan the carton barcode/physical label and supply the real SKU for this unit (ledger P8). What is the real SKU?",
+          "options": [
+            "scan the carton barcode and replace internal code PH-134-FIL-ECO-P8 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+            "keep internal code PH-134-FIL-ECO-P8 and import as-is (internal-only; not a sellable manufacturer SKU)",
+            "defer this row: exclude it from the import until the carton label/barcode is observed"
+          ],
+          "recommended_option": "scan the carton barcode and replace internal code PH-134-FIL-ECO-P8 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
+          "label_confirmations_row": 134,
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+        },
+        {
+          "id": "DQ-007",
+          "group": "internal_placeholders",
+          "n": 135,
+          "sku": "PH-135-FIL-TAT-P8",
+          "original_sku": "[No code]",
+          "brand": "Tatch",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P8",
+          "page": "PDF p.10",
+          "question": "Row #135 (Water Filter (Filtre d'eau) — no model code written on sheet) has no model code on the handwritten sheet; PH-135-FIL-TAT-P8 is an INTERNAL placeholder, not a real SKU. Scan the carton barcode/physical label and supply the real SKU for this unit (ledger P8). What is the real SKU?",
+          "options": [
+            "scan the carton barcode and replace internal code PH-135-FIL-TAT-P8 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+            "keep internal code PH-135-FIL-TAT-P8 and import as-is (internal-only; not a sellable manufacturer SKU)",
+            "defer this row: exclude it from the import until the carton label/barcode is observed"
+          ],
+          "recommended_option": "scan the carton barcode and replace internal code PH-135-FIL-TAT-P8 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
+          "label_confirmations_row": 135,
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+        },
+        {
+          "id": "DQ-008",
+          "group": "internal_placeholders",
+          "n": 138,
+          "sku": "PH-138-SMA-SEV-P6",
+          "original_sku": "[No code]",
+          "brand": "Severin",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P6",
+          "page": "PDF p.10",
+          "question": "Row #138 (Coffee Machine — no model code written on sheet) has no model code on the handwritten sheet; PH-138-SMA-SEV-P6 is an INTERNAL placeholder, not a real SKU. Scan the carton barcode/physical label and supply the real SKU for this unit (ledger P6). What is the real SKU?",
+          "options": [
+            "scan the carton barcode and replace internal code PH-138-SMA-SEV-P6 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+            "keep internal code PH-138-SMA-SEV-P6 and import as-is (internal-only; not a sellable manufacturer SKU)",
+            "defer this row: exclude it from the import until the carton label/barcode is observed"
+          ],
+          "recommended_option": "scan the carton barcode and replace internal code PH-138-SMA-SEV-P6 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
+          "label_confirmations_row": 138,
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+        },
+        {
+          "id": "DQ-009",
+          "group": "internal_placeholders",
+          "n": 149,
+          "sku": "PH-149-SMA-TAU-P6",
+          "original_sku": "[No code]",
+          "brand": "Taurus",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P6",
+          "page": "PDF p.10",
+          "question": "Row #149 (Food Processor / Kitchen Robot — no model code written on sheet) has no model code on the handwritten sheet; PH-149-SMA-TAU-P6 is an INTERNAL placeholder, not a real SKU. Scan the carton barcode/physical label and supply the real SKU for this unit (ledger P6). What is the real SKU?",
+          "options": [
+            "scan the carton barcode and replace internal code PH-149-SMA-TAU-P6 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+            "keep internal code PH-149-SMA-TAU-P6 and import as-is (internal-only; not a sellable manufacturer SKU)",
+            "defer this row: exclude it from the import until the carton label/barcode is observed"
+          ],
+          "recommended_option": "scan the carton barcode and replace internal code PH-149-SMA-TAU-P6 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
+          "label_confirmations_row": 149,
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+        }
+      ]
+    },
+    {
+      "type": "returns",
+      "description": "2 rows with returned units; decide exclusion/tagging before import.",
+      "entries": [
+        {
+          "id": "DQ-010",
+          "group": "returns",
+          "n": 6,
+          "sku": "50S5K",
+          "brand": "TCL",
+          "qty": 1,
+          "status": "Verified",
+          "ledger": "P8 (retour)",
+          "page": "PDF p.2",
+          "question": "Row #6 is marked as a return: P8 (retour). The document supports excluding full row qty 1 (the only unit is the retour). How should this row be treated in the import?",
+          "options": [
+            "exclude the full row qty 1 and tag the carton as a return (ledger literally reads 'P8 (retour)')",
+            "include qty 1 as factory-sealed (ignore the retour note)",
+            "defer this row until the return status is confirmed in the warehouse"
+          ],
+          "recommended_option": "exclude the full row qty 1 and tag the carton as a return (ledger literally reads 'P8 (retour)')",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "excluded_qty_if_recommended": 1,
+          "source": "verify_flags.json:returns; WAREHOUSE_CHECKLIST.md (customer returns)"
+        },
+        {
+          "id": "DQ-011",
+          "group": "returns",
+          "n": 10,
+          "sku": "32S5K",
+          "brand": "TCL",
+          "qty": 4,
+          "status": "Verified",
+          "ledger": "P2 (×1) + P4 (×2) + P8 (×1 ret.)",
+          "page": "PDF p.2",
+          "question": "Row #10 is marked as a return: P2 (×1) + P4 (×2) + P8 (×1 ret.) (abbreviated 'ret.'; description says '1 unit marked Return', not 'retour'). The document supports excluding only 1 of 4 units (P8 ×1 ret.); do not exclude the other 3. How should this row be treated in the import?",
+          "options": [
+            "exclude only 1 of the 4 units (P8 ×1 ret.) and keep the other 3 as factory-sealed",
+            "exclude all 4 units as returns",
+            "include all 4 units as factory-sealed",
+            "defer this row until the returned unit is identified"
+          ],
+          "recommended_option": "exclude only 1 of the 4 units (P8 ×1 ret.) and keep the other 3 as factory-sealed",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "excluded_qty_if_recommended": 1,
+          "source": "verify_flags.json:returns; WAREHOUSE_CHECKLIST.md (customer returns)"
+        }
+      ]
+    },
+    {
+      "type": "overwritten_qty",
+      "description": "2 rows whose handwritten quantities were scribbled over / overwritten; confirm the count.",
+      "entries": [
+        {
+          "id": "DQ-012",
+          "group": "overwritten_qty",
+          "n": 129,
+          "sku": "MYG06113WL",
+          "brand": "Arthur Martin",
+          "qty": 1,
+          "status": "Verified",
+          "ledger": "P7 (check qty)",
+          "page": "PDF p.9",
+          "question": "The checklist says the handwritten quantity was scribbled over for #129; the table records qty 1 (Verified, ledger 'P7 (check qty)'). Confirm the physically counted quantity.",
+          "options": [
+            "confirm the physically recounted quantity is 1 (matches the checklist count)",
+            "correct the quantity to a different value (record the value and physical count evidence)",
+            "defer this row until a physical recount is completed"
+          ],
+          "recommended_option": "confirm the physically recounted quantity is 1 (matches the checklist count)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:overwritten_qty; WAREHOUSE_CHECKLIST.md (overwritten quantities)"
+        },
+        {
+          "id": "DQ-013",
+          "group": "overwritten_qty",
+          "n": 74,
+          "sku": "KPB-13.5-CX",
+          "brand": "Krohler",
+          "qty": 1,
+          "status": "Verified",
+          "ledger": "P8 (KP1395CX)",
+          "page": "PDF p.6",
+          "question": "The checklist says the handwritten quantity was overwritten for #74; the table records qty 1 (Verified, ledger 'P8 (KP1395CX)'). Confirm the physically counted quantity.",
+          "options": [
+            "confirm the physically recounted quantity is 1 (matches the checklist count)",
+            "correct the quantity to a different value (record the value and physical count evidence)",
+            "defer this row until a physical recount is completed"
+          ],
+          "recommended_option": "confirm the physically recounted quantity is 1 (matches the checklist count)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:overwritten_qty; WAREHOUSE_CHECKLIST.md (overwritten quantities)"
+        }
+      ]
+    },
+    {
+      "type": "missing_model_or_brand",
+      "description": "10 flagged rows: 8 are the same physical items as the 8 placeholder rows (cross-referenced); #148 and #150 are brand-only.",
+      "entries": [
+        {
+          "id": "DQ-014",
+          "group": "missing_model_or_brand",
+          "n": 86,
+          "sku": "PH-086-LAU-TAT-P5",
+          "original_sku": "[No code]",
+          "brand": "Tatch",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P5",
+          "page": "PDF p.7",
+          "question": "Row #86 (10 kg Washing Machine (no model code written on sheet)) is flagged for a missing model code. It is the same physical item as internal placeholder PH-086-LAU-TAT-P5 (DQ-002). Supply the real SKU from the carton barcode and confirm the brand here and in decision DQ-002.",
+          "options": [
+            "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-002 and label_confirmations row #86",
+            "confirm the brand only for now and retain internal code PH-086-LAU-TAT-P5 (still blocks sale/import)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-002 and label_confirmations row #86",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": "DQ-002",
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+        },
+        {
+          "id": "DQ-015",
+          "group": "missing_model_or_brand",
+          "n": 120,
+          "sku": "PH-120-VEN-GEN-P8",
+          "original_sku": "[No code]",
+          "brand": "General",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P8 (reclassified)",
+          "page": "PDF p.9",
+          "question": "Row #120 (Range Hood / Hotte (reclassified from Refrigerators; written \"hot General\", no code)) is flagged for a missing model code. It is the same physical item as internal placeholder PH-120-VEN-GEN-P8 (DQ-003). Supply the real SKU from the carton barcode and confirm the brand here and in decision DQ-003.",
+          "options": [
+            "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-003 and label_confirmations row #120",
+            "confirm the brand only for now and retain internal code PH-120-VEN-GEN-P8 (still blocks sale/import)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-003 and label_confirmations row #120",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": "DQ-003",
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+        },
+        {
+          "id": "DQ-016",
+          "group": "missing_model_or_brand",
+          "n": 125,
+          "sku": "PH-125-WAT-JUN-P5",
+          "original_sku": "[No code]",
+          "brand": "Junkers",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P5",
+          "page": "PDF p.9",
+          "question": "Row #125 (6L Gas Water Heater (no model code written on sheet)) is flagged for a missing model code. It is the same physical item as internal placeholder PH-125-WAT-JUN-P5 (DQ-004). Supply the real SKU from the carton barcode and confirm the brand here and in decision DQ-004.",
+          "options": [
+            "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-004 and label_confirmations row #125",
+            "confirm the brand only for now and retain internal code PH-125-WAT-JUN-P5 (still blocks sale/import)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-004 and label_confirmations row #125",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": "DQ-004",
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+        },
+        {
+          "id": "DQ-017",
+          "group": "missing_model_or_brand",
+          "n": 126,
+          "sku": "PH-126-WAT-CHA-P1",
+          "original_sku": "[No code]",
+          "brand": "Chaffoteaux",
+          "qty": 5,
+          "status": "Check box",
+          "ledger": "P1",
+          "page": "PDF p.9",
+          "question": "Row #126 (6L Water Heater (no model code written on sheet)) is flagged for a missing model code. It is the same physical item as internal placeholder PH-126-WAT-CHA-P1 (DQ-005). Supply the real SKU from the carton barcode and confirm the brand here and in decision DQ-005.",
+          "options": [
+            "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-005 and label_confirmations row #126",
+            "confirm the brand only for now and retain internal code PH-126-WAT-CHA-P1 (still blocks sale/import)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-005 and label_confirmations row #126",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": "DQ-005",
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+        },
+        {
+          "id": "DQ-018",
+          "group": "missing_model_or_brand",
+          "n": 134,
+          "sku": "PH-134-FIL-ECO-P8",
+          "original_sku": "[No code]",
+          "brand": "Eco Aqua",
+          "qty": 4,
+          "status": "Check box",
+          "ledger": "P8",
+          "page": "PDF p.10",
+          "question": "Row #134 (Water Filter (Filtre d'eau) — no model code written on sheet) is flagged for a missing model code. It is the same physical item as internal placeholder PH-134-FIL-ECO-P8 (DQ-006). Supply the real SKU from the carton barcode and confirm the brand here and in decision DQ-006.",
+          "options": [
+            "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-006 and label_confirmations row #134",
+            "confirm the brand only for now and retain internal code PH-134-FIL-ECO-P8 (still blocks sale/import)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-006 and label_confirmations row #134",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": "DQ-006",
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+        },
+        {
+          "id": "DQ-019",
+          "group": "missing_model_or_brand",
+          "n": 135,
+          "sku": "PH-135-FIL-TAT-P8",
+          "original_sku": "[No code]",
+          "brand": "Tatch",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P8",
+          "page": "PDF p.10",
+          "question": "Row #135 (Water Filter (Filtre d'eau) — no model code written on sheet) is flagged for a missing model code. It is the same physical item as internal placeholder PH-135-FIL-TAT-P8 (DQ-007). Supply the real SKU from the carton barcode and confirm the brand here and in decision DQ-007.",
+          "options": [
+            "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-007 and label_confirmations row #135",
+            "confirm the brand only for now and retain internal code PH-135-FIL-TAT-P8 (still blocks sale/import)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-007 and label_confirmations row #135",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": "DQ-007",
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+        },
+        {
+          "id": "DQ-020",
+          "group": "missing_model_or_brand",
+          "n": 138,
+          "sku": "PH-138-SMA-SEV-P6",
+          "original_sku": "[No code]",
+          "brand": "Severin",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P6",
+          "page": "PDF p.10",
+          "question": "Row #138 (Coffee Machine — no model code written on sheet) is flagged for a missing model code. It is the same physical item as internal placeholder PH-138-SMA-SEV-P6 (DQ-008). Supply the real SKU from the carton barcode and confirm the brand here and in decision DQ-008.",
+          "options": [
+            "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-008 and label_confirmations row #138",
+            "confirm the brand only for now and retain internal code PH-138-SMA-SEV-P6 (still blocks sale/import)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-008 and label_confirmations row #138",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": "DQ-008",
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+        },
+        {
+          "id": "DQ-021",
+          "group": "missing_model_or_brand",
+          "n": 148,
+          "sku": "TH212",
+          "original_sku": "TH212",
+          "brand": "Unspecified",
+          "qty": 2,
+          "status": "Check box",
+          "ledger": "P6",
+          "page": "PDF p.10",
+          "question": "Row #148 has SKU TH212 but no brand was written on the sheet (brand field: 'Unspecified'). What brand (and, if needed, corrected SKU) is printed on the carton?",
+          "options": [
+            "confirm the brand from the carton label and keep the existing SKU TH212",
+            "correct both brand and SKU from the carton label (record the new SKU)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "confirm the brand from the carton label and keep the existing SKU TH212",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": null,
+          "overlap_note": "This row is NOT an internal placeholder (no PH- code); only the brand is missing."
+        },
+        {
+          "id": "DQ-022",
+          "group": "missing_model_or_brand",
+          "n": 149,
+          "sku": "PH-149-SMA-TAU-P6",
+          "original_sku": "[No code]",
+          "brand": "Taurus",
+          "qty": 1,
+          "status": "Check box",
+          "ledger": "P6",
+          "page": "PDF p.10",
+          "question": "Row #149 (Food Processor / Kitchen Robot — no model code written on sheet) is flagged for a missing model code. It is the same physical item as internal placeholder PH-149-SMA-TAU-P6 (DQ-009). Supply the real SKU from the carton barcode and confirm the brand here and in decision DQ-009.",
+          "options": [
+            "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-009 and label_confirmations row #149",
+            "confirm the brand only for now and retain internal code PH-149-SMA-TAU-P6 (still blocks sale/import)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-009 and label_confirmations row #149",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": "DQ-009",
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+        },
+        {
+          "id": "DQ-023",
+          "group": "missing_model_or_brand",
+          "n": 150,
+          "sku": "CH020A",
+          "original_sku": "CH020A",
+          "brand": "Unspecified",
+          "qty": 2,
+          "status": "Check box",
+          "ledger": "P6",
+          "page": "PDF p.11",
+          "question": "Row #150 has SKU CH020A but no brand was written on the sheet (brand field: 'Unspecified'). What brand (and, if needed, corrected SKU) is printed on the carton?",
+          "options": [
+            "confirm the brand from the carton label and keep the existing SKU CH020A",
+            "correct both brand and SKU from the carton label (record the new SKU)",
+            "defer this row until the carton is physically checked"
+          ],
+          "recommended_option": "confirm the brand from the carton label and keep the existing SKU CH020A",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
+          "related_placeholder_decision": null,
+          "overlap_note": "This row is NOT an internal placeholder (no PH- code); only the brand is missing."
+        }
+      ]
+    },
+    {
+      "type": "additional_check_carton_bulk",
+      "description": "One bulk-confirm decision covering exactly the 44 rows enumerated in covered_rows.",
+      "entries": [
+        {
+          "id": "DQ-024",
+          "group": "additional_check_carton_bulk",
+          "n": [
+            2,
+            3,
+            5,
+            8,
+            29,
+            44,
+            46,
+            48,
+            51,
+            52,
+            63,
+            64,
+            65,
+            66,
+            71,
+            73,
+            79,
+            80,
+            81,
+            82,
+            83,
+            85,
+            87,
+            88,
+            93,
+            96,
+            98,
+            104,
+            105,
+            107,
+            110,
+            113,
+            115,
+            119,
+            127,
+            130,
+            133,
+            136,
+            139,
+            141,
+            142,
+            144,
+            145,
+            147
+          ],
+          "sku": "See covered_rows (44 distinct SKUs)",
+          "brand": "Multiple - see covered_rows",
+          "qty": "Per row - see covered_rows",
+          "status": "Check carton",
+          "ledger": "Per row - see covered_rows",
+          "page": "PDF p.1-p.10 (per-row page in covered_rows)",
+          "question": "These 44 'Check carton' rows are NOT on the page-11 checklist. For every row listed in covered_rows, confirm the physical carton label/SKU/brand/qty matches the manifest before import. Which confirmation outcome applies?",
+          "options": [
+            "physically check all 44 rows against covered_rows and bulk-confirm that every carton label/SKU/brand/qty matches (record any mismatch before marking)",
+            "confirm a subset only and defer the mismatched or unchecked rows individually",
+            "defer all 44 rows until their cartons are physically checked"
+          ],
+          "recommended_option": "physically check all 44 rows against covered_rows and bulk-confirm that every carton label/SKU/brand/qty matches (record any mismatch before marking)",
+          "decision": null,
+          "decided_by": null,
+          "decided_at": null,
+          "blocks_import": true,
+          "covered_rows": [
+            {
+              "n": 2,
+              "sku": "P7 (65\")",
+              "brand": "TCL",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P1",
+              "page": "PDF p.1"
+            },
+            {
+              "n": 3,
+              "sku": "E6D (65\")",
+              "brand": "TCL",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P1",
+              "page": "PDF p.2"
+            },
+            {
+              "n": 5,
+              "sku": "E6D (55\")",
+              "brand": "TCL",
+              "qty": 5,
+              "status": "Check carton",
+              "ledger": "P1",
+              "page": "PDF p.2"
+            },
+            {
+              "n": 8,
+              "sku": "75 (43\")",
+              "brand": "TCL",
+              "qty": 5,
+              "status": "Check carton",
+              "ledger": "P1",
+              "page": "PDF p.2"
+            },
+            {
+              "n": 29,
+              "sku": "T540TMG",
+              "brand": "TCL",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P8",
+              "page": "PDF p.3"
+            },
+            {
+              "n": 44,
+              "sku": "BNF601341VNA",
+              "brand": "Indesit",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P6",
+              "page": "PDF p.4"
+            },
+            {
+              "n": 46,
+              "sku": "UINF601021KMA",
+              "brand": "Indesit",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P8",
+              "page": "PDF p.4"
+            },
+            {
+              "n": 48,
+              "sku": "CAN450W",
+              "brand": "Condor",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P5",
+              "page": "PDF p.4"
+            },
+            {
+              "n": 51,
+              "sku": "CH-160MS",
+              "brand": "Royal",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P3 (×1) + P5 (×1)",
+              "page": "PDF p.5"
+            },
+            {
+              "n": 52,
+              "sku": "BD200",
+              "brand": "KGLG",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P5 (×1) + P7 (×1)",
+              "page": "PDF p.5"
+            },
+            {
+              "n": 63,
+              "sku": "C1107FLG",
+              "brand": "TCL",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P5",
+              "page": "PDF p.5"
+            },
+            {
+              "n": 64,
+              "sku": "F407TLG",
+              "brand": "TCL",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P5",
+              "page": "PDF p.5"
+            },
+            {
+              "n": 65,
+              "sku": "C1110WDG",
+              "brand": "TCL",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P7",
+              "page": "PDF p.5"
+            },
+            {
+              "n": 66,
+              "sku": "CS12WDG",
+              "brand": "TCL",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P8",
+              "page": "PDF p.6"
+            },
+            {
+              "n": 71,
+              "sku": "REF. GAN1100",
+              "brand": "Ganador",
+              "qty": 4,
+              "status": "Check carton",
+              "ledger": "P4",
+              "page": "PDF p.6"
+            },
+            {
+              "n": 73,
+              "sku": "KPB95CX",
+              "brand": "Krohler",
+              "qty": 3,
+              "status": "Check carton",
+              "ledger": "P3 (×2) + P8 (×1)",
+              "page": "PDF p.6"
+            },
+            {
+              "n": 79,
+              "sku": "XPB12KG120",
+              "brand": "KGLG",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P2",
+              "page": "PDF p.6"
+            },
+            {
+              "n": 80,
+              "sku": "XPB1152770",
+              "brand": "Golden Star",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P5",
+              "page": "PDF p.6"
+            },
+            {
+              "n": 81,
+              "sku": "XPB150-2070",
+              "brand": "Golden Star",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P5",
+              "page": "PDF p.6"
+            },
+            {
+              "n": 82,
+              "sku": "WM9000TL",
+              "brand": "Fresh",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P2",
+              "page": "PDF p.7"
+            },
+            {
+              "n": 83,
+              "sku": "WM12000TL",
+              "brand": "Fresh",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P8",
+              "page": "PDF p.7"
+            },
+            {
+              "n": 85,
+              "sku": "F90467NB",
+              "brand": "Skyworth",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P5",
+              "page": "PDF p.7"
+            },
+            {
+              "n": 87,
+              "sku": "SBN1086",
+              "brand": "Globvision",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P7",
+              "page": "PDF p.7"
+            },
+            {
+              "n": 88,
+              "sku": "SBN1386",
+              "brand": "Globvision",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P7",
+              "page": "PDF p.7"
+            },
+            {
+              "n": 93,
+              "sku": "MLV1540IG",
+              "brand": "Krohler",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P5",
+              "page": "PDF p.7"
+            },
+            {
+              "n": 96,
+              "sku": "CKS6060BD ELITE",
+              "brand": "Krohler",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P5",
+              "page": "PDF p.7"
+            },
+            {
+              "n": 98,
+              "sku": "FZE7337BL",
+              "brand": "Krohler",
+              "qty": 3,
+              "status": "Check carton",
+              "ledger": "P8",
+              "page": "PDF p.7"
+            },
+            {
+              "n": 104,
+              "sku": "MFA615TP",
+              "brand": "Tatch",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P8",
+              "page": "PDF p.8"
+            },
+            {
+              "n": 105,
+              "sku": "I-07TLL",
+              "brand": "Itimat",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P8",
+              "page": "PDF p.8"
+            },
+            {
+              "n": 107,
+              "sku": "GRL 70",
+              "brand": "German Lab",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P2",
+              "page": "PDF p.8"
+            },
+            {
+              "n": 110,
+              "sku": "KL20MOBS5",
+              "brand": "Ekan / Krohler",
+              "qty": 4,
+              "status": "Check carton",
+              "ledger": "P7",
+              "page": "PDF p.8"
+            },
+            {
+              "n": 113,
+              "sku": "FBH6004GXS",
+              "brand": "Fitco",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P2 (×1) + P7 (×1)",
+              "page": "PDF p.8"
+            },
+            {
+              "n": 115,
+              "sku": "HMS113/-1",
+              "brand": "General",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P2",
+              "page": "PDF p.8"
+            },
+            {
+              "n": 119,
+              "sku": "CNPA61X",
+              "brand": "Infiniton",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P8 (reclassified)",
+              "page": "PDF p.9"
+            },
+            {
+              "n": 127,
+              "sku": "CAEW8548DK",
+              "brand": "Daiko",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P4",
+              "page": "PDF p.9"
+            },
+            {
+              "n": 130,
+              "sku": "GP-6L",
+              "brand": "BAP",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P5",
+              "page": "PDF p.9"
+            },
+            {
+              "n": 133,
+              "sku": "TY-LW8110T",
+              "brand": "TCL",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P7",
+              "page": "PDF p.10"
+            },
+            {
+              "n": 136,
+              "sku": "YT2009JL",
+              "brand": "Bonomi",
+              "qty": 11,
+              "status": "Check carton",
+              "ledger": "P6",
+              "page": "PDF p.10"
+            },
+            {
+              "n": 139,
+              "sku": "PEAF9512",
+              "brand": "Krohler",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P6",
+              "page": "PDF p.10"
+            },
+            {
+              "n": 141,
+              "sku": "PEAF9411",
+              "brand": "Krohler",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P6",
+              "page": "PDF p.10"
+            },
+            {
+              "n": 142,
+              "sku": "FAF1028DSS",
+              "brand": "Fitco",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P6",
+              "page": "PDF p.10"
+            },
+            {
+              "n": 144,
+              "sku": "GBM5130SBS",
+              "brand": "Genial",
+              "qty": 2,
+              "status": "Check carton",
+              "ledger": "P6",
+              "page": "PDF p.10"
+            },
+            {
+              "n": 145,
+              "sku": "KTSM6423",
+              "brand": "Genial",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P6",
+              "page": "PDF p.10"
+            },
+            {
+              "n": 147,
+              "sku": "007117",
+              "brand": "Tatch",
+              "qty": 1,
+              "status": "Check carton",
+              "ledger": "P6",
+              "page": "PDF p.10"
+            }
+          ],
+          "covered_rows_count": 44,
+          "source": "verify_flags.json:additional_check_status_rows; WAREHOUSE_CHECKLIST.md (check-carton rows not on page-11 checklist)"
+        }
+      ]
+    }
+  ]
+}

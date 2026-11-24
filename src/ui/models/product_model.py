@@ -9,7 +9,10 @@ class ProductTableModel(BaseTableModel):
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._headers = ["ID", "SKU", "Name", "Type", "State", "Purchase Price", "Sale Price"]
+        self._headers = [
+            "ID", "SKU", "Name", "Type", "State",
+            "Purchase Price", "Sale Price", "Pinned Price", "Priced",
+        ]
 
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if not index.isValid():
@@ -33,7 +36,11 @@ class ProductTableModel(BaseTableModel):
                 return f"{product.purchase_price:.2f}" if product.purchase_price is not None else ""
             elif col == 6:
                 return f"{product.sale_price:.2f}" if product.sale_price is not None else ""
-                
+            elif col == 7:
+                return f"{product.pinned_price:.2f}" if product.pinned_price is not None else ""
+            elif col == 8:
+                return "Yes" if product.priced else "No"
+
         if role == Qt.UserRole:
             return self.get_entity_id_at(index.row())
             

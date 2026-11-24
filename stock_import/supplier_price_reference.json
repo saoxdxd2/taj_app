@@ -1,0 +1,2992 @@
+{
+  "agent": "P",
+  "source_files": [
+    {
+      "path": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "sheets": [
+        "TARIF",
+        "TARIF (2)"
+      ]
+    },
+    {
+      "path": "img/TCL/PRICE AC TCL +ROWA 2026 taje.xlsx",
+      "sheets": [
+        "Order"
+      ]
+    }
+  ],
+  "purpose": "SUPPLIER COST REFERENCE ONLY - NOT RETAIL PRICING - NOT APPROVED FOR IMPORT",
+  "rows": [
+    {
+      "model": "32S5K",
+      "raw_value": 1560,
+      "cell": "TARIF!E8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "32S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "32S5K",
+      "raw_value": 0.15,
+      "cell": "TARIF!F8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "32S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "32S5K",
+      "raw_value": "=E8*(1-F8)",
+      "cell": "TARIF!G8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "32S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "32S5K",
+      "raw_value": "=G8*D8",
+      "cell": "TARIF!H8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "32S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "32S5K",
+      "raw_value": "=N8-E8",
+      "cell": "TARIF!I8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "32S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "40S5K",
+      "raw_value": 2600,
+      "cell": "TARIF!E9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "40S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "40S5K",
+      "raw_value": 0.18,
+      "cell": "TARIF!F9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "40S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "40S5K",
+      "raw_value": "=E9*(1-F9)",
+      "cell": "TARIF!G9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "40S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "40S5K",
+      "raw_value": "=G9*D9",
+      "cell": "TARIF!H9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "40S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "40S5K",
+      "raw_value": "=N9-E9",
+      "cell": "TARIF!I9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "40S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43S5K",
+      "raw_value": 2880,
+      "cell": "TARIF!E10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "43S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43S5K",
+      "raw_value": 0.18,
+      "cell": "TARIF!F10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "43S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43S5K",
+      "raw_value": "=E10*(1-F10)",
+      "cell": "TARIF!G10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "43S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43S5K",
+      "raw_value": "=G10*D10",
+      "cell": "TARIF!H10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "43S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43S5K",
+      "raw_value": "=N10-E10",
+      "cell": "TARIF!I10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "43S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50S5K",
+      "raw_value": 3490,
+      "cell": "TARIF!E11",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "50S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50S5K",
+      "raw_value": 0.15,
+      "cell": "TARIF!F11",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "50S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50S5K",
+      "raw_value": "=E11*(1-F11)",
+      "cell": "TARIF!G11",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "50S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50S5K",
+      "raw_value": "=G11*D11",
+      "cell": "TARIF!H11",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "50S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50S5K",
+      "raw_value": "=N11-E11",
+      "cell": "TARIF!I11",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "50S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P6K",
+      "raw_value": 4300,
+      "cell": "TARIF!E12",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P6K",
+      "raw_value": 0.25,
+      "cell": "TARIF!F12",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P6K",
+      "raw_value": "=E12*(1-F12)",
+      "cell": "TARIF!G12",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P6K",
+      "raw_value": "=G12*D12",
+      "cell": "TARIF!H12",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P6K",
+      "raw_value": "=N12-E12",
+      "cell": "TARIF!I12",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": null,
+      "raw_value": "=N13-E13",
+      "cell": "TARIF!I13",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43P7K",
+      "raw_value": 3390,
+      "cell": "TARIF!E14",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43P7K",
+      "raw_value": 0.17,
+      "cell": "TARIF!F14",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43P7K",
+      "raw_value": "=E14*(1-F14)",
+      "cell": "TARIF!G14",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43P7K",
+      "raw_value": "=G14*D14",
+      "cell": "TARIF!H14",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43P7K",
+      "raw_value": "=N14-E14",
+      "cell": "TARIF!I14",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50P7K",
+      "raw_value": 4190,
+      "cell": "TARIF!E15",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50P7K",
+      "raw_value": 0.15,
+      "cell": "TARIF!F15",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50P7K",
+      "raw_value": "=E15*(1-F15)",
+      "cell": "TARIF!G15",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50P7K",
+      "raw_value": "=G15*D15",
+      "cell": "TARIF!H15",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50P7K",
+      "raw_value": "=N15-E15",
+      "cell": "TARIF!I15",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P7K",
+      "raw_value": 4690,
+      "cell": "TARIF!E16",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P7K",
+      "raw_value": 0.15,
+      "cell": "TARIF!F16",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P7K",
+      "raw_value": "=E16*(1-F16)",
+      "cell": "TARIF!G16",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P7K",
+      "raw_value": "=G16*D16",
+      "cell": "TARIF!H16",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P7K",
+      "raw_value": "=N16-E16",
+      "cell": "TARIF!I16",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P7K",
+      "raw_value": 6590,
+      "cell": "TARIF!E17",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P7K",
+      "raw_value": 0.15,
+      "cell": "TARIF!F17",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P7K",
+      "raw_value": "=E17*(1-F17)",
+      "cell": "TARIF!G17",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P7K",
+      "raw_value": "=G17*D17",
+      "cell": "TARIF!H17",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P7K",
+      "raw_value": "=N17-E17",
+      "cell": "TARIF!I17",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P7K",
+      "raw_value": 8890,
+      "cell": "TARIF!E18",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P7K",
+      "raw_value": 0.15,
+      "cell": "TARIF!F18",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P7K",
+      "raw_value": "=E18*(1-F18)",
+      "cell": "TARIF!G18",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P7K",
+      "raw_value": "=G18*D18",
+      "cell": "TARIF!H18",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P7K",
+      "raw_value": "=N18-E18",
+      "cell": "TARIF!I18",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": null,
+      "raw_value": "=N19-E19",
+      "cell": "TARIF!I19",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P8K",
+      "raw_value": 5590,
+      "cell": "TARIF!E20",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P8K",
+      "raw_value": 0.17,
+      "cell": "TARIF!F20",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P8K",
+      "raw_value": "=E20*(1-F20)",
+      "cell": "TARIF!G20",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P8K",
+      "raw_value": "=G20*D20",
+      "cell": "TARIF!H20",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P8K",
+      "raw_value": "=N20-E20",
+      "cell": "TARIF!I20",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P8K",
+      "raw_value": 7790,
+      "cell": "TARIF!E21",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P8K",
+      "raw_value": 0.15,
+      "cell": "TARIF!F21",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P8K",
+      "raw_value": "=E21*(1-F21)",
+      "cell": "TARIF!G21",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P8K",
+      "raw_value": "=G21*D21",
+      "cell": "TARIF!H21",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P8K",
+      "raw_value": "=N21-E21",
+      "cell": "TARIF!I21",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P8K",
+      "raw_value": 10990,
+      "cell": "TARIF!E22",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P8K",
+      "raw_value": 0.2,
+      "cell": "TARIF!F22",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P8K",
+      "raw_value": "=E22*(1-F22)",
+      "cell": "TARIF!G22",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P8K",
+      "raw_value": "=G22*D22",
+      "cell": "TARIF!H22",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P8K",
+      "raw_value": "=N22-E22",
+      "cell": "TARIF!I22",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8K",
+      "raw_value": 16990,
+      "cell": "TARIF!E23",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8K",
+      "raw_value": 0.3,
+      "cell": "TARIF!F23",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8K",
+      "raw_value": "=E23*(1-F23)",
+      "cell": "TARIF!G23",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8K",
+      "raw_value": "=G23*D23",
+      "cell": "TARIF!H23",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8K",
+      "raw_value": "=N23-E23",
+      "cell": "TARIF!I23",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98P8K",
+      "raw_value": 34000,
+      "cell": "TARIF!E24",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98P8K",
+      "raw_value": 0.35,
+      "cell": "TARIF!F24",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98P8K",
+      "raw_value": "=E24*(1-F24)",
+      "cell": "TARIF!G24",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98P8K",
+      "raw_value": "=G24*D24",
+      "cell": "TARIF!H24",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98P8K",
+      "raw_value": "=N24-E24",
+      "cell": "TARIF!I24",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50C6K",
+      "raw_value": 5290,
+      "cell": "TARIF!E25",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50C6K",
+      "raw_value": 0.17,
+      "cell": "TARIF!F25",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50C6K",
+      "raw_value": "=E25*(1-F25)",
+      "cell": "TARIF!G25",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50C6K",
+      "raw_value": "=G25*D25",
+      "cell": "TARIF!H25",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50C6K",
+      "raw_value": "=N25-E25",
+      "cell": "TARIF!I25",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C6K",
+      "raw_value": 7090,
+      "cell": "TARIF!E26",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C6K",
+      "raw_value": 0.17,
+      "cell": "TARIF!F26",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C6K",
+      "raw_value": "=E26*(1-F26)",
+      "cell": "TARIF!G26",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C6K",
+      "raw_value": "=G26*D26",
+      "cell": "TARIF!H26",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C6K",
+      "raw_value": "=N26-E26",
+      "cell": "TARIF!I26",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C6K",
+      "raw_value": 9290,
+      "cell": "TARIF!E27",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C6K",
+      "raw_value": 0.17,
+      "cell": "TARIF!F27",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C6K",
+      "raw_value": "=E27*(1-F27)",
+      "cell": "TARIF!G27",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C6K",
+      "raw_value": "=G27*D27",
+      "cell": "TARIF!H27",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C6K",
+      "raw_value": "=N27-E27",
+      "cell": "TARIF!I27",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C6K",
+      "raw_value": 12990,
+      "cell": "TARIF!E28",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C6K",
+      "raw_value": 0.2,
+      "cell": "TARIF!F28",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C6K",
+      "raw_value": "=E28*(1-F28)",
+      "cell": "TARIF!G28",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C6K",
+      "raw_value": "=G28*D28",
+      "cell": "TARIF!H28",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C6K",
+      "raw_value": "=N28-E28",
+      "cell": "TARIF!I28",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C6K",
+      "raw_value": 19990,
+      "cell": "TARIF!E29",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C6K",
+      "raw_value": 0.2,
+      "cell": "TARIF!F29",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C6K",
+      "raw_value": "=E29*(1-F29)",
+      "cell": "TARIF!G29",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C6K",
+      "raw_value": "=G29*D29",
+      "cell": "TARIF!H29",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C6K",
+      "raw_value": "=N29-E29",
+      "cell": "TARIF!I29",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C7K",
+      "raw_value": 8990,
+      "cell": "TARIF!E30",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C7K",
+      "raw_value": 0.18,
+      "cell": "TARIF!F30",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C7K",
+      "raw_value": "=E30*(1-F30)",
+      "cell": "TARIF!G30",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C7K",
+      "raw_value": "=G30*D30",
+      "cell": "TARIF!H30",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C7K",
+      "raw_value": "=N30-E30",
+      "cell": "TARIF!I30",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C7K",
+      "raw_value": 11190,
+      "cell": "TARIF!E31",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C7K",
+      "raw_value": 0.2,
+      "cell": "TARIF!F31",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C7K",
+      "raw_value": "=E31*(1-F31)",
+      "cell": "TARIF!G31",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C7K",
+      "raw_value": "=G31*D31",
+      "cell": "TARIF!H31",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C7K",
+      "raw_value": "=N31-E31",
+      "cell": "TARIF!I31",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C7K",
+      "raw_value": 14990,
+      "cell": "TARIF!E32",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C7K",
+      "raw_value": 0.2,
+      "cell": "TARIF!F32",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C7K",
+      "raw_value": "=E32*(1-F32)",
+      "cell": "TARIF!G32",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C7K",
+      "raw_value": "=G32*D32",
+      "cell": "TARIF!H32",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C7K",
+      "raw_value": "=N32-E32",
+      "cell": "TARIF!I32",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C7K",
+      "raw_value": 24990,
+      "cell": "TARIF!E33",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C7K",
+      "raw_value": 0.35,
+      "cell": "TARIF!F33",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C7K",
+      "raw_value": "=E33*(1-F33)",
+      "cell": "TARIF!G33",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C7K",
+      "raw_value": "=G33*D33",
+      "cell": "TARIF!H33",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C7K",
+      "raw_value": "=N33-E33",
+      "cell": "TARIF!I33",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98C7K",
+      "raw_value": 45990,
+      "cell": "TARIF!E34",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98C7K",
+      "raw_value": 0.4,
+      "cell": "TARIF!F34",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98C7K",
+      "raw_value": "=E34*(1-F34)",
+      "cell": "TARIF!G34",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98C7K",
+      "raw_value": "=G34*D34",
+      "cell": "TARIF!H34",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98C7K",
+      "raw_value": "=N34-E34",
+      "cell": "TARIF!I34",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C8K",
+      "raw_value": 16990,
+      "cell": "TARIF!E35",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C8K",
+      "raw_value": 0.3,
+      "cell": "TARIF!F35",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C8K",
+      "raw_value": "=E35*(1-F35)",
+      "cell": "TARIF!G35",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C8K",
+      "raw_value": "=G35*D35",
+      "cell": "TARIF!H35",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C8K",
+      "raw_value": "=N35-E35",
+      "cell": "TARIF!I35",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C8K",
+      "raw_value": 22990,
+      "cell": "TARIF!E36",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C8K",
+      "raw_value": 0.3,
+      "cell": "TARIF!F36",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C8K",
+      "raw_value": "=E36*(1-F36)",
+      "cell": "TARIF!G36",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C8K",
+      "raw_value": "=G36*D36",
+      "cell": "TARIF!H36",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C8K",
+      "raw_value": "=N36-E36",
+      "cell": "TARIF!I36",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "115C7K",
+      "raw_value": 185000,
+      "cell": "TARIF!E37",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "115C7K",
+      "raw_value": 125000,
+      "cell": "TARIF!G37",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "115C7K",
+      "raw_value": "=G37*D37",
+      "cell": "TARIF!H37",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "115C7K",
+      "raw_value": "=N37-E37",
+      "cell": "TARIF!I37",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "Q85H",
+      "raw_value": 5599,
+      "cell": "TARIF!E38",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "Q85H",
+      "raw_value": 0.2,
+      "cell": "TARIF!F38",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "Q85H",
+      "raw_value": "=E38*(1-F38)",
+      "cell": "TARIF!G38",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "Q85H",
+      "raw_value": "=G38*D38",
+      "cell": "TARIF!H38",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "Q85H",
+      "raw_value": "=N38-E38",
+      "cell": "TARIF!I38",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell in price-difference column I (sheet note at I5); formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "32S5K",
+      "raw_value": 1560,
+      "cell": "TARIF!N8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "32S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "32S5K",
+      "raw_value": 0.13,
+      "cell": "TARIF!O8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "32S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "32S5K",
+      "raw_value": "=N8*(1-O8)",
+      "cell": "TARIF!P8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "32S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "32S5K",
+      "raw_value": "=P8*M8",
+      "cell": "TARIF!Q8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "32S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "40S5K",
+      "raw_value": 2600,
+      "cell": "TARIF!N9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "40S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "40S5K",
+      "raw_value": 0.16,
+      "cell": "TARIF!O9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "40S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "40S5K",
+      "raw_value": "=N9*(1-O9)",
+      "cell": "TARIF!P9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "40S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "40S5K",
+      "raw_value": "=P9*M9",
+      "cell": "TARIF!Q9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "40S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43S5K",
+      "raw_value": 2880,
+      "cell": "TARIF!N10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "43S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43S5K",
+      "raw_value": 0.16,
+      "cell": "TARIF!O10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "43S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43S5K",
+      "raw_value": "=N10*(1-O10)",
+      "cell": "TARIF!P10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "43S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43S5K",
+      "raw_value": "=P10*M10",
+      "cell": "TARIF!Q10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "43S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50S5K",
+      "raw_value": 3490,
+      "cell": "TARIF!N11",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "50S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50S5K",
+      "raw_value": 0.13,
+      "cell": "TARIF!O11",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "50S5K",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50S5K",
+      "raw_value": "=N11*(1-O11)",
+      "cell": "TARIF!P11",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "50S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50S5K",
+      "raw_value": "=P11*M11",
+      "cell": "TARIF!Q11",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "50S5K",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P6L",
+      "raw_value": 4300,
+      "cell": "TARIF!N12",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P6L",
+      "raw_value": 0.15,
+      "cell": "TARIF!O12",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P6L",
+      "raw_value": "=N12*(1-O12)",
+      "cell": "TARIF!P12",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P6L",
+      "raw_value": "=P12*M12",
+      "cell": "TARIF!Q12",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P6L",
+      "raw_value": 7999,
+      "cell": "TARIF!N13",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P6L",
+      "raw_value": 0.15,
+      "cell": "TARIF!O13",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P6L",
+      "raw_value": "=N13*(1-O13)",
+      "cell": "TARIF!P13",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P6L",
+      "raw_value": "=P13*M13",
+      "cell": "TARIF!Q13",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43P7L",
+      "raw_value": 3549,
+      "cell": "TARIF!N14",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43P7L",
+      "raw_value": 0.12,
+      "cell": "TARIF!O14",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43P7L",
+      "raw_value": "=N14*(1-O14)",
+      "cell": "TARIF!P14",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "43P7L",
+      "raw_value": "=P14*M14",
+      "cell": "TARIF!Q14",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50P7L",
+      "raw_value": 4349,
+      "cell": "TARIF!N15",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50P7L",
+      "raw_value": 0.12,
+      "cell": "TARIF!O15",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50P7L",
+      "raw_value": "=N15*(1-O15)",
+      "cell": "TARIF!P15",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50P7L",
+      "raw_value": "=P15*M15",
+      "cell": "TARIF!Q15",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P7L",
+      "raw_value": 4849,
+      "cell": "TARIF!N16",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P7L",
+      "raw_value": 0.12,
+      "cell": "TARIF!O16",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P7L",
+      "raw_value": "=N16*(1-O16)",
+      "cell": "TARIF!P16",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P7L",
+      "raw_value": "=P16*M16",
+      "cell": "TARIF!Q16",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P7L",
+      "raw_value": 6699,
+      "cell": "TARIF!N17",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P7L",
+      "raw_value": 0.12,
+      "cell": "TARIF!O17",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P7L",
+      "raw_value": "=N17*(1-O17)",
+      "cell": "TARIF!P17",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P7L",
+      "raw_value": "=P17*M17",
+      "cell": "TARIF!Q17",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P7L",
+      "raw_value": 8999,
+      "cell": "TARIF!N18",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "75P7L",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P7L",
+      "raw_value": 0.12,
+      "cell": "TARIF!O18",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "75P7L",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P7L",
+      "raw_value": "=N18*(1-O18)",
+      "cell": "TARIF!P18",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "75P7L",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P7L",
+      "raw_value": "=P18*M18",
+      "cell": "TARIF!Q18",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "75P7L",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P7L",
+      "raw_value": 12999,
+      "cell": "TARIF!N19",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P7L",
+      "raw_value": 0.2,
+      "cell": "TARIF!O19",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P7L",
+      "raw_value": "=N19*(1-O19)",
+      "cell": "TARIF!P19",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P7L",
+      "raw_value": "=P19*M19",
+      "cell": "TARIF!Q19",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P8L",
+      "raw_value": 5699,
+      "cell": "TARIF!N20",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "55P8L",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P8L",
+      "raw_value": 0.15,
+      "cell": "TARIF!O20",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "55P8L",
+      "match_confidence": "exact",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P8L",
+      "raw_value": "=N20*(1-O20)",
+      "cell": "TARIF!P20",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "55P8L",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55P8L",
+      "raw_value": "=P20*M20",
+      "cell": "TARIF!Q20",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": "55P8L",
+      "match_confidence": "exact",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P8L",
+      "raw_value": 7999,
+      "cell": "TARIF!N21",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P8L",
+      "raw_value": 0.15,
+      "cell": "TARIF!O21",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P8L",
+      "raw_value": "=N21*(1-O21)",
+      "cell": "TARIF!P21",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65P8L",
+      "raw_value": "=P21*M21",
+      "cell": "TARIF!Q21",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P8L",
+      "raw_value": 10999,
+      "cell": "TARIF!N22",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P8L",
+      "raw_value": 0.15,
+      "cell": "TARIF!O22",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P8L",
+      "raw_value": "=N22*(1-O22)",
+      "cell": "TARIF!P22",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75P8L",
+      "raw_value": "=P22*M22",
+      "cell": "TARIF!Q22",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8L",
+      "raw_value": 16499,
+      "cell": "TARIF!N23",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8L",
+      "raw_value": 0.2,
+      "cell": "TARIF!O23",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8L",
+      "raw_value": "=N23*(1-O23)",
+      "cell": "TARIF!P23",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8L",
+      "raw_value": "=P23*M23",
+      "cell": "TARIF!Q23",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98P8L",
+      "raw_value": 24999,
+      "cell": "TARIF!N24",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98P8L",
+      "raw_value": 0.2,
+      "cell": "TARIF!O24",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98P8L",
+      "raw_value": "=N24*(1-O24)",
+      "cell": "TARIF!P24",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98P8L",
+      "raw_value": "=P24*M24",
+      "cell": "TARIF!Q24",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50C6K",
+      "raw_value": 5499,
+      "cell": "TARIF!N25",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50C6K",
+      "raw_value": 0.15,
+      "cell": "TARIF!O25",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50C6K",
+      "raw_value": "=N25*(1-O25)",
+      "cell": "TARIF!P25",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "50C6K",
+      "raw_value": "=P25*M25",
+      "cell": "TARIF!Q25",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C6K",
+      "raw_value": 7090,
+      "cell": "TARIF!N26",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C6K",
+      "raw_value": 0.15,
+      "cell": "TARIF!O26",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C6K",
+      "raw_value": "=N26*(1-O26)",
+      "cell": "TARIF!P26",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C6K",
+      "raw_value": "=P26*M26",
+      "cell": "TARIF!Q26",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C6K",
+      "raw_value": 9290,
+      "cell": "TARIF!N27",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C6K",
+      "raw_value": 0.15,
+      "cell": "TARIF!O27",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C6K",
+      "raw_value": "=N27*(1-O27)",
+      "cell": "TARIF!P27",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C6K",
+      "raw_value": "=P27*M27",
+      "cell": "TARIF!Q27",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C6K",
+      "raw_value": 12990,
+      "cell": "TARIF!N28",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C6K",
+      "raw_value": 0.2,
+      "cell": "TARIF!O28",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C6K",
+      "raw_value": "=N28*(1-O28)",
+      "cell": "TARIF!P28",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C6K",
+      "raw_value": "=P28*M28",
+      "cell": "TARIF!Q28",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C6K",
+      "raw_value": 19990,
+      "cell": "TARIF!N29",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C6K",
+      "raw_value": 0.2,
+      "cell": "TARIF!O29",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C6K",
+      "raw_value": "=N29*(1-O29)",
+      "cell": "TARIF!P29",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C6K",
+      "raw_value": "=P29*M29",
+      "cell": "TARIF!Q29",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C7L",
+      "raw_value": 9499,
+      "cell": "TARIF!N30",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C7L",
+      "raw_value": 0.18,
+      "cell": "TARIF!O30",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C7L",
+      "raw_value": "=N30*(1-O30)",
+      "cell": "TARIF!P30",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "55C7L",
+      "raw_value": "=P30*M30",
+      "cell": "TARIF!Q30",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C7L",
+      "raw_value": 11699,
+      "cell": "TARIF!N31",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C7L",
+      "raw_value": 0.18,
+      "cell": "TARIF!O31",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C7L",
+      "raw_value": "=N31*(1-O31)",
+      "cell": "TARIF!P31",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C7L",
+      "raw_value": "=P31*M31",
+      "cell": "TARIF!Q31",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C7L",
+      "raw_value": 15499,
+      "cell": "TARIF!N32",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C7L",
+      "raw_value": 0.18,
+      "cell": "TARIF!O32",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C7L",
+      "raw_value": "=N32*(1-O32)",
+      "cell": "TARIF!P32",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C7L",
+      "raw_value": "=P32*M32",
+      "cell": "TARIF!Q32",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C7L",
+      "raw_value": 24999,
+      "cell": "TARIF!N33",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C7L",
+      "raw_value": 0.3,
+      "cell": "TARIF!O33",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C7L",
+      "raw_value": "=N33*(1-O33)",
+      "cell": "TARIF!P33",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85C7L",
+      "raw_value": "=P33*M33",
+      "cell": "TARIF!Q33",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98C7L",
+      "raw_value": 45999,
+      "cell": "TARIF!N34",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98C7L",
+      "raw_value": 0.3,
+      "cell": "TARIF!O34",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98C7L",
+      "raw_value": "=N34*(1-O34)",
+      "cell": "TARIF!P34",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "98C7L",
+      "raw_value": "=P34*M34",
+      "cell": "TARIF!Q34",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C8L",
+      "raw_value": 18499,
+      "cell": "TARIF!N35",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C8L",
+      "raw_value": 0.3,
+      "cell": "TARIF!O35",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C8L",
+      "raw_value": "=N35*(1-O35)",
+      "cell": "TARIF!P35",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "65C8L",
+      "raw_value": "=P35*M35",
+      "cell": "TARIF!Q35",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C8L",
+      "raw_value": 24499,
+      "cell": "TARIF!N36",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C8L",
+      "raw_value": 0.3,
+      "cell": "TARIF!O36",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C8L",
+      "raw_value": "=N36*(1-O36)",
+      "cell": "TARIF!P36",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "75C8L",
+      "raw_value": "=P36*M36",
+      "cell": "TARIF!Q36",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "115C7K",
+      "raw_value": 185000,
+      "cell": "TARIF!N37",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "115C7K",
+      "raw_value": 125000,
+      "cell": "TARIF!P37",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "115C7K",
+      "raw_value": "=P37*M37",
+      "cell": "TARIF!Q37",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "Q85H",
+      "raw_value": 5599,
+      "cell": "TARIF!N38",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF!A42."
+    },
+    {
+      "model": "Q85H",
+      "raw_value": 0.2,
+      "cell": "TARIF!O38",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF!A42."
+    },
+    {
+      "model": "Q85H",
+      "raw_value": "=N38*(1-O38)",
+      "cell": "TARIF!P38",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "Q85H",
+      "raw_value": "=P38*M38",
+      "cell": "TARIF!Q38",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF!A42."
+    },
+    {
+      "model": "85P8L",
+      "raw_value": 16499,
+      "cell": "TARIF (2)!E8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in TARIF (2)!A12."
+    },
+    {
+      "model": "85P8L",
+      "raw_value": 0.2,
+      "cell": "TARIF (2)!F8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in TARIF (2)!A12."
+    },
+    {
+      "model": "85P8L",
+      "raw_value": "=E8*(1-F8)",
+      "cell": "TARIF (2)!G8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF (2)!A12."
+    },
+    {
+      "model": "85P8L",
+      "raw_value": "=G8*D8",
+      "cell": "TARIF (2)!H8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in TARIF (2)!A12."
+    },
+    {
+      "model": "RAC-09CHSD/ZG31I",
+      "raw_value": 3499,
+      "cell": "Order!F7",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-09CHSD/ZG31I",
+      "raw_value": 0.18,
+      "cell": "Order!G7",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-09CHSD/ZG31I",
+      "raw_value": "=F7-F7*G7",
+      "cell": "Order!H7",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-09CHSD/ZG31I",
+      "raw_value": "=H7*E7",
+      "cell": "Order!I7",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-12CHSD/ZG31I",
+      "raw_value": 3799,
+      "cell": "Order!F8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-12CHSD/ZG31I",
+      "raw_value": 0.18,
+      "cell": "Order!G8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-12CHSD/ZG31I",
+      "raw_value": "=F8-F8*G8",
+      "cell": "Order!H8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-12CHSD/ZG31I",
+      "raw_value": "=H8*E8",
+      "cell": "Order!I8",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-18CHSD/ZG31I",
+      "raw_value": 5299,
+      "cell": "Order!F9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-18CHSD/ZG31I",
+      "raw_value": 0.18,
+      "cell": "Order!G9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-18CHSD/ZG31I",
+      "raw_value": "=F9-F9*G9",
+      "cell": "Order!H9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-18CHSD/ZG31I",
+      "raw_value": "=H9*E9",
+      "cell": "Order!I9",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-24CHSD/ZG31I",
+      "raw_value": 6399,
+      "cell": "Order!F10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Prix unitaire (TTC)'; supplier unit cost, not a retail price. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-24CHSD/ZG31I",
+      "raw_value": 0.18,
+      "cell": "Order!G10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw value under header 'Remise%'; stored as a fraction; not applied, converted or merged. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-24CHSD/ZG31I",
+      "raw_value": "=F10-F10*G10",
+      "cell": "Order!H10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant (TTC) après remise'; formula string preserved, not evaluated. VAT note in Order!A15."
+    },
+    {
+      "model": "RAC-24CHSD/ZG31I",
+      "raw_value": "=H10*E10",
+      "cell": "Order!I10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw cell under header 'Montant Total (TTC) après remise'; formula string preserved, not evaluated. VAT note in Order!A15."
+    },
+    {
+      "model": "TOTAL",
+      "raw_value": "=SUM(H8:H39)",
+      "cell": "TARIF!H40",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw total amount formula/value under 'Total (TTC) Après Remise'; not evaluated, not retail pricing. VAT note in TARIF!A42."
+    },
+    {
+      "model": "TOTAL",
+      "raw_value": "=SUM(H8:H9)",
+      "cell": "TARIF (2)!H10",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw total amount formula/value under 'Total (TTC) Après Remise'; not evaluated, not retail pricing. VAT note in TARIF (2)!A12."
+    },
+    {
+      "model": "TOTAL",
+      "raw_value": "=SUM(I7:I12)",
+      "cell": "Order!I13",
+      "currency_hint": "No explicit currency symbol on price cells; sheet contains label 'RIB N°:(MAD)' only; note '*les prix (TTC) incluent la TVA'.",
+      "matched_sku": null,
+      "match_confidence": "none",
+      "notes": "Raw total amount formula/value under 'Total (TTC) Après Remise'; not evaluated, not retail pricing. VAT note in Order!A15."
+    }
+  ],
+  "explicit_non_matches": [
+    {
+      "model": "115C7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B37",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "43P7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B14",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "43P7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K14",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "50C6K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B25",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "50P7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B15",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "50P7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K15",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "55C6K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B26",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "55C7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B30",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "55C7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K30",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "55P6K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B12",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "55P6L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K12",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "55P7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B16",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "55P7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K16",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "55P8K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B20",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "65C6K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B27",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "65C7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B31",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "65C7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K31",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "65C8K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B35",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "65C8L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K35",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "65P7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B17",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "65P7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K17",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "65P8K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B21",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "65P8L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K21",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "75C6K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B28",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "75C7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B32",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "75C7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K32",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "75C8K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B36",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "75C8L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K36",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "75P6L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K13",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "75P7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B18",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "75P8K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B22",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "75P8L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K22",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "85C6K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B29",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "85C7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B33",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "85C7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K33",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "85P7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K19",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "85P8K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B23",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "85P8L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K23",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "98C7K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B34",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "98C7L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K34",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "98P8K",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B24",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "98P8L",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!K24",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "Q85H",
+      "source_file": "img/TCL/Price list  TV  2026 NEW TAJ.xlsx",
+      "cell": "TARIF!B38",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "RAC-09CHSD/ZG31I",
+      "source_file": "img/TCL/PRICE AC TCL +ROWA 2026 taje.xlsx",
+      "cell": "Order!C7",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "RAC-12CHSD/ZG31I",
+      "source_file": "img/TCL/PRICE AC TCL +ROWA 2026 taje.xlsx",
+      "cell": "Order!C8",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "RAC-18CHSD/ZG31I",
+      "source_file": "img/TCL/PRICE AC TCL +ROWA 2026 taje.xlsx",
+      "cell": "Order!C9",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    },
+    {
+      "model": "RAC-24CHSD/ZG31I",
+      "source_file": "img/TCL/PRICE AC TCL +ROWA 2026 taje.xlsx",
+      "cell": "Order!C10",
+      "matched_sku": null,
+      "reason": "No exact or normalized SKU match in stock_import/import_manifest.json; no fuzzy match attempted."
+    }
+  ],
+  "warnings": [
+    "SUPPLIER COST REFERENCE ONLY - NOT RETAIL PRICING - NOT APPROVED FOR IMPORT. These are TCL supplier pro-forma purchase/discount sheets, not TAJ FROID retail price lists.",
+    "No VAT-rate field exists in either workbook. Both contain the note '*les prix (TTC) incluent la TVA' (prices include VAT). No VAT was added, removed or inferred.",
+    "No approval/signature date is filled in: 'Date:' cells are empty (TARIF A62/F62; TARIF (2) A32/F32; Order A35/G35). The pro-forma is not shown as signed by the buyer.",
+    "Discount fields are stored as fractions under header 'Remise%'. Raw fractions were recorded verbatim; no discount was applied, merged or converted.",
+    "Amount and total cells contain uncalculated spreadsheet formulas (with a few hardcoded amount values). Raw formulas/values were recorded verbatim and never evaluated; no retail price was derived.",
+    "Currency is not explicitly stated on any price cell. 'MAD' appears only in the bank-detail label 'RIB N°:(MAD)'; no currency was inferred.",
+    "Only 6 model codes in these workbooks match SKUs in stock_import/import_manifest.json by exact/normalized SKU matching. All other mentioned models are listed under explicit_non_matches; no fuzzy matching to a different product was performed.",
+    "Client differs by sheet: TV 'TARIF' says 'Client：SKY LINE ELECTRO'; TV 'TARIF (2)' says 'Client：TAJ FROID'; AC 'Order' says 'CLIENT: TAJ FROID'.",
+    "Other pro-forma/order workbooks also exist under img/TCL/. This reference covers only the two filename-identified price-list workbooks listed in source_files."
+  ],
+  "retail_pricing_usable": false
+}

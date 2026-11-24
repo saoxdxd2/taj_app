@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, 
                                QPushButton, QTableView, 
-                               QHeaderView, QMessageBox)
+                               QHeaderView, QMessageBox, QInputDialog)
 from PySide6.QtCore import Qt
 from src.modules.inventory.services import InventoryService
 from src.security.permissions import AccessDenied
@@ -22,6 +22,7 @@ class ProductWidget(QWidget):
         self.btn_refresh = QPushButton("Refresh")
         self.btn_add = QPushButton("Add Product")
         self.btn_edit = QPushButton("Edit")
+        self.btn_pin_price = QPushButton("Set Pinned Price")
         self.btn_activate = QPushButton("Activate")
         self.btn_archive = QPushButton("Archive")
         self.btn_delete = QPushButton("Delete")
@@ -30,6 +31,7 @@ class ProductWidget(QWidget):
         toolbar.addWidget(self.btn_refresh)
         toolbar.addWidget(self.btn_add)
         toolbar.addWidget(self.btn_edit)
+        toolbar.addWidget(self.btn_pin_price)
         toolbar.addWidget(self.btn_activate)
         toolbar.addWidget(self.btn_archive)
         toolbar.addWidget(self.btn_delete)
@@ -56,6 +58,7 @@ class ProductWidget(QWidget):
         self.btn_refresh.clicked.connect(self.refresh_table)
         self.btn_add.clicked.connect(self.on_add_product)
         self.btn_edit.clicked.connect(self.on_edit_product)
+        self.btn_pin_price.clicked.connect(self.on_set_pinned_price)
         self.btn_activate.clicked.connect(self.on_activate_product)
         self.btn_archive.clicked.connect(self.on_archive_product)
         self.btn_delete.clicked.connect(self.on_delete_product)
@@ -132,6 +135,29 @@ class ProductWidget(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
             
+        self.refresh_table()
+
+    def on_set_pinned_price(self):
+        from src.core.session import CurrentSession
+        product_id = self.get_selected_product_id()
+        if not product_id:
+            QMessageBox.warning(self, "Warning", "Please select a product to pin.")
+            return
+
+        value, ok = QInputDialog.getText(
+            self, "Pinned Price", "Pinned price (0 or blank clears):"
+        )
+        if not ok:
+            return
+        try:
+            # The service normalizes the text; blank, 0 and invalid values clear.
+            InventoryService.set_pinned_price(
+                CurrentSession.get_context(), product_id=product_id,
+                pinned_price=value,
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+
         self.refresh_table()
 
     def on_delete_product(self):

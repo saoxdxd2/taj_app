@@ -1,0 +1,161 @@
+{
+  "report": "ERP field map for the non-destructive stock import tool",
+  "generated_by": "static inspection only - no ERP database was opened and no import was executed",
+  "files_inspected": [
+    "src/modules/inventory/models.py",
+    "src/modules/inventory/services.py",
+    "src/core/context.py",
+    "src/core/session.py",
+    "src/core/paths.py",
+    "src/database/base.py",
+    "src/database/session.py",
+    "src/database/transaction.py",
+    "src/database/audit_listener.py",
+    "src/security/permissions.py",
+    "src/modules/mobile_sync/catalog.py",
+    "src/modules/websync/services.py",
+    "stock_import/import_manifest.json"
+  ],
+  "how_products_are_actually_created": {
+    "entry_point": "InventoryService.create_product(context, session, ...) in src/modules/inventory/services.py:110-150",
+    "steps": [
+      "PermissionManager.verify_permission(context, 'Inventory.Products.Create') (services.py:124).",
+      "Validates: negative purchase_price/sale_price forbidden, negative vat_rate forbidden, empty sku forbidden (services.py:126-133). ZERO prices/VAT are NOT rejected.",
+      "Constructs Product(... state=ProductState.DRAFT ...) explicitly, adds it to the session and flushes to obtain the id (services.py:135-148).",
+      "Stock is not created by create_product. InventoryService.adjust_stock (services.py:233-276) gets-or-creates StockLevel(product_id, quantity=0) and records an immutable StockMovement; that is the code path this importer uses.",
+      "All of the above runs inside @transactional (src/database/transaction.py:5-43): one SessionLocal, commit on success, rollback on exception, close always."
+    ],
+    "activation_is_separate": "InventoryService.activate_product (services.py:152-169) is the only Draft->Active transition. This importer never calls it; imported products stay DRAFT so a human can verify them first.",
+    "deletion_is_forbidden": "This importer never calls delete_product (services.py:187-231), never issues DELETE, and never updates an existing Product's name/price/state."
+  },
+  "product_state_meanings": {
+    "Draft": "ProductState.DRAFT ('Draft', models.py:13). Default for the model (models.py:49) and HARD-CODED by create_product (services.py:139). Included in mobile/website catalogs but 'active': false (catalog.py:32,43; websync/services.py:60,72), so it is not selectable in the phone invoice picker. Chosen for this import.",
+    "Active": "ProductState.ACTIVE ('Active', models.py:14). Only reachable via activate_product; 'active': true in catalogs and sellable. Not set by this importer.",
+    "Archived": "ProductState.ARCHIVED ('Archived', models.py:15). Products with history must be archived instead of deleted (services.py:171-185,205-214). Excluded from catalogs (catalog.py:32). Not set by this importer."
+  },
+  "category_and_brand_resolution": {
+    "models": "Category.name and Brand.name are String(100), unique=True, nullable=False (models.py:27-37). Product.category_id / Product.brand_id are nullable ForeignKey columns (models.py:64-65).",
+    "resolution": "EXACT, case-sensitive match on the name string against category.name / brand.name only. No id, alias, fuzzy match, or creation by the ERP service exists.",
+    "services_have_no_create_method": "InventoryService exposes get_all_brands/get_all_categories (services.py:21-33) but NO create_category/create_brand. The UI product dialog only selects existing ids (src/ui/dialogs/product_dialog.py:95-126). Therefore lookup rows must normally pre-exist.",
+    "importer_behaviour": "dry-run lists every category/brand that would need creating. --apply get-or-creates missing Category/Brand rows by exact name inside the SAME transaction (additive only; never renames or deletes an existing row). This is the only write not performed through InventoryService and is disclosed in the plan.",
+    "if_omitted": "Product.brand_id / category_id may be NULL; catalog.py:44-45 then emits JSON null. This importer always supplies both because the manifest has them.",
+    "manifest_vocabulary": {
+      "categories": ["TV & Audio", "Laundry", "Refrigerators", "Freezers", "Cooking", "Dishwashers", "Small Appl.", "Filtration", "Ventilation", "Water Heaters"],
+      "category_count": 10,
+      "brand_count": 40,
+      "brands": ["Ariston", "Arthur Martin", "BAP", "Beko", "Bonomi", "Candy", "Chaffoteaux", "Condor", "Daiko", "Eco Aqua", "Ekan / Krohler", "Fitco", "Fresh", "Galanz", "Ganador", "General", "Genial", "German Lab", "Globvision", "Golden Star", "Indesit", "Infiniton", "Itimat", "Junkers", "Junkers / Bosch", "KGLG", "Krohler", "LG", "Regal", "Royal", "Samsung", "Severin", "Siera", "Skyworth", "TCL", "Tatch", "Taurus", "Tefal", "Unspecified", "Whirlpool"]
+    }
+  },
+  "price_and_vat_semantics": {
+    "sale_price": {
+      "erp": "Numeric(12,2), nullable=False, model default Decimal('0.00') (models.py:53); service default Decimal('0.00') (services.py:115); zero is accepted because only negative values are rejected (services.py:126).",
+      "if_none": "Passing None explicitly triggers TypeError at 'sale_price < 0' in the service, or a NOT NULL database error if a Product is constructed directly. NEVER rely on the default.",
+      "if_zero": "Legal for imported stock: catalog.py excludes unpriced products from the phone sales catalog, and POS/invoice surfaces use the effective pinned price. The ERP Inventory and phone Needs pricing screens keep the row visible so staff can enter a pin. Website pricing is unchanged and out of scope.",
+      "importer_rule": "Missing/blank/zero is NEEDS PRICING: stage DRAFT at sale_price=0.00 with no pin. Invalid, negative, non-numeric, >2 decimals, or out-of-range values HARD FAIL. No price is ever invented or inferred."
+    },
+    "vat_rate": {
+      "erp": "Numeric(5,2), nullable=False, model default Decimal('20.00') (models.py:55); service default Decimal('20.00') (services.py:116); zero is accepted (services.py:129 checks only '< 0').",
+      "if_none": "TypeError in the service ('vat_rate < 0') or NOT NULL violation on a direct insert.",
+      "if_zero": "Accepted by the ERP but wrong for Moroccan 20% VAT; catalog.py:41 publishes '0.00' and tax totals are understated.",
+      "importer_rule": "Take vat_rate from the optional CSV column. If absent, use the ERP default 20.00 but mark it UNVERIFIED in the plan/audit output. Never invent a per-SKU rate."
+    },
+    "purchase_price": "Numeric(12,2), default 0.00, nullable=False (models.py:52). No source in the manifest; importer uses 0.00. Risk: margin/cost reports will treat these as zero-cost until a human supplies supplier cost.",
+    "sale_price_website": "Numeric(12,2), default 0.00, nullable=False (models.py:54). create_product never sets it. Website export falls back to sale_price when it is 0 (websync/services.py:31-37), so a positive sale_price is sufficient; website price imports overwrite this column, not sale_price."
+  },
+  "fields": [
+    {
+      "field": "id", "owner": "Product (BaseModel)", "source": "autoincrement", "required": "no", "default": "DB-generated", "used_by_importer": "no", "risk": "Never supplied; returned after flush. src/database/base.py:26."
+    },
+    {
+      "field": "created_at / updated_at", "owner": "Product, StockLevel, Category, Brand, StockMovement (BaseModel)", "source": "application clock", "required": "no", "default": "datetime.now(timezone.utc)", "used_by_importer": "no", "risk": "Automatic; src/database/base.py:27-35."
+    },
+    {
+      "field": "name", "owner": "Product", "source": "manifest.name", "required": "yes (String(255), nullable=False, indexed)", "default": "none", "used_by_importer": "yes, for NEW products only", "risk": "Exact text from register; never overwrites an existing product's name. models.py:44, catalog.py:39."
+    },
+    {
+      "field": "sku", "owner": "Product", "source": "manifest.sku", "required": "yes (String(50), unique, nullable=False, indexed)", "default": "none", "used_by_importer": "yes - idempotency/conflict key", "risk": "Duplicate or empty SKU hard-fails. Match is exact/case-sensitive. 8 internal_placeholder rows use PH-... codes and are flagged for human label checks. models.py:45, catalog.py:38."
+    },
+    {
+      "field": "description", "owner": "Product", "source": "none", "required": "no (nullable)", "default": "NULL", "used_by_importer": "no", "risk": "Not present in the register."
+    },
+    {
+      "field": "product_type", "owner": "Product", "source": "constant", "required": "yes (SQLAlchemy Enum)", "default": "ProductType.PHYSICAL ('Physical Product')", "used_by_importer": "yes", "risk": "All 150 rows are physical stock. models.py:48; services.py:113."
+    },
+    {
+      "field": "state", "owner": "Product", "source": "constant", "required": "yes (SQLAlchemy Enum)", "default": "ProductState.DRAFT ('Draft')", "used_by_importer": "yes", "risk": "Service hard-codes DRAFT; activation is a separate human action. DRAFT rows are visible in catalogs with active=false. models.py:49; services.py:139; catalog.py:43."
+    },
+    {
+      "field": "purchase_price", "owner": "Product", "source": "constant", "required": "yes (Numeric(12,2))", "default": "Decimal('0.00')", "used_by_importer": "yes", "risk": "No supplier cost available; margin reports will be zero-cost. models.py:52."
+    },
+    {
+      "field": "sale_price", "owner": "Product", "source": "optional prices CSV column 'sale_price' (aliases: price, prix, selling_price, unit_price)", "required": "no (Numeric(12,2), zero allowed)", "default": "Decimal('0.00') in ERP - staged as NEEDS PRICING", "used_by_importer": "yes", "risk": "Missing/zero is staged DRAFT at 0.00 with no pin and hidden from sales until pinned. Invalid/negative values hard-fail. No price is invented. See PRICE_GATE.md."
+    },
+    {
+      "field": "pinned_price", "owner": "Product", "source": "ERP UI / phone Needs pricing screen", "required": "no (Numeric(12,2), nullable)", "default": "None", "used_by_importer": "no (importer never sets it)", "risk": "Authoritative retail price. Pin wins over sale_price; unpriced rows stay hidden from sales until a pin is entered. See PINNED_PRICE_CONTRACT.md."
+    },
+    {
+      "field": "sale_price_website", "owner": "Product", "source": "none", "required": "yes (Numeric(12,2))", "default": "Decimal('0.00')", "used_by_importer": "no (left at ERP default)", "risk": "Website export falls back to sale_price while this is 0; do not set it from an unverified source. models.py:54; websync/services.py:34-37."
+    },
+    {
+      "field": "vat_rate", "owner": "Product", "source": "optional prices CSV column 'vat_rate' (alias: tva)", "required": "yes (Numeric(5,2))", "default": "Decimal('20.00') in ERP", "used_by_importer": "yes (CSV value, or flagged 20.00 fallback)", "risk": "0 is accepted by ERP but wrong; None errors. models.py:55; catalog.py:41."
+    },
+    {
+      "field": "total_sold_website / total_sold_store / revenue_website / revenue_store", "owner": "Product", "source": "none", "required": "yes", "default": "0 / 0 / 0.00 / 0.00", "used_by_importer": "no", "risk": "Analytics counters start empty; models.py:58-61."
+    },
+    {
+      "field": "brand_id", "owner": "Product", "source": "manifest.brand -> brand.name exact lookup", "required": "no (nullable FK)", "default": "NULL", "used_by_importer": "yes", "risk": "Missing brand is get-or-created by exact name in --apply. models.py:64; catalog.py:45."
+    },
+    {
+      "field": "category_id", "owner": "Product", "source": "manifest.category -> category.name exact lookup", "required": "no (nullable FK)", "default": "NULL", "used_by_importer": "yes", "risk": "Missing category is get-or-created by exact name in --apply. models.py:65; catalog.py:44."
+    },
+    {
+      "field": "supplier_id", "owner": "Product", "source": "none", "required": "no (nullable FK)", "default": "NULL", "used_by_importer": "no", "risk": "No supplier mapping exists."
+    },
+    {
+      "field": "name", "owner": "Category / Brand", "source": "manifest.category / manifest.brand", "required": "yes (String(100), unique, nullable=False)", "default": "none", "used_by_importer": "yes, only when absent", "risk": "Unique constraint means exact-name get-or-create; no renames. models.py:27-37."
+    },
+    {
+      "field": "product_id", "owner": "StockLevel", "source": "Product.id after flush", "required": "yes (unique FK, nullable=False, indexed)", "default": "none", "used_by_importer": "yes (implicitly via adjust_stock)", "risk": "One StockLevel per product; services.py:255 creates it with quantity 0. models.py:83."
+    },
+    {
+      "field": "quantity", "owner": "StockLevel", "source": "manifest.qty", "required": "yes (nullable=False)", "default": "0", "used_by_importer": "yes", "risk": "Target is absolute 297 units total. Existing stock is never reduced; a higher existing quantity aborts. services.py:258-263; catalog.py:42."
+    },
+    {
+      "field": "min_quantity", "owner": "StockLevel", "source": "none", "required": "yes (nullable=False)", "default": "0", "used_by_importer": "no (left at ERP default)", "risk": "Reorder alerts stay off until a human sets thresholds. models.py:87."
+    },
+    {
+      "field": "movement_type / quantity_change / reference", "owner": "StockMovement (immutable ledger)", "source": "'Purchase' / +qty / import reference", "required": "yes", "default": "adjust_stock falls back to MANUAL_ADJUSTMENT for an unknown type", "used_by_importer": "yes, via adjust_stock", "risk": "Provides provenance; reference embeds manifest row n and ledger (P1..P8). services.py:246-275."
+    },
+    {
+      "field": "n", "owner": "manifest only", "source": "import_manifest.json", "required": "yes (1..150)", "default": "none", "used_by_importer": "yes (audit reference)", "risk": "Not an ERP field."
+    },
+    {
+      "field": "status", "owner": "manifest only", "source": "import_manifest.json", "required": "yes", "default": "none", "used_by_importer": "reported only", "risk": "QA/provenance flag ('Verified', 'Check carton', 'Check box'), NOT ProductState. Must not be mapped to Active/Draft."
+    },
+    {
+      "field": "ledger", "owner": "manifest only", "source": "import_manifest.json", "required": "yes", "default": "none", "used_by_importer": "embedded in StockMovement.reference", "risk": "Sheet provenance (P1..P8), not an ERP field."
+    },
+    {
+      "field": "source_page", "owner": "manifest only", "source": "import_manifest.json", "required": "yes", "default": "none", "used_by_importer": "reported only", "risk": "Page provenance; not an ERP field."
+    },
+    {
+      "field": "internal_placeholder", "owner": "manifest only", "source": "import_manifest.json", "required": "yes", "default": "none", "used_by_importer": "reported and flagged for review", "risk": "8 rows (86,120,125,126,134,135,138,149) have synthetic PH-... SKUs; physical label checks remain mandatory."
+    },
+    {
+      "field": "physical_label_check_required", "owner": "manifest only", "source": "import_manifest.json", "required": "no", "default": "false", "used_by_importer": "reported", "risk": "Not an ERP field."
+    }
+  ],
+  "validation_rules": {
+    "manifest_rows": "exactly 150 (declared and actual)",
+    "manifest_units": "exactly 297 (declared and sum of qty)",
+    "manifest_skus": "non-empty and unique after stripping whitespace; case-sensitive",
+    "prices": "optional CSV rows; missing/blank/zero is NEEDS PRICING and stages DRAFT at sale_price=0.00 with no pin. Supplied prices must be numeric, positive, <= 2 decimals, within Numeric(12,2). Supplier/cost/pro-forma columns are rejected; no retail price is invented.",
+    "csv_skus": "non-empty and unique; extra CSV rows are warnings only",
+    "dry_run": "never imports src.* ERP modules; if a DB file exists it is probed only via sqlite3 mode=ro&immutable=1 (no -wal/-shm side files, fails closed on a non-empty WAL); writes only stock_import/erp_import_plan.json",
+    "apply_guard": "requires BOTH --i-understand-destructive-risk AND stock_import/APPLY_APPROVED.txt containing exactly APPROVED BY HUMAN; requires an existing DB file; no deletes; one transaction; full rollback on any exception"
+  },
+  "database_location": {
+    "path_expression": "os.environ['LOCALAPPDATA']/TAJ_FROID/data/taj_froid.db (src/core/paths.py:6-23)",
+    "note": "Importing src.core.paths creates TAJ_FROID data/log/backup/config/temp directories as a side effect; the dry-run deliberately avoids importing it."
+  }
+}

@@ -1,8 +1,8 @@
 """Catalog snapshot: ERP -> relay.
 
 The catalog comes from the ERP (InventoryService), never from the
-website products table. Only non-archived products are included, with
-their store price, VAT, stock quantity and active flag.
+website products table. Only non-archived, priced products are included,
+with their base/pinned/effective prices, VAT, stock and active flag.
 """
 from __future__ import annotations
 
@@ -22,7 +22,9 @@ def build_catalog_payload(context: RequestContext, base_revision: int = 0) -> Di
     pushed. The relay rejects a stale base so an offline rebuild cannot
     silently overwrite a newer catalog.
     """
-    from src.modules.inventory.models import Product, ProductState, StockLevel
+    from src.modules.inventory.models import (
+        Product, ProductState, StockLevel, decimal_string, pinned_price_value,
+    )
 
     @transactional
     def _load(session):
@@ -34,10 +36,19 @@ def build_catalog_payload(context: RequestContext, base_revision: int = 0) -> Di
         )
         products: List[Dict[str, Any]] = []
         for product, stock in rows:
+            effective = product.effective_price
+            if effective <= 0:
+                # Imported zero-price DRAFT stock stays out of the phone
+                # catalog until a pin (or a real base price) makes it priced.
+                continue
+            pin = pinned_price_value(product.pinned_price)
             products.append({
                 "sku": product.sku,
                 "name": product.name,
-                "sale_price": str(product.sale_price),
+                "sale_price": decimal_string(product.sale_price),
+                "pinned_price": str(pin) if pin is not None else "",
+                "effective_price": str(effective),
+                "priced": bool(effective > 0),
                 "vat_rate": str(product.vat_rate),
                 "stock": int(stock.quantity) if stock else 0,
                 "active": product.state == ProductState.ACTIVE,
@@ -46,7 +57,7 @@ def build_catalog_payload(context: RequestContext, base_revision: int = 0) -> Di
             })
         return products
 
-    products = _load(context)
+    products = _load()  # transactional injects a managed session
     # Version is a simple content-derived counter: the relay compares it
     # to decide whether the phone needs a refresh.
     import hashlib, json

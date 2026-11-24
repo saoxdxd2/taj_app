@@ -1,10 +1,10 @@
 import logging
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import List, Optional
 from src.modules.inventory.models import (
     Product, ProductState, ProductType,
     AttributeDef, AttributeDataType, ProductAttribute, StockLevel,
-    Brand, Category,
+    Brand, Category, as_decimal,
 )
 from src.core.context import RequestContext
 from src.security.permissions import PermissionManager
@@ -12,6 +12,8 @@ from src.modules.audit.services import AuditService
 from src.database.transaction import transactional
 
 logger = logging.getLogger(__name__)
+
+PRICE_QUANTUM = Decimal("0.01")
 
 class InventoryService:
     """
@@ -105,6 +107,45 @@ class InventoryService:
         
         session.flush() # flush to generate updates before audit
         logger.info(f"Updated product: {sku} - {name} by {context.username}")
+        return product
+
+    @staticmethod
+    @transactional
+    def set_pinned_price(context: RequestContext, session, product_id: int,
+                         pinned_price, verify_permission: bool = True) -> Optional[Product]:
+        """Set or clear a product's authoritative retail price.
+
+        Invalid, non-positive values clear the pin. Setting a pin activates
+        a DRAFT product; clearing never changes its lifecycle state. The
+        shared SQLAlchemy audit listener records the change on flush.
+
+        ``verify_permission=False`` is reserved for trusted sync imports of
+        phone-entered pins; UI callers must keep the default check.
+        """
+        if verify_permission:
+            PermissionManager.verify_permission(context, "Inventory.Products.Update")
+
+        product = session.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            return None
+
+        pin = as_decimal(pinned_price)
+        if pin is not None:
+            try:
+                pin = pin.quantize(PRICE_QUANTUM, rounding=ROUND_HALF_UP)
+            except InvalidOperation:
+                pin = None
+
+        if pin is None or pin <= 0:
+            product.pinned_price = None
+            logger.info("Cleared pinned price for product %s by %s", product.sku, context.username)
+        else:
+            product.pinned_price = pin
+            if product.state == ProductState.DRAFT:
+                product.state = ProductState.ACTIVE
+            logger.info("Pinned price %s for product %s by %s", pin, product.sku, context.username)
+
+        session.flush()  # audit listener derives before/after values here
         return product
 
     @staticmethod

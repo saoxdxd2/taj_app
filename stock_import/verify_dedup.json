@@ -1,0 +1,76 @@
+{
+  "agent": "G",
+  "purged_skus": [
+    "BNF601341VNA",
+    "BINF 601341 XNA",
+    "KFL-6.1-SK-V",
+    "KPB-8.2-CX",
+    "KPB-7.1-SE",
+    "MLV1540IG",
+    "CK6060-DGLITDIN",
+    "MOK-MK-20-BL",
+    "TFU-83MI-UF",
+    "CS5057R",
+    "GRL 70",
+    "P70H20EL",
+    "GP-6L",
+    "JSD12-6A"
+  ],
+  "purged_count": 14,
+  "merges": [
+    {
+      "from": "TKS32SN101",
+      "to": "Krohler TKS-32-SM-01",
+      "units": 4
+    },
+    {
+      "from": "Krohler P532BFG",
+      "to": "TCL P532BFBG",
+      "units": 3
+    },
+    {
+      "from": "Candy CNBQT3518F",
+      "to": "CNBQT3518E",
+      "units": 3
+    }
+  ],
+  "brand_corrections": [
+    "Candy CNCQ2T518EX",
+    "Fitco FMR-95SDVSA",
+    "Itimat I-28TTFL"
+  ],
+  "reclassifications": [
+    "Infiniton CNPA61X (#119)",
+    "General (#120)"
+  ],
+  "purged_still_present": [
+    "BNF601341VNA",
+    "BINF 601341 XNA",
+    "KFL-6.1-SK-V",
+    "KPB-8.2-CX",
+    "KPB-7.1-SE",
+    "MLV1540IG",
+    "CK6060-DGLITDIN",
+    "MOK-MK-20-BL",
+    "TFU-83MI-UF",
+    "CS5057R",
+    "GRL 70",
+    "P70H20EL",
+    "GP-6L",
+    "JSD12-6A"
+  ],
+  "source_codes_still_present": [],
+  "numbering": {
+    "contiguous": true,
+    "gaps": [],
+    "duplicates": []
+  },
+  "duplicate_sku_values": [
+    "[No code]"
+  ],
+  "discrepancies": [
+    "Lines 52-55 claim 14 duplicate rows were purged with -20 phantom units, but all 14 listed SKUs are still present exactly once each as Verified SKU values in the 150-row table: BNF601341VNA row 44 (lines 587-588), BINF 601341 XNA row 45 (lines 598-599), KFL-6.1-SK-V row 76 (line 953), KPB-8.2-CX row 77 (line 966), KPB-7.1-SE row 78 (line 976), MLV1540IG row 93 (line 1139), CK6060-DGLITDIN row 95 (lines 1161-1162), MOK-MK-20-BL row 100 (line 1229), TFU-83MI-UF row 132 (line 1608), CS5057R row 94 (line 1150), GRL 70 row 107 (line 1301), P70H20EL row 108 (line 1310), GP-6L row 130 (line 1571), JSD12-6A row 131 (line 1581). Their quantities sum to exactly 20 units (same as the claimed -20 phantom units), so those 20 units remain inside the 297-unit grand total. Caveat: this is consistent with the narrow reading that only the extra duplicate COPIES were purged and one row per SKU was retained; the prior draft is not in the source, so the purge cannot be independently verified. What must be true: the final 150-row catalog contains all 14 SKUs and all 20 of those units; removing them would give 136 rows / 277 units and break the stated totals.",
+    "Lines 5 and 1815 claim '0 duplicate rows' / '0 Duplicates'. At the literal string level, '[No code]' is printed as the Verified SKU value in 8 rows: 86 (line 1069), 120 (line 1450), 125 (line 1512), 126 (line 1524), 134 (line 1629), 135 (line 1639), 138 (line 1669), 149 (line 1777). These are missing-code placeholders rather than real SKUs; after excluding them, there are no duplicate SKU values in the 150 rows.",
+    "No other discrepancies found: row numbers are contiguous 1..150 with no gaps or repeats; the 3 merge source codes appear only in the corrections text (lines 61-62) and never as standalone table rows; the 3 brand corrections and 2 range-hood reclassifications match their table rows; total quantity sums to 297 and category counts match the page-1 summary."
+  ]
+}

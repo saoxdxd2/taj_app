@@ -1,0 +1,116 @@
+{
+  "agent": "J",
+  "required_product_fields": [
+    {
+      "field": "sku",
+      "source": "catalog.py:38; relay handlers/agent/catalog/index.go:34-36,152-162; inventory/models.py:45",
+      "required": true,
+      "default_if_missing": "None. Relay returns 400 'product %d: sku required' (index.go:160-162); ERP model is unique, nullable=False.",
+      "risk": "Quote catalog.py:38 '\"sku\": product.sku,'. Relay inserts it as the conflict key (catalogInsertSQL, index.go:34-36). Placeholder '[No code]' values (rows 86,120,125,126,134,135,138,149) collapse/abort on import. Pilot rows have real SKUs."
+    },
+    {
+      "field": "name",
+      "source": "catalog.py:39; relay handlers/agent/catalog/index.go:163-169; inventory/models.py:44",
+      "required": true,
+      "default_if_missing": "None. Relay returns 400 'product %d: name required' (index.go:167-169).",
+      "risk": "Quote catalog.py:39 '\"name\": product.name,'. Non-empty name is mandatory; phone CatalogView.vue:8 renders it directly."
+    },
+    {
+      "field": "sale_price",
+      "source": "catalog.py price fields; relay handlers/catalog/index.go and handlers/agent/catalog/index.go; phone src/stores/catalog.js + NeedsPricingView.vue; inventory/models.py",
+      "required": false,
+      "default_if_missing": "ERP stages Decimal('0.00') with no pinned_price. Unpriced rows are hidden from the default sales catalog and invoice picker; no price is invented.",
+      "risk": "A zero base price is now a NEEDS PRICING state, not a published 0 DH quote. Staff must enter a pinned price from the ERP or phone before the product can be sold. The importer never copies supplier pro-forma figures into retail price."
+    },
+    {
+      "field": "vat_rate",
+      "source": "catalog.py:41; relay handlers/agent/catalog/index.go:34-36,174,253-279; inventory/models.py:55",
+      "required": true,
+      "default_if_missing": "Relay silently substitutes '20' when missing/empty (index.go:174); ERP model default Decimal('20.00') (inventory/models.py:55).",
+      "risk": "Quote catalog.py:41 '\"vat_rate\": str(product.vat_rate),'. An unverified default can misstate tax even when the price is correct; docs mention Moroccan VAT 20% but there is no per-SKU VAT reference in the register."
+    },
+    {
+      "field": "stock",
+      "source": "catalog.py:42; relay handlers/agent/catalog/index.go:34-36,178,281-303",
+      "required": true,
+      "default_if_missing": "0 when no StockLevel row (catalog.py:42) or when missing/invalid in relay (index.go:281-284).",
+      "risk": "Quote catalog.py:42 '\"stock\": int(stock.quantity) if stock else 0,'. Silent 0 understates availability. Pilot expected stocks are 1 (#13), 2 (#14), 1 (#58)."
+    },
+    {
+      "field": "active",
+      "source": "catalog.py:43; relay handlers/agent/catalog/index.go:34-36,182,305-323; phone InvoiceDetailView.vue:144; inventory/models.py:49",
+      "required": true,
+      "default_if_missing": "Relay 0/inactive when missing (index.go:305-307). ERP Product.state defaults to DRAFT (models.py:49), which makes active=False.",
+      "risk": "Quote catalog.py:43 '\"active\": product.state == ProductState.ACTIVE,'. CatalogView shows inactive rows too, but the invoice product picker filters p.active (InvoiceDetailView.vue:144), so a wrong flag changes sellability without any error."
+    },
+    {
+      "field": "category",
+      "source": "catalog.py:44; relay handlers/agent/catalog/index.go:34-36,186,325-336",
+      "required": false,
+      "default_if_missing": "NULL (catalog.py emits None when no category; relay catalogNullable stores SQL NULL, index.go:325-336).",
+      "risk": "Quote catalog.py:44 '\"category\": product.category.name if product.category else None,'. Loss of TV & Audio / Laundry grouping removes the sibling rows needed for the conflict test."
+    },
+    {
+      "field": "brand",
+      "source": "catalog.py:45; relay handlers/agent/catalog/index.go:34-36,190,325-336",
+      "required": false,
+      "default_if_missing": "NULL (catalog.py emits None when no brand; relay catalogNullable stores SQL NULL, index.go:325-336).",
+      "risk": "Quote catalog.py:45 '\"brand\": product.brand.name if product.brand else None,'. Loss of Samsung/TCL identity defeats the planned same-brand conflict test and 'Check box' rows would be meaningless."
+    },
+    {
+      "field": "version (payload-level, not a product field)",
+      "source": "catalog.py:50-58; relay handlers/agent/catalog/index.go:65-68,101-111",
+      "required": true,
+      "default_if_missing": "No safe default; relay rejects version<0 (index.go:65-68), then assigns its own monotonic newVersion (index.go:101-111).",
+      "risk": "Quote catalog.py:53-54 'digest = hashlib.sha256(...)', 'version = int(digest[:8], 16)'. The hash is only compatibility-checked; the phone cursor is the relay monotonic version. A wrong value can cause 304 staleness or a rejected push."
+    },
+    {
+      "field": "baseRevision (payload-level, not a product field)",
+      "source": "catalog.py:57; src/modules/mobile_sync/sync.py:557-607; relay handlers/agent/catalog/index.go:92-99",
+      "required": true,
+      "default_if_missing": "0 is used when absent (catalog.py:57, sync.py:568-569); with 0 the stale-base 409 check is skipped.",
+      "risk": "Quote catalog.py:57 '\"baseRevision\": int(base_revision or 0),'. Must be the last relay revision or the push is rejected with 409; sync.py retries once with the relay's currentRevision (sync.py:590-596). This is the mechanism that prevents an offline desktop silently overwriting newer data."
+    }
+  ],
+  "price_source_found": false,
+  "price_source_detail": "No defensible sale_price/VAT source exists for these 150 SKUs, and none was used. File-name search under C:\\Users\\user\\Documents\\TAJFROID for price/prix/tva/vat/tarif found only: img/TCL/PRICE AC TCL +ROWA 2026 taje.xlsx and img/TCL/Price list TV 2026 NEW TAJ.xlsx (plus code/migrations/tests, not data). The AC workbook is a TCL/ROWA supplier pro-forma ('Bon de commande Pro-forma', client TAJ FROID) for 4 RAC-... air-conditioner models with 'Prix unitaire (TTC)' and 0.18 discount; it has 0 exact SKU overlap with the register (there are no AC rows). The TV workbook has two pro-forma sheets: 'TARIF' client SKY LINE ELECTRO (TCL models with two discount tiers, e.g. 75P7L 8999 / 0.12 -> 7919.12, 55P8L 5699 / 0.15, 40S5K 2600 / 0.18) and 'TARIF (2)' client TAJ FROID (single 85P8L). Exact overlap with the register is only 6 TCL TV rows (1, 4, 6, 7, 9, 10); there is no separate VAT rate field ('les prix TTC incluent la TVA'), no effective/approval date, and these are supplier purchase/discount sheets, not TAJ FROID's retail selling prices. They cannot defensibly set sale_price or vat_rate, and they do not cover any of the 3 pilot SKUs. Other checks: C:\\Users\\user\\Documents\\TAJFROID\\tajfroid\\local.db contains 0 tables; 69 historical facture .xlsx files in taj_app/factures have 0 exact SKU matches; stock_import/*.json (including import_manifest.json) contain no price or VAT field (grep for price/prix/tva/vat/tarif returned no matches). No secret/token files were opened.",
+  "pilot_rows": [
+    {
+      "n": 13,
+      "sku": "UA50DU7000U",
+      "brand": "Samsung",
+      "qty": 1,
+      "category": "TV & Audio",
+      "why_safe": "status exactly 'Verified'; absent from every verify_flags.json group; extract_A.json notes field is empty (no wrap reconstruction); qty 1 (in range 1-3, not the qty-11 row); real Samsung brand and SKU; single-sheet ledger P2; sibling row #14 (same brand/category) is also in the pilot for the conflict test; no price is assumed.",
+      "ledger": "P2"
+    },
+    {
+      "n": 14,
+      "sku": "UA43T5300AU",
+      "brand": "Samsung",
+      "qty": 2,
+      "category": "TV & Audio",
+      "why_safe": "status exactly 'Verified'; absent from every verify_flags.json group; extract_A.json notes field is empty (no wrap reconstruction); qty 2 (in range 1-3); real Samsung brand and SKU; split ledger P2 (x1) + P8 (x1) deliberately tests multi-sheet allocation; sibling row #13 provides the same-brand conflict-test pair; no price is assumed.",
+      "ledger": "P2 (×1) + P8 (×1)"
+    },
+    {
+      "n": 58,
+      "sku": "F710TLG",
+      "brand": "TCL",
+      "qty": 1,
+      "category": "Laundry",
+      "why_safe": "status exactly 'Verified'; absent from every verify_flags.json group; extract_B.json notes field is empty (no wrap reconstruction); qty 1 (in range 1-3); real TCL brand and SKU; single-sheet ledger P3; adds a second brand/category/ledger to the pilot; sibling TCL Laundry row #57 is available but not pushed, so a same-brand conflict can also be staged if needed; no price is assumed.",
+      "ledger": "P3"
+    }
+  ],
+  "verification_steps": [
+    "STEP 1 - Relay DB (read-only, immediately after the 3-row push): SELECT sku,name,sale_price,pinned_price,vat_rate,stock,active,category,brand FROM catalog ORDER BY sku; SELECT version,updated_at FROM catalog_meta WHERE id=1; and read the PUT /api/agent/catalog response. Expect exactly the pushed rows, version/revision to advance, no unexpected row deletions, stock 1/2/1 for #13/#14/#58, category/brand TV & Audio/Samsung for #13-#14 and Laundry/TCL for #58, and sale_price='0' with pinned_price='' because the register has no authoritative retail prices. Unpriced rows must be inactive and hidden from the default sales catalog. Any invented price, missing row, or unexpected deletion aborts the pilot.",
+    "STEP 2 - Phone (force a catalog refresh and inspect UI): GET /api/catalog must omit unpriced rows by default; GET /api/catalog?include_unpriced=1 and the Inventory / Needs pricing screens must show all three rows with a 'Needs pricing' badge and no '0 DH' sales quote. Enter a pinned price for one SKU from the phone, confirm it appears with that effective price in CatalogView and the invoice picker, then clear it and confirm it returns to Needs pricing. Repeat from the ERP UI to confirm both sides behave identically.",
+    "STEP 3 - Offline / conflict test using the Samsung sibling pair #13/#14: with the phone offline, queue a stock or pinned-price edit for #13; while still offline, change #14 via the desktop/agent path so the relay version moves. Reconnect and let the queue flush. Verify the stale baseCatalogVersion receives 409 and is rebased with the fresh version rather than silently overwriting newer state. Final check: relay DB, phone and ERP all show the same effective price and stock for #13/#14/#58, no row disappeared, and catalog_meta advanced once per accepted write. If any row vanishes, a price reverts, or the 409 is not surfaced, abort before the 150-row import."
+  ],
+  "blockers": [
+    "HUMAN DECISIONS / LABELS / APPROVAL: prices are no longer a blocker. Unpriced rows stage DRAFT at sale_price=0.00 with no pin and are hidden from sales. The pilot still requires the 24 decision-queue answers, 8 physical label/barcode confirmations, the #39/#40 merge decision, and an explicit human approval file before any --apply or relay push.",
+    "RELAY RECHECK: PUT /api/agent/catalog now deletes only SKUs absent from the pushed snapshot, not every row, and preserves phone pins via baseRevision + targeted deletes. Re-check the live relay catalog membership immediately before the push so a 3-SKU pilot cannot remove live rows."
+  ],
+  "recommendation": "NO-GO until the remaining human decisions, label confirmations, #39/#40 decision and explicit import/push approval are supplied. The three pre-selected rows (13 UA50DU7000U, 14 UA43T5300AU, 58 F710TLG) remain the safest pilot candidates. They may now be staged without prices; a pin must be entered from the ERP or phone before any of them is quoted or invoiced. No retail price may be invented or copied from TCL pro-forma data. The full 150-row / 297-unit import remains separately gated by the same approvals and the corrected 95 Verified / 45 Check carton / 10 Check box status split."
+}

@@ -1,10 +1,48 @@
 from enum import Enum
-from typing import List, Optional
-from decimal import Decimal
+from typing import Any, List, Optional
+from decimal import Decimal, InvalidOperation
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey, Numeric, Enum as SQLAlchemyEnum
 
 from src.database.base import BaseModel
+
+
+def as_decimal(value: Any) -> Optional[Decimal]:
+    """Parse a money-like value defensively; unusable values become None."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        text = str(value).strip()
+    except Exception:  # noqa: BLE001 - hostile objects must not break pricing
+        return None
+    if not text:
+        return None
+    try:
+        parsed = Decimal(text)
+    except (InvalidOperation, TypeError, ValueError):
+        return None
+    return parsed if parsed.is_finite() else None
+
+
+def pinned_price_value(value: Any) -> Optional[Decimal]:
+    """Normalize a pin: absent/empty/invalid/non-positive means not pinned."""
+    pin = as_decimal(value)
+    return pin if pin is not None and pin > 0 else None
+
+
+def effective_price_value(product: "Product") -> Decimal:
+    """The price all sales surfaces use: the pin when valid, else base price."""
+    pin = pinned_price_value(getattr(product, "pinned_price", None))
+    if pin is not None:
+        return pin
+    base = as_decimal(getattr(product, "sale_price", None))
+    return base if base is not None else Decimal("0")
+
+
+def decimal_string(value: Any) -> str:
+    """Stable decimal string for catalog payloads (never null/empty)."""
+    parsed = as_decimal(value)
+    return str(parsed if parsed is not None else Decimal("0"))
 
 class ProductState(str, Enum):
     """
@@ -51,9 +89,21 @@ class Product(BaseModel):
     # Financial fields must use Decimal for precision (No floating point money allowed)
     purchase_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"), nullable=False)
     sale_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"), nullable=False)
+    # Authoritative retail price. NULL means never set / explicitly cleared.
+    pinned_price: Mapped[Optional[Decimal]] = mapped_column(Numeric(12, 2), nullable=True)
     sale_price_website: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"), nullable=False)
     vat_rate: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("20.00"), nullable=False)
-    
+
+    @property
+    def effective_price(self) -> Decimal:
+        """Shared sales price: valid pin first, then the ERP base price."""
+        return effective_price_value(self)
+
+    @property
+    def priced(self) -> bool:
+        """Unpriced products are hidden from sales surfaces."""
+        return self.effective_price > 0
+
     # Analytics tracking
     total_sold_website: Mapped[int] = mapped_column(default=0, nullable=False)
     total_sold_store: Mapped[int] = mapped_column(default=0, nullable=False)
