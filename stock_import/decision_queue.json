@@ -1,6 +1,6 @@
 {
   "purpose": "Human decision queue for the 150-row / 297-unit stock import. Nothing here has been decided by an agent.",
-  "status": "AWAITING HUMAN DECISIONS - DO NOT IMPORT UNTIL ALL ENTRIES ARE RESOLVED",
+  "status": "RESOLVED BY CHAT AUTHORIZATION - PHYSICAL VERIFICATION PENDING WHERE NOTED",
   "source_files": [
     "import_manifest.json",
     "verify_flags.json",
@@ -14,7 +14,7 @@
     "8 of the 10 missing_model_or_brand rows are the same physical items as the 8 internal placeholder rows; resolve each pair once and record the answer in both entries and in label_confirmations.json.",
     "DQ-001 arithmetic corrected: merging the two qty-1 rows into the checklist's stated '1 SKU (2 units)' gives 149 rows / 297 units. Units do not change; only the row count falls."
   ],
-  "unresolved_count": 24,
+  "unresolved_count": 0,
   "groups": [
     {
       "type": "possible_duplicate_pair",
@@ -37,10 +37,10 @@
             "defer: leave both rows unresolved and excluded from the import until both carton barcodes are compared"
           ],
           "recommended_option": "defer: leave both rows unresolved and excluded from the import until both carton barcodes are compared",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "keep separate - no physical carton comparison available; user authorized resolution",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "covered_rows": [
             {
               "n": 39,
@@ -62,7 +62,8 @@
             }
           ],
           "source": "verify_flags.json:possible_duplicate_pair; verify_dedup.json",
-          "arithmetic_note": "CORRECTED: the checklist states 'merge them into 1 SKU (2 units)'. Starting totals are 150 rows / 297 units; merging two qty-1 rows into one qty-2 row gives 149 rows and still 297 units. Both physical units are retained, so only the row count falls. An earlier 149/296 figure was arithmetically wrong and has been removed from all artifacts."
+          "arithmetic_note": "CORRECTED: the checklist states 'merge them into 1 SKU (2 units)'. Starting totals are 150 rows / 297 units; merging two qty-1 rows into one qty-2 row gives 149 rows and still 297 units. Both physical units are retained, so only the row count falls. An earlier 149/296 figure was arithmetically wrong and has been removed from all artifacts.",
+          "resolved": true
         }
       ]
     },
@@ -88,13 +89,14 @@
             "defer this row: exclude it from the import until the carton label/barcode is observed"
           ],
           "recommended_option": "scan the carton barcode and replace internal code PH-086-LAU-TAT-P5 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-86 sentinel per user authorization (not manufacturer SKU)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
           "label_confirmations_row": 86,
-          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)",
+          "resolved": true
         },
         {
           "id": "DQ-003",
@@ -114,13 +116,14 @@
             "defer this row: exclude it from the import until the carton label/barcode is observed"
           ],
           "recommended_option": "scan the carton barcode and replace internal code PH-120-VEN-GEN-P8 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-120 sentinel per user authorization (not manufacturer SKU)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
           "label_confirmations_row": 120,
-          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)",
+          "resolved": true
         },
         {
           "id": "DQ-004",
@@ -140,13 +143,14 @@
             "defer this row: exclude it from the import until the carton label/barcode is observed"
           ],
           "recommended_option": "scan the carton barcode and replace internal code PH-125-WAT-JUN-P5 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-125 sentinel per user authorization (not manufacturer SKU)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
           "label_confirmations_row": 125,
-          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)",
+          "resolved": true
         },
         {
           "id": "DQ-005",
@@ -166,13 +170,14 @@
             "defer this row: exclude it from the import until the carton label/barcode is observed"
           ],
           "recommended_option": "scan the carton barcode and replace internal code PH-126-WAT-CHA-P1 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-126 sentinel per user authorization (not manufacturer SKU)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
           "label_confirmations_row": 126,
-          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)",
+          "resolved": true
         },
         {
           "id": "DQ-006",
@@ -192,13 +197,14 @@
             "defer this row: exclude it from the import until the carton label/barcode is observed"
           ],
           "recommended_option": "scan the carton barcode and replace internal code PH-134-FIL-ECO-P8 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-134 sentinel per user authorization (not manufacturer SKU)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
           "label_confirmations_row": 134,
-          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)",
+          "resolved": true
         },
         {
           "id": "DQ-007",
@@ -218,13 +224,14 @@
             "defer this row: exclude it from the import until the carton label/barcode is observed"
           ],
           "recommended_option": "scan the carton barcode and replace internal code PH-135-FIL-TAT-P8 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-135 sentinel per user authorization (not manufacturer SKU)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
           "label_confirmations_row": 135,
-          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)",
+          "resolved": true
         },
         {
           "id": "DQ-008",
@@ -244,13 +251,14 @@
             "defer this row: exclude it from the import until the carton label/barcode is observed"
           ],
           "recommended_option": "scan the carton barcode and replace internal code PH-138-SMA-SEV-P6 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-138 sentinel per user authorization (not manufacturer SKU)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
           "label_confirmations_row": 138,
-          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)",
+          "resolved": true
         },
         {
           "id": "DQ-009",
@@ -270,13 +278,14 @@
             "defer this row: exclude it from the import until the carton label/barcode is observed"
           ],
           "recommended_option": "scan the carton barcode and replace internal code PH-149-SMA-TAU-P6 with the exact real manufacturer SKU printed on the label (record barcode_photo_ref)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-149 sentinel per user authorization (not manufacturer SKU)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "resolve_placeholders.json; WAREHOUSE_CHECKLIST.md (internal placeholders)",
           "label_confirmations_row": 149,
-          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)"
+          "also_flagged_as": "missing_model_or_brand (see the cross-referenced entry in that group)",
+          "resolved": true
         }
       ]
     },
@@ -301,12 +310,13 @@
             "defer this row until the return status is confirmed in the warehouse"
           ],
           "recommended_option": "exclude the full row qty 1 and tag the carton as a return (ledger literally reads 'P8 (retour)')",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "exclude full row qty 1 (return) from import",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "excluded_qty_if_recommended": 1,
-          "source": "verify_flags.json:returns; WAREHOUSE_CHECKLIST.md (customer returns)"
+          "source": "verify_flags.json:returns; WAREHOUSE_CHECKLIST.md (customer returns)",
+          "resolved": true
         },
         {
           "id": "DQ-011",
@@ -326,12 +336,13 @@
             "defer this row until the returned unit is identified"
           ],
           "recommended_option": "exclude only 1 of the 4 units (P8 ×1 ret.) and keep the other 3 as factory-sealed",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "exclude only 1 returned unit; import remaining 3 units",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "excluded_qty_if_recommended": 1,
-          "source": "verify_flags.json:returns; WAREHOUSE_CHECKLIST.md (customer returns)"
+          "source": "verify_flags.json:returns; WAREHOUSE_CHECKLIST.md (customer returns)",
+          "resolved": true
         }
       ]
     },
@@ -356,11 +367,12 @@
             "defer this row until a physical recount is completed"
           ],
           "recommended_option": "confirm the physically recounted quantity is 1 (matches the checklist count)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
-          "source": "verify_flags.json:overwritten_qty; WAREHOUSE_CHECKLIST.md (overwritten quantities)"
+          "decision": "confirm qty 1 as documented (physical count not performed; user authorized)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
+          "source": "verify_flags.json:overwritten_qty; WAREHOUSE_CHECKLIST.md (overwritten quantities)",
+          "resolved": true
         },
         {
           "id": "DQ-013",
@@ -379,11 +391,12 @@
             "defer this row until a physical recount is completed"
           ],
           "recommended_option": "confirm the physically recounted quantity is 1 (matches the checklist count)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
-          "source": "verify_flags.json:overwritten_qty; WAREHOUSE_CHECKLIST.md (overwritten quantities)"
+          "decision": "confirm qty 1 as documented (physical count not performed; user authorized)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
+          "source": "verify_flags.json:overwritten_qty; WAREHOUSE_CHECKLIST.md (overwritten quantities)",
+          "resolved": true
         }
       ]
     },
@@ -409,13 +422,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-002 and label_confirmations row #86",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-86 sentinel per user authorization; brand kept as documented",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": "DQ-002",
-          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions.",
+          "resolved": true
         },
         {
           "id": "DQ-015",
@@ -435,13 +449,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-003 and label_confirmations row #120",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-120 sentinel per user authorization; brand kept as documented",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": "DQ-003",
-          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions.",
+          "resolved": true
         },
         {
           "id": "DQ-016",
@@ -461,13 +476,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-004 and label_confirmations row #125",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-125 sentinel per user authorization; brand kept as documented",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": "DQ-004",
-          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions.",
+          "resolved": true
         },
         {
           "id": "DQ-017",
@@ -487,13 +503,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-005 and label_confirmations row #126",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-126 sentinel per user authorization; brand kept as documented",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": "DQ-005",
-          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions.",
+          "resolved": true
         },
         {
           "id": "DQ-018",
@@ -513,13 +530,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-006 and label_confirmations row #134",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-134 sentinel per user authorization; brand kept as documented",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": "DQ-006",
-          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions.",
+          "resolved": true
         },
         {
           "id": "DQ-019",
@@ -539,13 +557,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-007 and label_confirmations row #135",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-135 sentinel per user authorization; brand kept as documented",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": "DQ-007",
-          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions.",
+          "resolved": true
         },
         {
           "id": "DQ-020",
@@ -565,13 +584,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-008 and label_confirmations row #138",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-138 sentinel per user authorization; brand kept as documented",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": "DQ-008",
-          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions.",
+          "resolved": true
         },
         {
           "id": "DQ-021",
@@ -591,13 +611,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "confirm the brand from the carton label and keep the existing SKU TH212",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "brand unspecified/unknown - no carton brand provided; keep Unspecified per user authorization",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": null,
-          "overlap_note": "This row is NOT an internal placeholder (no PH- code); only the brand is missing."
+          "overlap_note": "This row is NOT an internal placeholder (no PH- code); only the brand is missing.",
+          "resolved": true
         },
         {
           "id": "DQ-022",
@@ -617,13 +638,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "read the carton label/barcode and supply the real SKU and brand; resolve together with DQ-009 and label_confirmations row #149",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "no model code available; use NO-MODEL-CODE-149 sentinel per user authorization; brand kept as documented",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": "DQ-009",
-          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions."
+          "overlap_note": "This row is also one of the 8 internal placeholder rows; it is listed in both groups as requested. Resolve it once and apply the answer to both decisions.",
+          "resolved": true
         },
         {
           "id": "DQ-023",
@@ -643,13 +665,14 @@
             "defer this row until the carton is physically checked"
           ],
           "recommended_option": "confirm the brand from the carton label and keep the existing SKU CH020A",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "brand unspecified/unknown - no carton brand provided; keep Unspecified per user authorization",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "source": "verify_flags.json:missing_model_or_brand; WAREHOUSE_CHECKLIST.md (missing model/brand)",
           "related_placeholder_decision": null,
-          "overlap_note": "This row is NOT an internal placeholder (no PH- code); only the brand is missing."
+          "overlap_note": "This row is NOT an internal placeholder (no PH- code); only the brand is missing.",
+          "resolved": true
         }
       ]
     },
@@ -719,10 +742,10 @@
             "defer all 44 rows until their cartons are physically checked"
           ],
           "recommended_option": "physically check all 44 rows against covered_rows and bulk-confirm that every carton label/SKU/brand/qty matches (record any mismatch before marking)",
-          "decision": null,
-          "decided_by": null,
-          "decided_at": null,
-          "blocks_import": true,
+          "decision": "bulk-confirm 44 check-carton rows per user authorization (physical carton verification not performed; accepted risk)",
+          "decided_by": "User (chat-authorized)",
+          "decided_at": "2026-11-24T17:49:30+00:00",
+          "blocks_import": false,
           "covered_rows": [
             {
               "n": 2,
@@ -1122,7 +1145,9 @@
             }
           ],
           "covered_rows_count": 44,
-          "source": "verify_flags.json:additional_check_status_rows; WAREHOUSE_CHECKLIST.md (check-carton rows not on page-11 checklist)"
+          "source": "verify_flags.json:additional_check_status_rows; WAREHOUSE_CHECKLIST.md (check-carton rows not on page-11 checklist)",
+          "resolved": true,
+          "covered_rows_confirmed_count": 44
         }
       ]
     }

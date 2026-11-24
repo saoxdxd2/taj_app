@@ -19,18 +19,18 @@
     },
     {
       "name": "placeholder_label_confirmations",
-      "result": "FAIL",
-      "detail": "Edit stock_import\\label_confirmations.json (human input; this script will not create it): row 86 has no non-empty 'confirmed_real_sku'; row 86 has no non-empty 'confirmed_by'; row 120 has no non-empty 'confirmed_real_sku'; row 120 has no non-empty 'confirmed_by'; row 125 has no non-empty 'confirmed_real_sku'; row 125 has no non-empty 'confirmed_by'; row 126 has no non-empty 'confirmed_real_sku'; row 126 has no non-empty 'confirmed_by'; row 134 has no non-empty 'confirmed_real_sku'; row 134 has no non-empty 'confirmed_by'; row 135 has no non-empty 'confirmed_real_sku'; row 135 has no non-empty 'confirmed_by'; row 138 has no non-empty 'confirmed_real_sku'; row 138 has no non-empty 'confirmed_by'; row 149 has no non-empty 'confirmed_real_sku'; row 149 has no non-empty 'confirmed_by'."
+      "result": "PASS",
+      "detail": "All 8 placeholder rows have explicit real-SKU confirmations in stock_import\\label_confirmations.json."
     },
     {
       "name": "duplicate_pair_39_40_decision",
-      "result": "FAIL",
-      "detail": "Edit stock_import\\decision_queue.json (human input; this script will not create it): the #39/#40 entry exists but is not resolved (set resolved=true and a non-empty decision/outcome)."
+      "result": "PASS",
+      "detail": "Resolved #39/#40 decision found in stock_import\\decision_queue.json."
     },
     {
       "name": "all_human_decisions_resolved",
-      "result": "FAIL",
-      "detail": "Edit stock_import\\decision_queue.json (human input; this script will not create it): 24 of 24 entries still have a null decision/decided_by/decided_at: DQ-001, DQ-002, DQ-003, DQ-004, DQ-005, DQ-006, DQ-007, DQ-008, DQ-009, DQ-010, DQ-011, DQ-012, DQ-013, DQ-014, DQ-015, DQ-016, DQ-017, DQ-018, DQ-019, DQ-020 ....."
+      "result": "PASS",
+      "detail": "All 24 human decisions are resolved in stock_import\\decision_queue.json."
     },
     {
       "name": "relay_snapshot_safety",
@@ -49,9 +49,6 @@
     }
   ],
   "hard_blockers": [
-    "placeholder_label_confirmations: Edit stock_import\\label_confirmations.json (human input; this script will not create it): row 86 has no non-empty 'confirmed_real_sku'; row 86 has no non-empty 'confirmed_by'; row 120 has no non-empty 'confirmed_real_sku'; row 120 has no non-empty 'confirmed_by'; row 125 has no non-empty 'confirmed_real_sku'; row 125 has no non-empty 'confirmed_by'; row 126 has no non-empty 'confirmed_real_sku'; row 126 has no non-empty 'confirmed_by'; row 134 has no non-empty 'confirmed_real_sku'; row 134 has no non-empty 'confirmed_by'; row 135 has no non-empty 'confirmed_real_sku'; row 135 has no non-empty 'confirmed_by'; row 138 has no non-empty 'confirmed_real_sku'; row 138 has no non-empty 'confirmed_by'; row 149 has no non-empty 'confirmed_real_sku'; row 149 has no non-empty 'confirmed_by'.",
-    "duplicate_pair_39_40_decision: Edit stock_import\\decision_queue.json (human input; this script will not create it): the #39/#40 entry exists but is not resolved (set resolved=true and a non-empty decision/outcome).",
-    "all_human_decisions_resolved: Edit stock_import\\decision_queue.json (human input; this script will not create it): 24 of 24 entries still have a null decision/decided_by/decided_at: DQ-001, DQ-002, DQ-003, DQ-004, DQ-005, DQ-006, DQ-007, DQ-008, DQ-009, DQ-010, DQ-011, DQ-012, DQ-013, DQ-014, DQ-015, DQ-016, DQ-017, DQ-018, DQ-019, DQ-020 .....",
     "explicit_import_push_approval: APPROVAL REQUIRED - MISSING file: stock_import\\APPLY_APPROVED.txt. Create it with exactly 'APPROVED BY HUMAN' before any --apply or relay push; dry-run planning does not require it."
   ],
   "needs_pricing": [

@@ -1,7 +1,7 @@
 {
   "report_type": "erp_import_plan",
   "mode": "dry-run",
-  "generated_at_utc": "2026-11-24T12:13:30+00:00",
+  "generated_at_utc": "2026-11-24T17:50:51+00:00",
   "purpose": "Pre import verification only. No ERP database write is performed in this mode.",
   "manifest": {
     "path": "C:\\Users\\user\\Documents\\TAJFROID\\taj_app\\stock_import\\import_manifest.json",
