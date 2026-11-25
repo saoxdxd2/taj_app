@@ -5,12 +5,12 @@
     {
       "name": "manifest_invariants",
       "result": "PASS",
-      "detail": "stock_import\\import_manifest.json: 150 rows / 297 units / contiguous 1..150 / 150 unique effective SKUs."
+      "detail": "stock_import\\import_manifest.json: 149 rows / 297 units / merged #40->#39 / 149 unique effective SKUs."
     },
     {
       "name": "price_coverage",
       "result": "WARN",
-      "detail": "NEEDS PRICING (non-blocking) for 150/150 SKU(s) (no price file at stock_import\\prices.csv): 007117, 32S5K, 32STD2000, 40S5K, 43LM6300, 43S5K, 43STE6600, 50S5K, 55P8L, 65QNED70B, 75 (43\"), 75P7L, AKM 268/IX, AO235HX, B11BS, B1W73235WMA, B1W73435SMA, BCNA300E3W, BD200, BINF 601341 XNA .... Import stages sale_price=0.00, pinned_price unset, state DRAFT; a later ERP/phone pin makes them sellable. No price is invented or copied from supplier pro-forma data."
+      "detail": "NEEDS PRICING (non-blocking) for 149/149 SKU(s) (no price file at stock_import\\prices.csv): 007117, 32S5K, 32STD2000, 40S5K, 43LM6300, 43S5K, 43STE6600, 50S5K, 55P8L, 65QNED70B, 75 (43\"), 75P7L, AKM 268/IX, AO235HX, B11BS, B1W73235WMA, B1W73435SMA, BCNA300E3W, BD200, BINF 601341 XNA .... Import stages sale_price=0.00, pinned_price unset, state DRAFT; a later ERP/phone pin makes them sellable. No price is invented or copied from supplier pro-forma data."
     },
     {
       "name": "prices_not_default_or_cost_reference",
@@ -52,10 +52,10 @@
     "explicit_import_push_approval: APPROVAL REQUIRED - MISSING file: stock_import\\APPLY_APPROVED.txt. Create it with exactly 'APPROVED BY HUMAN' before any --apply or relay push; dry-run planning does not require it."
   ],
   "needs_pricing": [
-    "NEEDS PRICING (non-blocking) for 150/150 SKU(s) (no price file at stock_import\\prices.csv): 007117, 32S5K, 32STD2000, 40S5K, 43LM6300, 43S5K, 43STE6600, 50S5K, 55P8L, 65QNED70B, 75 (43\"), 75P7L, AKM 268/IX, AO235HX, B11BS, B1W73235WMA, B1W73435SMA, BCNA300E3W, BD200, BINF 601341 XNA .... Import stages sale_price=0.00, pinned_price unset, state DRAFT; a later ERP/phone pin makes them sellable. No price is invented or copied from supplier pro-forma data."
+    "NEEDS PRICING (non-blocking) for 149/149 SKU(s) (no price file at stock_import\\prices.csv): 007117, 32S5K, 32STD2000, 40S5K, 43LM6300, 43S5K, 43STE6600, 50S5K, 55P8L, 65QNED70B, 75 (43\"), 75P7L, AKM 268/IX, AO235HX, B11BS, B1W73235WMA, B1W73435SMA, BCNA300E3W, BD200, BINF 601341 XNA .... Import stages sale_price=0.00, pinned_price unset, state DRAFT; a later ERP/phone pin makes them sellable. No price is invented or copied from supplier pro-forma data."
   ],
   "warnings": [
-    "NEEDS PRICING (non-blocking) for 150/150 SKU(s) (no price file at stock_import\\prices.csv): 007117, 32S5K, 32STD2000, 40S5K, 43LM6300, 43S5K, 43STE6600, 50S5K, 55P8L, 65QNED70B, 75 (43\"), 75P7L, AKM 268/IX, AO235HX, B11BS, B1W73235WMA, B1W73435SMA, BCNA300E3W, BD200, BINF 601341 XNA .... Import stages sale_price=0.00, pinned_price unset, state DRAFT; a later ERP/phone pin makes them sellable. No price is invented or copied from supplier pro-forma data.",
+    "NEEDS PRICING (non-blocking) for 149/149 SKU(s) (no price file at stock_import\\prices.csv): 007117, 32S5K, 32STD2000, 40S5K, 43LM6300, 43S5K, 43STE6600, 50S5K, 55P8L, 65QNED70B, 75 (43\"), 75P7L, AKM 268/IX, AO235HX, B11BS, B1W73235WMA, B1W73435SMA, BCNA300E3W, BD200, BINF 601341 XNA .... Import stages sale_price=0.00, pinned_price unset, state DRAFT; a later ERP/phone pin makes them sellable. No price is invented or copied from supplier pro-forma data.",
     "PUT /api/agent/catalog deletes only SKUs absent from the pushed snapshot, then upserts with pin-preserving semantics and a baseRevision check. Production was confirmed EMPTY by direct DB query at verification time, but that is point-in-time only: re-check catalog membership immediately before pushing.",
     "60 flagged rows (16 checklist rows + 44 extra check-carton rows) are still awaiting a physical decision (verify_flags.json). Non-blocking for this gate; resolve before trusting stock status.",
     "verify_flags.json discrepancy: Page-1 summary claims '89 SKUs matched to verified catalog specs' and '61 SKUs flagged for carton / label check', but the 150-row table actually has 95 Verified and 55 Check rows (45 Check carton + 10 Check box). Raw text token counts independently confirm 95/45/10. Use the table counts, not the page-1 summary.",

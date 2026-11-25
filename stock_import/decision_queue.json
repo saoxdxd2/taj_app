@@ -37,9 +37,9 @@
             "defer: leave both rows unresolved and excluded from the import until both carton barcodes are compared"
           ],
           "recommended_option": "defer: leave both rows unresolved and excluded from the import until both carton barcodes are compared",
-          "decision": "keep separate - no physical carton comparison available; user authorized resolution",
+          "decision": "merge into 1 SKU with 2 units (149/297): collapse #40 (KRG370combi NFG) into #39 (KRG-3730-COMB-NF-G) per owner hyphen-merge rule",
           "decided_by": "User (chat-authorized)",
-          "decided_at": "2026-11-24T17:49:30+00:00",
+          "decided_at": "2026-11-24T19:05:00+00:00",
           "blocks_import": false,
           "covered_rows": [
             {
@@ -310,9 +310,9 @@
             "defer this row until the return status is confirmed in the warehouse"
           ],
           "recommended_option": "exclude the full row qty 1 and tag the carton as a return (ledger literally reads 'P8 (retour)')",
-          "decision": "exclude full row qty 1 (return) from import",
+          "decision": "count qty 1 with Return label; visible in PC app, Mobile app, and Website Admin only (hidden from public website)",
           "decided_by": "User (chat-authorized)",
-          "decided_at": "2026-11-24T17:49:30+00:00",
+          "decided_at": "2026-11-24T19:05:00+00:00",
           "blocks_import": false,
           "excluded_qty_if_recommended": 1,
           "source": "verify_flags.json:returns; WAREHOUSE_CHECKLIST.md (customer returns)",
@@ -336,9 +336,9 @@
             "defer this row until the returned unit is identified"
           ],
           "recommended_option": "exclude only 1 of the 4 units (P8 ×1 ret.) and keep the other 3 as factory-sealed",
-          "decision": "exclude only 1 returned unit; import remaining 3 units",
+          "decision": "count all 4 units with Return (1/4 units) label; 3 sealed units public, 1 return unit visible in PC/Mobile/Admin only",
           "decided_by": "User (chat-authorized)",
-          "decided_at": "2026-11-24T17:49:30+00:00",
+          "decided_at": "2026-11-24T19:05:00+00:00",
           "blocks_import": false,
           "excluded_qty_if_recommended": 1,
           "source": "verify_flags.json:returns; WAREHOUSE_CHECKLIST.md (customer returns)",

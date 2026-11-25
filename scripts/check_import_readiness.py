@@ -64,8 +64,9 @@ APPROVAL_TEXT = "APPROVED BY HUMAN"
 PILOT_SKUS = ("UA50DU7000U", "UA43T5300AU", "F710TLG")
 PLACEHOLDER_ROWS = (86, 120, 125, 126, 134, 135, 138, 149)
 DUPLICATE_PAIR = (39, 40)
-EXPECTED_ROWS = 150
+EXPECTED_ROWS = 149
 EXPECTED_UNITS = 297
+MERGED_AWAY_ROWS = (40,)
 
 COST_RE = re.compile(
     r"supplier|pro[\s-]?forma|cost|purchase|wholesale|discount|"
@@ -496,12 +497,12 @@ def main() -> int:
         nums = [as_int(p.get("n")) for p in products if isinstance(p, dict)]
         if len(products) != EXPECTED_ROWS or len(nums) != EXPECTED_ROWS:
             problems.append("%s must contain %d product rows (found %d)." % (relative(MANIFEST_PATH), EXPECTED_ROWS, len(products)))
-        expected_nums = list(range(1, EXPECTED_ROWS + 1))
+        expected_nums = [i for i in range(1, 151) if i not in MERGED_AWAY_ROWS]
         if nums != expected_nums:
             missing_n = sorted(set(expected_nums) - set(nums))
             extra_n = sorted(n for n in nums if n not in set(expected_nums))
             dup_n = sorted({n for n in nums if nums.count(n) > 1 and n is not None})
-            problems.append("row numbers are not contiguous 1..150 (missing=%s, unexpected=%s, repeated=%s)." % (missing_n, extra_n, dup_n))
+            problems.append("row numbers do not match merged 1..150 (excluding %s) (missing=%s, unexpected=%s, repeated=%s)." % (list(MERGED_AWAY_ROWS), missing_n, extra_n, dup_n))
         units = 0
         bad_qty = []
         for product in products:
@@ -543,7 +544,7 @@ def main() -> int:
     add_check(
         "manifest_invariants",
         not problems,
-        "%s: 150 rows / 297 units / contiguous 1..150 / %d unique effective SKUs." % (relative(MANIFEST_PATH), len({s.casefold() for s in (effective_skus(manifest, labels)[0].values())}))
+        "%s: %d rows / %d units / merged #40->#39 / %d unique effective SKUs." % (relative(MANIFEST_PATH), EXPECTED_ROWS, EXPECTED_UNITS, len({s.casefold() for s in (effective_skus(manifest, labels)[0].values())}))
         if not problems else "Fix %s: %s" % (relative(MANIFEST_PATH), " ".join(problems)),
     )
 

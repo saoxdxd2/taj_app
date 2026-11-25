@@ -85,7 +85,7 @@ DEFAULT_PRICES = REPO_ROOT / "stock_import" / "prices.csv"
 PLAN_PATH = REPO_ROOT / "stock_import" / "erp_import_plan.json"
 APPROVAL_PATH = REPO_ROOT / "stock_import" / "APPLY_APPROVED.txt"
 
-EXPECTED_ROWS = 150
+EXPECTED_ROWS = 149
 EXPECTED_UNITS = 297
 APPROVAL_TEXT = "APPROVED BY HUMAN"
 MONEY_QUANT = Decimal("0.01")

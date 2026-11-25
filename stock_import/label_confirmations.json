@@ -1,102 +1,110 @@
 {
   "template": false,
-  "note": "Filled by chat authorization: user confirmed no SKU for rows 86,120,125,126,134,135,138,149; sentinel NO-MODEL-CODE-<n> used. Physical carton verification not performed.",
+  "note": "Updated per owner audit: rows 86,120,125,126,134,135,138,149 carry NO-SKU-NNN internal keys with display_sku='NO SKU', no_sku=true, and an urgent operator warning across PC and Mobile until the carton barcode is updated.",
   "rows": [
     {
       "n": 86,
       "original_sku": "[No code]",
       "internal_sku": "PH-086-LAU-TAT-P5",
-      "confirmed_real_sku": "NO-MODEL-CODE-86",
+      "confirmed_real_sku": "NO-SKU-086",
+      "display_sku": "NO SKU",
       "confirmed_by": "User (chat-authorized)",
-      "confirmed_at": "2026-11-24T17:49:30+00:00",
-      "barcode_photo_ref": "user-confirmed-no-sku-chat",
+      "confirmed_at": "2026-11-24T19:05:00+00:00",
+      "barcode_photo_ref": "user-confirmed-no-sku-urgent-warning",
       "template": false,
       "no_sku": true,
-      "note": "User confirmed no model code/SKU on carton/sheet; sentinel used per chat authorization. Not a manufacturer SKU."
+      "note": "No model code on sheet/carton; flagged NO SKU with urgent update warning and hidden from public website."
     },
     {
       "n": 120,
       "original_sku": "[No code]",
       "internal_sku": "PH-120-VEN-GEN-P8",
-      "confirmed_real_sku": "NO-MODEL-CODE-120",
+      "confirmed_real_sku": "NO-SKU-120",
+      "display_sku": "NO SKU",
       "confirmed_by": "User (chat-authorized)",
-      "confirmed_at": "2026-11-24T17:49:30+00:00",
-      "barcode_photo_ref": "user-confirmed-no-sku-chat",
+      "confirmed_at": "2026-11-24T19:05:00+00:00",
+      "barcode_photo_ref": "user-confirmed-no-sku-urgent-warning",
       "template": false,
       "no_sku": true,
-      "note": "User confirmed no model code/SKU on carton/sheet; sentinel used per chat authorization. Not a manufacturer SKU."
+      "note": "No model code on sheet/carton; flagged NO SKU with urgent update warning and hidden from public website."
     },
     {
       "n": 125,
       "original_sku": "[No code]",
       "internal_sku": "PH-125-WAT-JUN-P5",
-      "confirmed_real_sku": "NO-MODEL-CODE-125",
+      "confirmed_real_sku": "NO-SKU-125",
+      "display_sku": "NO SKU",
       "confirmed_by": "User (chat-authorized)",
-      "confirmed_at": "2026-11-24T17:49:30+00:00",
-      "barcode_photo_ref": "user-confirmed-no-sku-chat",
+      "confirmed_at": "2026-11-24T19:05:00+00:00",
+      "barcode_photo_ref": "user-confirmed-no-sku-urgent-warning",
       "template": false,
       "no_sku": true,
-      "note": "User confirmed no model code/SKU on carton/sheet; sentinel used per chat authorization. Not a manufacturer SKU."
+      "note": "No model code on sheet/carton; flagged NO SKU with urgent update warning and hidden from public website."
     },
     {
       "n": 126,
       "original_sku": "[No code]",
       "internal_sku": "PH-126-WAT-CHA-P1",
-      "confirmed_real_sku": "NO-MODEL-CODE-126",
+      "confirmed_real_sku": "NO-SKU-126",
+      "display_sku": "NO SKU",
       "confirmed_by": "User (chat-authorized)",
-      "confirmed_at": "2026-11-24T17:49:30+00:00",
-      "barcode_photo_ref": "user-confirmed-no-sku-chat",
+      "confirmed_at": "2026-11-24T19:05:00+00:00",
+      "barcode_photo_ref": "user-confirmed-no-sku-urgent-warning",
       "template": false,
       "no_sku": true,
-      "note": "User confirmed no model code/SKU on carton/sheet; sentinel used per chat authorization. Not a manufacturer SKU."
+      "note": "No model code on sheet/carton; flagged NO SKU with urgent update warning and hidden from public website."
     },
     {
       "n": 134,
       "original_sku": "[No code]",
       "internal_sku": "PH-134-FIL-ECO-P8",
-      "confirmed_real_sku": "NO-MODEL-CODE-134",
+      "confirmed_real_sku": "NO-SKU-134",
+      "display_sku": "NO SKU",
       "confirmed_by": "User (chat-authorized)",
-      "confirmed_at": "2026-11-24T17:49:30+00:00",
-      "barcode_photo_ref": "user-confirmed-no-sku-chat",
+      "confirmed_at": "2026-11-24T19:05:00+00:00",
+      "barcode_photo_ref": "user-confirmed-no-sku-urgent-warning",
       "template": false,
       "no_sku": true,
-      "note": "User confirmed no model code/SKU on carton/sheet; sentinel used per chat authorization. Not a manufacturer SKU."
+      "note": "No model code on sheet/carton; flagged NO SKU with urgent update warning and hidden from public website."
     },
     {
       "n": 135,
       "original_sku": "[No code]",
       "internal_sku": "PH-135-FIL-TAT-P8",
-      "confirmed_real_sku": "NO-MODEL-CODE-135",
+      "confirmed_real_sku": "NO-SKU-135",
+      "display_sku": "NO SKU",
       "confirmed_by": "User (chat-authorized)",
-      "confirmed_at": "2026-11-24T17:49:30+00:00",
-      "barcode_photo_ref": "user-confirmed-no-sku-chat",
+      "confirmed_at": "2026-11-24T19:05:00+00:00",
+      "barcode_photo_ref": "user-confirmed-no-sku-urgent-warning",
       "template": false,
       "no_sku": true,
-      "note": "User confirmed no model code/SKU on carton/sheet; sentinel used per chat authorization. Not a manufacturer SKU."
+      "note": "No model code on sheet/carton; flagged NO SKU with urgent update warning and hidden from public website."
     },
     {
       "n": 138,
       "original_sku": "[No code]",
       "internal_sku": "PH-138-SMA-SEV-P6",
-      "confirmed_real_sku": "NO-MODEL-CODE-138",
+      "confirmed_real_sku": "NO-SKU-138",
+      "display_sku": "NO SKU",
       "confirmed_by": "User (chat-authorized)",
-      "confirmed_at": "2026-11-24T17:49:30+00:00",
-      "barcode_photo_ref": "user-confirmed-no-sku-chat",
+      "confirmed_at": "2026-11-24T19:05:00+00:00",
+      "barcode_photo_ref": "user-confirmed-no-sku-urgent-warning",
       "template": false,
       "no_sku": true,
-      "note": "User confirmed no model code/SKU on carton/sheet; sentinel used per chat authorization. Not a manufacturer SKU."
+      "note": "No model code on sheet/carton; flagged NO SKU with urgent update warning and hidden from public website."
     },
     {
       "n": 149,
       "original_sku": "[No code]",
       "internal_sku": "PH-149-SMA-TAU-P6",
-      "confirmed_real_sku": "NO-MODEL-CODE-149",
+      "confirmed_real_sku": "NO-SKU-149",
+      "display_sku": "NO SKU",
       "confirmed_by": "User (chat-authorized)",
-      "confirmed_at": "2026-11-24T17:49:30+00:00",
-      "barcode_photo_ref": "user-confirmed-no-sku-chat",
+      "confirmed_at": "2026-11-24T19:05:00+00:00",
+      "barcode_photo_ref": "user-confirmed-no-sku-urgent-warning",
       "template": false,
       "no_sku": true,
-      "note": "User confirmed no model code/SKU on carton/sheet; sentinel used per chat authorization. Not a manufacturer SKU."
+      "note": "No model code on sheet/carton; flagged NO SKU with urgent update warning and hidden from public website."
     }
   ]
 }

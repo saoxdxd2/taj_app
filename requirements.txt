@@ -27,7 +27,7 @@ reportlab>=4.4.6
 pypdf>=6.0.0
 
 # Supplier invoice scanning (Windows built-in OCR, offline)
-winocr>=2.0
+winocr>=0.0.15
 Pillow>=11.0
 
 # Logging
